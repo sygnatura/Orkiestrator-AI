@@ -25,9 +25,10 @@ Jak wczytują je narzędzia:
   Zalecane: CLAUDE.md z importem `@AGENTS.md` (import nigdy nie wczytuje pliku dwa razy).
   Zdanie „przeczytaj AGENTS.md” jest słabe — Claude otworzy plik tylko, jeśli sam zdecyduje.
   Symlink zamiast importu nie działa poprawnie na Windows. Zalecany rozmiar < 200 linii na plik.
-- **Antigravity**: przed dodaniem osobnego pliku reguł sprawdź w dokumentacji używanej wersji,
-  czy czyta AGENTS.md. Jeśli nie — jego plik reguł zawiera tylko odesłanie do AGENTS.md
-  i różnice narzędziowe. Zlecenia i tak zawierają „PRZECZYTAJ: AGENTS.md”.
+- **Antigravity (aplikacja i CLI `agy`)**: przed dodaniem osobnego pliku reguł sprawdź
+  w dokumentacji używanej wersji, czy czyta AGENTS.md (np. krótkim zleceniem „wypisz polecenie
+  testów z zasad projektu” bez wskazywania pliku). Jeśli nie — jego plik reguł zawiera tylko
+  odesłanie do AGENTS.md i różnice narzędziowe. Zlecenia i tak zawierają „PRZECZYTAJ: AGENTS.md”.
 
 Wynikające zasady:
 - AGENTS.md = jedyne źródło zasad wspólnych; CLAUDE.md = `@AGENTS.md` + krótka sekcja tylko dla
@@ -286,6 +287,7 @@ Polecenia testów dopasuj do projektu. Sprawdzenie: `/permissions`.
       "Bash(<polecenie testów> *)",
       "Bash(<polecenie lintu> *)",
       "Bash(codex exec *)",
+      "Bash(agy *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git switch *)",

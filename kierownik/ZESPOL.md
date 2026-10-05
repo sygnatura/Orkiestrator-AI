@@ -8,19 +8,28 @@ Stan wypełnienia: NIEWYPEŁNIONY   (kierownik zmienia na: WYPEŁNIONY <data>)
 
 ## Wykonawcy
 
-| Narzędzie | Rodzina | Jak uruchamiane | Role |
+`<repo>` = bezwzględna ścieżka głównego katalogu projektu; `<worktree>` = katalog worktree zadania.
+Wyniki zawsze do `<repo>/.kierownik/` (ścieżka bezwzględna — działa niezależnie od katalogu,
+w którym uruchomiono agenta).
+
+| Narzędzie | Rodzina | Polecenie nieinteraktywne | Role |
 |---|---|---|---|
-| Claude Code — subagenci | Claude | narzędzie Agent w sesji kierownika (parametr `model`; implementacja z `isolation: worktree`) | analiza kodu (tańszy model), weryfikacja kodu Codexa, implementacja gdy Codex niedostępny |
-| Codex CLI | OpenAI | `codex exec -C <katalog> -s workspace-write -o .kierownik/T-NNN-<rola>.md "<zlecenie>"` — zweryfikowane: [?] | implementacja, trudne błędy, weryfikacja kodu Claude |
-| Antigravity | Google (Gemini) | brak wywołania z terminala → zlecenie przekazuje właściciel ręcznie | tylko gdy potrzebna przeglądarka/UI albo trzecia opinia przy sporze Claude ↔ Codex |
+| Claude Code — subagenci | Claude | narzędzie Agent w sesji kierownika (parametr `model`; implementacja z `isolation: worktree`) | analiza kodu (tańszy model), weryfikacja, implementacja gdy inni niedostępni |
+| Codex CLI | OpenAI | `codex exec -C <worktree> -s workspace-write -o <repo>/.kierownik/T-NNN-<rola>.md "<zlecenie>"` — zweryfikowane: [?] | implementacja (domyślnie), trudne błędy, weryfikacja |
+| Antigravity CLI (`agy`) | Google | `cd <worktree> && agy -p "<zlecenie>" --dangerously-skip-permissions > <repo>/.kierownik/T-NNN-<rola>.md 2> <repo>/.kierownik/T-NNN-<rola>.err` — zweryfikowane: [?]; model (Gemini Pro / Flash): flaga z `agy --help` [?] | implementacja, zadania z UI/przeglądarką, weryfikacja, trzecia opinia |
 
 Uwagi:
-- Polecenie Codexa sprawdź przy pierwszym uruchomieniu (`codex exec --help` + test dymny)
-  i zapisz tu wersję, która zadziałała. Model i poziom rozumowania: <np. domyślne z ~/.codex/config.toml>.
-- Recenzja bez zapisu plików: `-s read-only`; recenzja z uruchamianiem testów: `workspace-write`
+- Polecenia sprawdź przy pierwszym uruchomieniu (`--help` + test dymny) i zapisz tu wersję,
+  która zadziałała. Modele i poziomy rozumowania: <np. Codex: domyślne z ~/.codex/config.toml;
+  agy: Pro do implementacji, Flash do szybkich zadań>.
+- Codex — recenzja bez zapisu plików: `-s read-only`; z uruchamianiem testów: `workspace-write`
   w worktree zadania.
-- Antigravity nie blokuje pętli: zadanie dla niego kierownik odkłada do raportu etapu,
-  chyba że jest jedyną drogą do celu.
+- `agy` bez `--dangerously-skip-permissions` w trybie `-p` może zapisywać pliki, ale polecenia
+  powłoki są „soft-denied”: przebieg kończy się kodem 0, a jedyny ślad to komunikat na stderr.
+  Dlatego zawsze czytaj plik `.err` i nie traktuj kodu 0 jako sukcesu.
+- `--dangerously-skip-permissions` = agent może wykonać dowolne polecenie bez pytania. Używaj go
+  wyłącznie w worktree zadania (nigdy w głównym katalogu ani na main), bez sekretów w zleceniu,
+  z zakazami z szablonu A. Po przebiegu sprawdź `git status` i `git log` worktree.
 
 
 ## Limity
@@ -29,7 +38,7 @@ Uwagi:
 |---|---|---|---|
 | Claude (kierownik + subagenci — wspólny limit) | <…> | <np. okno 5 h + tygodniowy> | dostępny |
 | OpenAI / Codex | <…> | <…> | dostępny |
-| Antigravity | <…> | <…> | dostępny |
+| Google / Antigravity | <…> | <…> | dostępny |
 
 Stan: `dostępny` | `niedostępny do <data godzina>` (wpisuje kierownik po komunikacie o limicie).
 
@@ -37,13 +46,16 @@ Stan: `dostępny` | `niedostępny do <data godzina>` (wpisuje kierownik po komun
 ## Podział pracy (domyślny)
 
 - Analiza / odczyt: subagent Claude na tańszym modelu (Explore).
-- Implementacja: Codex. Gdy Codex niedostępny: subagent Claude.
-- Weryfikacja: druga rodzina względem autora — kod Codexa sprawdza Claude, kod Claude sprawdza Codex.
-- Plan / trudna diagnoza: kierownik na najsilniejszym modelu + druga opinia Codexa.
-- Spór Claude ↔ Codex albo zadanie z przeglądarką: Antigravity przez właściciela.
+- Implementacja: Codex → Antigravity → subagent Claude (kolejny, gdy poprzedni niedostępny
+  albo gdy zadanie lepiej pasuje — np. UI/przeglądarka → Antigravity).
+- Weryfikacja: zawsze inna rodzina niż autor. Domyślnie:
+  kod Codexa → Antigravity; kod Antigravity → Codex; kod Claude (także kierownika) → Codex.
+  Weryfikacja celu etapu i zmiany ryzykowne → dodatkowo subagent Claude na najsilniejszym modelu.
+- Spór dwóch rodzin (sprzeczne werdykty) → trzecia rodzina rozstrzyga, bez udziału właściciela.
+- Plan / trudna diagnoza: kierownik na najsilniejszym modelu + druga opinia innej rodziny.
 
-Ponieważ kierownik i subagenci Claude korzystają z tego samego limitu, ciężką implementację
-kieruj do Codexa, a Claude zostaw na planowanie, analizę i weryfikację.
+Ponieważ kierownik i subagenci Claude korzystają z tego samego limitu, implementację i rutynową
+weryfikację kieruj do Codexa i Antigravity, a Claude zostaw na planowanie, analizę i decyzje.
 
 
 ## Historia zmian

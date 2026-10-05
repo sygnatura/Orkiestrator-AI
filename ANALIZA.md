@@ -31,11 +31,12 @@ wątku, bo to najdroższy zasób (każde wczytanie zjada limit, a pełny konteks
    trybie inny agent może przeczytać SKILL.md jako zwykły plik.
 2. **Dwa pliki stanu projektu**: PROJEKT.md (jak działa system — zmienia się wolno) i TODO.md
    (plan i stan — zmienia się po każdym zadaniu). VISION.md wchłonięty przez PROJEKT.md.
-3. **Weryfikacja krzyżowa Claude ↔ Codex.** Dwie rodziny modeli wystarczą do niezależnej
-   weryfikacji; Antigravity tylko jako trzecia opinia lub do zadań z przeglądarką, bo nie ma
-   wywołania z terminala.
-4. **Codex jako główny wykonawca implementacji**, bo kierownik i subagenci Claude dzielą limit;
-   Claude zajmuje się planem, analizą i weryfikacją.
+3. **Weryfikacja krzyżowa trzech rodzin.** Claude (subagenci), OpenAI (`codex exec`) i Google
+   (`agy -p … --dangerously-skip-permissions`) są uruchamiane przez kierownika z terminala.
+   Autor i recenzent zawsze z różnych rodzin; spór rozstrzyga trzecia rodzina bez właściciela.
+   Trzy rodziny dają też zamienniki przy wyczerpanych limitach.
+4. **Codex i Antigravity jako główni wykonawcy**, bo kierownik i subagenci Claude dzielą limit;
+   Claude zajmuje się planem, analizą i weryfikacją celu etapu.
 5. **Pięć statusów**: TODO, W TOKU, DO SPRAWDZENIA, GOTOWE, ZABLOKOWANE. Status „do scalenia”
    zniknął, bo kierownik scala sam zaraz po weryfikacji.
 6. **Uwagi recenzenta BLOKUJĄCE vs OPCJONALNE** — tylko blokujące wracają do poprawy (Anthropic:
@@ -58,8 +59,14 @@ Ograniczenia, o których trzeba wiedzieć:
   robi je sam — inaczej system byłby wolniejszy niż zwykła sesja Claude Code.
 - Dla małego projektu lub jednorazowej zmiany wystarczy zwykła sesja Claude Code z trybem planu;
   kierownik zaczyna się opłacać, gdy ciągłość między sesjami staje się problemem.
-- Wywoływanie `codex exec` z wnętrza Claude Code wymaga, by Codex był zalogowany i działał
+- Wywoływanie `codex exec` i `agy` z wnętrza Claude Code wymaga, by oba były zalogowane i działały
   nieinteraktywnie na tej maszynie — kierownik sprawdza to testem dymnym przy pierwszym uruchomieniu.
+- `agy --dangerously-skip-permissions` to agent bez żadnych pytań o zgodę. Ryzyko ogranicza
+  praca wyłącznie w worktree zadania i kontrola `git status` po każdym przebiegu, ale nie usuwa
+  go całkowicie (agent ma dostęp do całej maszyny). Producent zaleca kontener lub sandbox —
+  warto rozważyć, jeśli na tej maszynie są cenne dane poza repozytorium. Bez flagi `agy -p`
+  po cichu pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek
+  czytania stderr.
 - Zestawu nie przetestowano jeszcze na prawdziwym projekcie. Zalecany pilot: jeden istniejący
   projekt, jeden etap; poprawki SKILL.md na podstawie tego, gdzie kierownik się pomylił.
 

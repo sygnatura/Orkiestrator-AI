@@ -1,8 +1,8 @@
 # Kierownik projektu AI — instrukcja (v8)
 
 Skill dla Claude Code, który robi z sesji Claude kierownika technicznego projektu: rozumie system,
-prowadzi plan rozwoju i stan w repozytorium, deleguje implementację do Codexa, weryfikuje
-krzyżowo (kod Codexa sprawdza Claude, kod Claude sprawdza Codex), scala i wypycha to, co
+prowadzi plan rozwoju i stan w repozytorium, deleguje pracę do Codexa i Antigravity, weryfikuje
+krzyżowo (autor i recenzent zawsze z różnych rodzin modeli), scala i wypycha to, co
 zweryfikowane, a do Ciebie wraca z raportem po etapie albo z decyzją, która należy do Ciebie.
 
 ## Instalacja (raz na maszynę)
@@ -75,17 +75,27 @@ sekcja 8) albo użyj trybu auto.
 
 ## Zespół
 
-Domyślnie: Claude Code (kierownik + subagenci) i Codex CLI wywoływany z terminala.
-Antigravity nie ma wywołania z terminala, więc kierownik używa go tylko przez Ciebie — dla zadań
-z przeglądarką/UI albo jako trzecia opinia przy sporze Claude ↔ Codex. Konfiguracja i limity:
-`kierownik/ZESPOL.md`.
+Trzy rodziny modeli, wszystkie uruchamiane przez kierownika z terminala:
+- **Claude Code** — kierownik i jego subagenci (analiza, plan, weryfikacja celu etapu);
+- **Codex CLI** (`codex exec`) — domyślna implementacja i weryfikacja;
+- **Antigravity CLI** (`agy -p "…" --dangerously-skip-permissions`) — implementacja, zadania
+  z UI/przeglądarką, weryfikacja kodu Codexa, trzecia opinia przy sporach.
+
+Autor i recenzent zmiany są zawsze z różnych rodzin; spór rozstrzyga trzecia — bez Ciebie.
+Kierownik dobiera wykonawcę także według limitów (Claude oszczędza, bo dzieli limit z kierownikiem).
+
+`--dangerously-skip-permissions` pozwala agentowi wykonać dowolne polecenie bez pytania.
+Kierownik uruchamia go wyłącznie w osobnym worktree zadania (nigdy w głównym katalogu ani na
+main), bez sekretów w zleceniu, i po każdym przebiegu sprawdza `git status` oraz stderr —
+bez tej flagi `agy` w trybie `-p` po cichu pomija polecenia powłoki i kończy się kodem 0.
+Konfiguracja i limity: `kierownik/ZESPOL.md`.
 
 ## Gdy Claude jest niedostępny
 
-Możesz poprowadzić projekt w Codex CLI: „Przeczytaj ~/.claude/skills/kierownik/SKILL.md i działaj
-według niego jako kierownik tego projektu.” Bez subagentów Claude część analizy i weryfikację
-kodu Codexa przejmie świeża sesja `codex exec` albo Antigravity — jakość krzyżowej weryfikacji
-będzie wtedy niższa.
+Możesz poprowadzić projekt w Codex CLI albo w `agy`: „Przeczytaj ~/.claude/skills/kierownik/SKILL.md
+i działaj według niego jako kierownik tego projektu.” Rolę subagentów Claude przejmą wtedy
+pozostałe dwie rodziny (np. kierownik w Codex: implementacja Antigravity, recenzja świeża sesja
+`codex exec` lub odwrotnie) — weryfikacja krzyżowa nadal działa, choć bez trzeciej opinii.
 
 ## Pliki tego repozytorium
 

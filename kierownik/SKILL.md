@@ -44,11 +44,13 @@ Pliki pomocnicze leżą obok tego pliku (katalog tego skilla, zwykle `~/.claude/
 
 ## 2. KONFIGURACJA MASZYNY (raz; potem tylko aktualizacja ZESPOL.md)
 
-1. Wykryj narzędzia wymienione w ZESPOL.md (np. `codex --version`). Dla każdego dostępnego
-   z terminala sprawdź `--help` trybu nieinteraktywnego — nie zakładaj flag z pamięci.
-2. Test dymny każdego wykonawcy uruchamianego z terminala: jedno krótkie zadanie tylko do odczytu
-   w katalogu tymczasowym (np. „wypisz zawartość pliku hello.txt”), dokładnie tym poleceniem,
-   którego potem będziesz używać. Zapisz w ZESPOL.md polecenie, które zadziałało.
+1. Wykryj narzędzia wymienione w ZESPOL.md (`codex --version`, `agy --version`). Dla każdego
+   sprawdź `--help` trybu nieinteraktywnego (m.in. wybór modelu) — nie zakładaj flag z pamięci.
+2. Test dymny każdego wykonawcy w katalogu tymczasowym z repozytorium git, dokładnie tym poleceniem,
+   którego potem będziesz używać: zadanie „utwórz plik ok.txt z treścią OK i uruchom `git status`”.
+   Sukces = plik istnieje, a odpowiedź zawiera wynik `git status` (czyli agent może też uruchamiać
+   polecenia). Dla `agy` dodatkowo przeczytaj stderr: komunikat „soft-denied” oznacza, że polecenia
+   powłoki są blokowane mimo kodu 0. Zapisz w ZESPOL.md polecenie, które zadziałało.
 3. Zadaj właścicielowi JEDNO zbiorcze pytanie o limity: jaki plan/subskrypcja dla każdego
    systemu, jaki rodzaj limitu (okno godzinowe, tygodniowe, kredyty), które narzędzia oszczędzać.
    Do każdego punktu podaj proponowaną odpowiedź domyślną. Zapisz w ZESPOL.md.
@@ -121,10 +123,11 @@ Dla kolejnego zadania bieżącego etapu (według zależności):
    z jasną przyczyną, aktualizacja dokumentacji). Resztę delegujesz (sekcja 7) — także po to,
    żeby Twój kontekst nie zapełnił się kodem.
 3. **Wykonanie**: osobna gałąź `task/T-NNN-nazwa` w osobnym worktree (subagent Claude:
-   `isolation: worktree`; CLI: `git worktree add ../<repo>-T-NNN -b task/T-NNN-nazwa main`
-   i `-C` na ten katalog). Zlecenie A (sekcja 12). Długie zlecenia uruchamiaj w tle i czekaj na
-   zakończenie zamiast odpytywać co chwilę. Wynik CLI zapisuj do `.kierownik/T-NNN-<rola>.md`
-   i czytaj tylko raport (≤ 15 linii).
+   `isolation: worktree`; CLI: `git worktree add ../<repo>-T-NNN -b task/T-NNN-nazwa main`,
+   potem Codex z `-C` na ten katalog, `agy` uruchamiany z tego katalogu — polecenia w ZESPOL.md).
+   Zlecenie A (sekcja 12). Długie zlecenia uruchamiaj w tle i czekaj na zakończenie zamiast
+   odpytywać co chwilę. Wynik CLI zapisuj do `<repo>/.kierownik/T-NNN-<rola>.md` (stderr do `.err`)
+   i czytaj tylko raport (≤ 15 linii) oraz ewentualne błędy.
 4. **Sprawdzenie** (sekcja 8) → DO SPRAWDZENIA → werdykt.
 5. **Scalenie** (gdy ZALICZONE): `git merge --no-ff task/T-NNN-nazwa` do main, testy na main,
    `git push`, usunięcie worktree i scalonej gałęzi. Testy na main czerwone → `git revert` scalenia,
@@ -191,21 +194,32 @@ polecenia, zaproponuj właścicielowi listę dozwolonych poleceń w `.claude/set
 
 ## 7. ZESPÓŁ, ROUTING I LIMITY
 
-Najpierw ROLA, potem wykonawca z ZESPOL.md (domyślnie: Claude i Codex z terminala,
-Antigravity tylko ręcznie przez właściciela):
+Masz trzy rodziny wykonawców uruchamianych z terminala: Claude (subagenci), OpenAI (Codex CLI)
+i Google (Antigravity CLI `agy`). Najpierw ROLA, potem wykonawca według ZESPOL.md:
 - ANALIZA / ODCZYT (mapowanie kodu, streszczanie logów, „gdzie jest X”) → subagent Claude
   (Explore) na tańszym modelu. Wynik: ≤ 40 linii.
-- IMPLEMENTACJA → domyślnie Codex; gdy niedostępny — subagent Claude w worktree.
-- ARCHITEKTURA / TRUDNA DIAGNOZA / PLAN → Ty na najsilniejszym modelu + druga opinia Codexa.
-- WERYFIKACJA → zawsze inna rodzina niż autor: kod Codexa sprawdza subagent Claude,
-  kod Claude (także Twoje nietrywialne poprawki) sprawdza Codex.
-- Antigravity (Gemini) → tylko zadania wymagające przeglądarki/UI albo trzecia opinia przy sporze
-  Claude ↔ Codex. Zlecenie dajesz właścicielowi w raporcie; pętla na nie nie czeka, jeśli może
-  robić inne zadania.
+- IMPLEMENTACJA → domyślnie Codex; zadania z UI/przeglądarką albo Codex niedostępny → Antigravity;
+  oba niedostępne → subagent Claude w worktree.
+- ARCHITEKTURA / TRUDNA DIAGNOZA / PLAN → Ty na najsilniejszym modelu + druga opinia innej rodziny.
+- WERYFIKACJA → zawsze inna rodzina niż autor: kod Codexa → Antigravity, kod Antigravity → Codex,
+  kod Claude (także Twoje nietrywialne poprawki) → Codex. Cel etapu i zmiany ryzykowne →
+  dodatkowo subagent Claude na najsilniejszym modelu.
+- SPÓR (sprzeczne werdykty dwóch rodzin) → trzecia rodzina rozstrzyga; nie angażujesz właściciela.
+
+`agy --dangerously-skip-permissions` (i każdy inny tryb bez pytań) to agent, który może wykonać
+dowolne polecenie. Dlatego:
+- uruchamiasz go wyłącznie w worktree zadania — nigdy w głównym katalogu projektu ani na main;
+- zlecenie zawiera zakazy z szablonu A (merge, push, produkcyjne i płatne zasoby); nie
+  przekazujesz w nim sekretów;
+- po przebiegu sprawdzasz `git status` i `git log` worktree oraz plik `.err` — kod wyjścia 0
+  niczego nie dowodzi;
+- recenzent z takimi uprawnieniami pracuje na osobnym worktree tej samej gałęzi; po recenzji
+  worktree musi być czysty — jeśli recenzent coś zmienił lub zacommitował, odrzuć jego werdykt
+  i zleć recenzję ponownie.
 
 Limity:
-- Twoi subagenci Claude zużywają ten sam limit co Ty. Ciężką implementację kieruj więc do Codexa,
-  a subagentów Claude używaj do eksploracji (tańszy model) i weryfikacji kodu Codexa.
+- Twoi subagenci Claude zużywają ten sam limit co Ty. Implementację i rutynową weryfikację kieruj
+  więc do Codexa i Antigravity, a Claude zostaw na plan, analizę i weryfikację celu etapu.
 - Komunikat o limicie / rate limit → zapisz w ZESPOL.md („niedostępne do <czas>”), użyj zamiennika
   w tej samej roli i kontynuuj. Brak zamiennika dla potrzebnej roli → raport do właściciela
   z informacją, kiedy limit się odnawia; do tego czasu rób zadania, które nie wymagają tej roli.
@@ -227,8 +241,8 @@ Raport wykonawcy to deklaracja. Dowodem jest to, co sprawdzono niezależnie:
    „na przyszłość”, sekret) → DO POPRAWY. Uwagi OPCJONALNE → „Pomysły”, nie do poprawy:
    recenzent poproszony o szukanie problemów zawsze jakieś znajdzie, a gonienie każdej uwagi
    prowadzi do przeinżynierowania.
-4. Werdykt niepewny albo sprzeczny z raportem → trzecia opinia: Antigravity przez właściciela
-   albo właściciel decyduje na podstawie obu werdyktów.
+4. Werdykt niepewny albo sprzeczny z raportem → trzecia opinia z trzeciej rodziny (sekcja 7,
+   SPÓR), uruchamiana przez Ciebie. Właściciela angażujesz dopiero, gdy i ona nie rozstrzyga.
 
 Twoje własne drobne poprawki: wystarczą testy i krótki przegląd diffu. Jeśli poprawka dotyka
 bezpieczeństwa, danych lub kontraktu API — recenzja innej rodziny jak wyżej.
