@@ -1,4 +1,4 @@
-# ANALIZA I DECYZJE (v8)
+# ANALIZA I DECYZJE (v9)
 
 Do czytania, gdy chcesz zmieniać system. Do codziennej pracy niepotrzebne.
 
@@ -23,7 +23,7 @@ wątku, bo to najdroższy zasób (każde wczytanie zjada limit, a pełny konteks
 | Oszczędzanie kontekstu przez niewiedzę | „Czytaj tylko `git --stat`” | Oszczędzanie przez delegowanie: ciężkie czytanie robią subagenci, do kierownika wracają streszczenia |
 
 
-## 3. Kluczowe decyzje v8
+## 3. Kluczowe decyzje (v8, zaktualizowane w v9)
 
 1. **Skill zamiast promptu.** `disable-model-invocation: true` sprawia, że opis skilla nie trafia
    do kontekstu innych sesji, a treść ładuje się tylko po `/kierownik`. Pliki pomocnicze
@@ -31,12 +31,17 @@ wątku, bo to najdroższy zasób (każde wczytanie zjada limit, a pełny konteks
    trybie inny agent może przeczytać SKILL.md jako zwykły plik.
 2. **Dwa pliki stanu projektu**: PROJEKT.md (jak działa system — zmienia się wolno) i TODO.md
    (plan i stan — zmienia się po każdym zadaniu). VISION.md wchłonięty przez PROJEKT.md.
-3. **Weryfikacja krzyżowa trzech rodzin.** Claude (subagenci), OpenAI (`codex exec`) i Google
-   (`agy -p … --dangerously-skip-permissions`) są uruchamiane przez kierownika z terminala.
-   Autor i recenzent zawsze z różnych rodzin; spór rozstrzyga trzecia rodzina bez właściciela.
-   Trzy rodziny dają też zamienniki przy wyczerpanych limitach.
-4. **Codex i Antigravity jako główni wykonawcy**, bo kierownik i subagenci Claude dzielą limit;
-   Claude zajmuje się planem, analizą i weryfikacją celu etapu.
+3. **(v9) Claude Max jako główny zespół.** Przy dużym zapasie limitów Claude cała pętla działa
+   na subagentach Claude Code z modelem dobranym do roli: analityk Sonnet, wykonawca Sonnet/Opus,
+   recenzent Opus/Fable, architekt Fable 5.1, kierownik Opus 5.5. Subagenci są zdefiniowani w
+   `agents/kier-*.md` (model, effort, narzędzia, worktree), więc zlecenia są krótkie, a zasady ról
+   nie rozjeżdżają się między sesjami.
+4. **(v9) Niezależność weryfikacji w jednej rodzinie**: recenzent to inny model niż autor
+   (Sonnet → Opus, Opus → Fable), świeży kontekst, tylko kryteria + diff + polecenia — wzorzec
+   recenzji zalecany przez Anthropic. Recenzja innej rodziny (Antigravity / Codex) jest wybiórcza:
+   bezpieczeństwo, dane, pieniądze, kontrakty zewnętrzne, sprzeczne sygnały, dwie nieudane rundy,
+   cel etapu kluczowego dla MVP. Codex i Antigravity są też zapasem, gdy Claude jest niedostępny;
+   wybór zawsze według stanu limitów w ZESPOL.md — schemat nie zakłada wolnego limitu żadnego z nich.
 5. **Pięć statusów**: TODO, W TOKU, DO SPRAWDZENIA, GOTOWE, ZABLOKOWANE. Status „do scalenia”
    zniknął, bo kierownik scala sam zaraz po weryfikacji.
 6. **Uwagi recenzenta BLOKUJĄCE vs OPCJONALNE** — tylko blokujące wracają do poprawy (Anthropic:
@@ -55,12 +60,17 @@ to dokładnie to, co Anthropic i OpenAI opisują jako sprawdzone praktyki długi
 Ograniczenia, o których trzeba wiedzieć:
 - To nadal instrukcje dla modelu, nie program. Model może je łamać; dlatego ważne reguły mają
   zabezpieczenie techniczne (uprawnienia, ochrona gałęzi), a stan jest kontrolowalny w Gicie.
-- Delegowanie do Codexa ma narzut (zlecenie, worktree, raport). Dla drobnych zmian kierownik
+- Delegowanie ma narzut (zlecenie, worktree, raport, recenzja). Dla drobnych zmian kierownik
   robi je sam — inaczej system byłby wolniejszy niż zwykła sesja Claude Code.
+- Weryfikacja w obrębie jednej rodziny (Claude → Claude) jest słabsza niż między rodzinami
+  (wspólne ślepe punkty). Łagodzą to: inny model, świeży kontekst, testy uruchamiane niezależnie
+  i recenzja innej rodziny w przypadkach ryzykownych.
+- Okno 1M tokenów kusi, żeby nie przekazywać wątku. Koszt każdej tury i jakość decyzji nadal
+  zależą od długości wątku — stąd przekazanie po etapie i bezpiecznik `/autocompact 400k`.
 - Dla małego projektu lub jednorazowej zmiany wystarczy zwykła sesja Claude Code z trybem planu;
   kierownik zaczyna się opłacać, gdy ciągłość między sesjami staje się problemem.
-- Wywoływanie `codex exec` i `agy` z wnętrza Claude Code wymaga, by oba były zalogowane i działały
-  nieinteraktywnie na tej maszynie — kierownik sprawdza to testem dymnym przy pierwszym uruchomieniu.
+- Zapasowe `codex exec` i `agy` wymagają zalogowania i działania bez interakcji na tej maszynie —
+  kierownik sprawdza to testem dymnym przy pierwszym uruchomieniu.
 - `agy --dangerously-skip-permissions` to agent bez żadnych pytań o zgodę. Ryzyko ogranicza
   praca wyłącznie w worktree zadania i kontrola `git status` po każdym przebiegu, ale nie usuwa
   go całkowicie (agent ma dostęp do całej maszyny). Producent zaleca kontener lub sandbox —

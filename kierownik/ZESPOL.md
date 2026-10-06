@@ -1,4 +1,4 @@
-# ZESPÓŁ — narzędzia, polecenia i limity na tej maszynie
+# ZESPÓŁ — modele, role, zapas i limity na tej maszynie
 
 Wspólny dla wszystkich projektów na tej maszynie. Wypełnia i aktualizuje kierownik
 (SKILL.md, sekcje 2 i 7). Właściciel może edytować ręcznie.
@@ -6,56 +6,53 @@ Wspólny dla wszystkich projektów na tej maszynie. Wypełnia i aktualizuje kier
 Stan wypełnienia: NIEWYPEŁNIONY   (kierownik zmienia na: WYPEŁNIONY <data>)
 
 
-## Wykonawcy
+## Główny zespół — Claude Code (plan Max)
 
-`<repo>` = bezwzględna ścieżka głównego katalogu projektu; `<worktree>` = katalog worktree zadania.
-Wyniki zawsze do `<repo>/.kierownik/` (ścieżka bezwzględna — działa niezależnie od katalogu,
-w którym uruchomiono agenta).
-
-| Narzędzie | Rodzina | Polecenie nieinteraktywne | Role |
+| Rola | Subagent (`~/.claude/agents/`) | Model domyślny (effort) | Kiedy wyżej |
 |---|---|---|---|
-| Claude Code — subagenci | Claude | narzędzie Agent w sesji kierownika (parametr `model`; implementacja z `isolation: worktree`) | analiza kodu (tańszy model), weryfikacja, implementacja gdy inni niedostępni |
-| Codex CLI | OpenAI | `codex exec -C <worktree> -s workspace-write -o <repo>/.kierownik/T-NNN-<rola>.md "<zlecenie>"` — zweryfikowane: [?] | implementacja (domyślnie), trudne błędy, weryfikacja |
-| Antigravity CLI (`agy`) | Google | `cd <worktree> && agy -p "<zlecenie>" --dangerously-skip-permissions > <repo>/.kierownik/T-NNN-<rola>.md 2> <repo>/.kierownik/T-NNN-<rola>.err` — zweryfikowane: [?]; model (Gemini Pro / Flash): flaga z `agy --help` [?] | implementacja, zadania z UI/przeglądarką, weryfikacja, trzecia opinia |
+| Kierownik | wątek główny `/kierownik` | Opus 5.5 (high) | — |
+| Analityk | `kier-analityk` | Sonnet (low) | duże repo / trudne pytanie → Opus; trywialne → Haiku |
+| Wykonawca | `kier-wykonawca` | Sonnet (high) | trudne / ryzykowne / po nieudanej rundzie → Opus (high/xhigh) |
+| Recenzent | `kier-recenzent` | Opus (high) | autor na Opus → Fable; cel etapu → Fable |
+| Architekt | `kier-architekt` | Fable 5.1 (xhigh) | — |
+
+Fable 5.1: w limicie planu (bez „Requires usage credits”) — stan na <data>.
+Jeśli `/model` zacznie pokazywać „Requires usage credits” przy Fable, kierownik zastępuje Fable
+Opusem (effort max) i odnotowuje to tutaj.
+
+Stan subagentów `kier-*`: zainstalowani [?]   (kierownik sprawdza na starcie sesji)
+
+
+## Zapas i recenzja innej rodziny
+
+Używane tylko: (a) gdy Claude jest niedostępny, (b) do recenzji innej rodziny w przypadkach
+z SKILL.md, sekcja 7. Wybór: narzędzie ze stanem `dostępny`; jeśli oba dostępne — to z większym
+zapasem limitu.
+
+`<repo>` = bezwzględna ścieżka projektu; worktree zadania: `<repo>/.kierownik/wt/T-NNN`.
+
+| Narzędzie | Rodzina | Polecenie nieinteraktywne | Zweryfikowane |
+|---|---|---|---|
+| Antigravity CLI (`agy`) | Google | `cd <repo>/.kierownik/wt/T-NNN && agy -p "<zlecenie>" --dangerously-skip-permissions > <repo>/.kierownik/T-NNN-<rola>.md 2> <repo>/.kierownik/T-NNN-<rola>.err`; model (Gemini Pro / Flash) flagą z `agy --help` | [?] |
+| Codex CLI | OpenAI | `codex exec -C <repo>/.kierownik/wt/T-NNN -s workspace-write -o <repo>/.kierownik/T-NNN-<rola>.md "<zlecenie>"` (recenzja bez zapisu: `-s read-only`) | [?] |
 
 Uwagi:
-- Polecenia sprawdź przy pierwszym uruchomieniu (`--help` + test dymny) i zapisz tu wersję,
-  która zadziałała. Modele i poziomy rozumowania: <np. Codex: domyślne z ~/.codex/config.toml;
-  agy: Pro do implementacji, Flash do szybkich zadań>.
-- Codex — recenzja bez zapisu plików: `-s read-only`; z uruchamianiem testów: `workspace-write`
-  w worktree zadania.
-- `agy` bez `--dangerously-skip-permissions` w trybie `-p` może zapisywać pliki, ale polecenia
-  powłoki są „soft-denied”: przebieg kończy się kodem 0, a jedyny ślad to komunikat na stderr.
-  Dlatego zawsze czytaj plik `.err` i nie traktuj kodu 0 jako sukcesu.
-- `--dangerously-skip-permissions` = agent może wykonać dowolne polecenie bez pytania. Używaj go
-  wyłącznie w worktree zadania (nigdy w głównym katalogu ani na main), bez sekretów w zleceniu,
-  z zakazami z szablonu A. Po przebiegu sprawdź `git status` i `git log` worktree.
+- `agy` bez `--dangerously-skip-permissions` w trybie `-p` po cichu pomija polecenia powłoki
+  (kod 0, komunikat tylko na stderr) — zawsze czytaj `.err`.
+- Tryb bez pytań = agent może wykonać dowolne polecenie: tylko w worktree zadania, bez sekretów
+  w zleceniu, po przebiegu `git status` i `git log` worktree.
 
 
 ## Limity
 
-| System | Plan / subskrypcja | Rodzaj limitu | Stan |
-|---|---|---|---|
-| Claude (kierownik + subagenci — wspólny limit) | <…> | <np. okno 5 h + tygodniowy> | dostępny |
-| OpenAI / Codex | <…> | <…> | dostępny |
-| Google / Antigravity | <…> | <…> | dostępny |
+| System | Plan | Stan |
+|---|---|---|
+| Claude | Max | dostępny |
+| Google / Antigravity | <…> | <dostępny / niedostępny do …> |
+| OpenAI / Codex | <…> | <dostępny / niedostępny do …> |
 
-Stan: `dostępny` | `niedostępny do <data godzina>` (wpisuje kierownik po komunikacie o limicie).
-
-
-## Podział pracy (domyślny)
-
-- Analiza / odczyt: subagent Claude na tańszym modelu (Explore).
-- Implementacja: Codex → Antigravity → subagent Claude (kolejny, gdy poprzedni niedostępny
-  albo gdy zadanie lepiej pasuje — np. UI/przeglądarka → Antigravity).
-- Weryfikacja: zawsze inna rodzina niż autor. Domyślnie:
-  kod Codexa → Antigravity; kod Antigravity → Codex; kod Claude (także kierownika) → Codex.
-  Weryfikacja celu etapu i zmiany ryzykowne → dodatkowo subagent Claude na najsilniejszym modelu.
-- Spór dwóch rodzin (sprzeczne werdykty) → trzecia rodzina rozstrzyga, bez udziału właściciela.
-- Plan / trudna diagnoza: kierownik na najsilniejszym modelu + druga opinia innej rodziny.
-
-Ponieważ kierownik i subagenci Claude korzystają z tego samego limitu, implementację i rutynową
-weryfikację kieruj do Codexa i Antigravity, a Claude zostaw na planowanie, analizę i decyzje.
+Stan: `dostępny` | `niedostępny do <data godzina>` (wpisuje kierownik po komunikacie o limicie
+albo po informacji od właściciela).
 
 
 ## Historia zmian

@@ -191,15 +191,15 @@ Prowadzi kierownik. Agenci: wyłącznie odczyt.
 Cel: <1 zdanie z PROJEKT.md>
 Etap: E2 — <nazwa>: <obserwowalny cel etapu> (3/5 GOTOWE)
 main @ <sha> | ostatni zweryfikowany: <sha> (<data>, <co potwierdzono>)
-W toku: T-007 | W TOKU | Codex | task/T-007-import
+W toku: T-007 | W TOKU | kier-wykonawca (Sonnet) | task/T-007-import
 Blokady: brak
 Następny krok: <konkretnie: zadanie, wykonawca, czynność>
 Ustalenia: <np. odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
 
 ## E2 — <nazwa>: <obserwowalny cel etapu>
-- [ ] T-006 | DO SPRAWDZENIA | Codex → recenzja Claude | <opis>
+- [ ] T-006 | DO SPRAWDZENIA | wyk. Sonnet → rec. Opus | <opis>
       Kryteria: <obserwowalne>; `<polecenie testu>`
-- [ ] T-007 | W TOKU | Codex | <opis> (po T-006) | plan: docs/tasks/T-007.md
+- [ ] T-007 | W TOKU | wyk. Opus | <opis> (po T-006) | plan: docs/tasks/T-007.md
       Kryteria: <…>
 - [ ] T-008 | TODO | — | <opis> (po T-007)
       Kryteria: <…>
