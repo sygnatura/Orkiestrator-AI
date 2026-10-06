@@ -2,14 +2,14 @@
 
 Czyta kierownik, gdy zakłada lub naprawia pliki projektu (oraz wykonawca, któremu to zlecono).
 
-1. Zasady AGENTS.md i CLAUDE.md (stan wytycznych OpenAI i Anthropic na 2026-10-03)
+1. Zasady AGENTS.md i CLAUDE.md (stan wytycznych OpenAI i Anthropic na 2026-10-06)
 2. AGENTS.md
 3. CLAUDE.md
 4. docs/PROJEKT.md
 5. docs/TODO.md
 6. docs/tasks/T-NNN.md
 7. ADR
-8. .claude/settings.json (uprawnienia dla pętli kierownika)
+8. .claude/settings.json (uprawnienia i ustawienia sesji kierownika)
 9. Lista kontrolna przeglądu (koniec etapu)
 
 
@@ -20,15 +20,16 @@ Jak wczytują je narzędzia:
   roboczego (w katalogu `AGENTS.override.md` ma pierwszeństwo przed `AGENTS.md`; plus globalny
   `~/.codex/AGENTS.md`). Nie schodzi poniżej katalogu roboczego. Łącznie domyślnie 32 KiB —
   nadmiar jest po cichu obcinany. Nie rozwija importów `@plik`.
-- **Claude Code** czyta AGENTS.md sam (od v2.1.277) tylko wtedy, gdy nie ma CLAUDE.md,
+- **Claude Code** czyta AGENTS.md sam (od v2.1.277) tylko wtedy, gdy w drzewie projektu nie ma CLAUDE.md,
   .claude/CLAUDE.md ani CLAUDE.local.md. Z CLAUDE.md czyta domyślnie tylko pliki CLAUDE.
-  Zalecane: CLAUDE.md z importem `@AGENTS.md` (import nigdy nie wczytuje pliku dwa razy).
+  Zalecane: CLAUDE.md z importem `@AGENTS.md` (import nigdy nie wczytuje pliku dwa razy). Subagenci Claude
+  Code dostają CLAUDE.md projektu automatycznie (także w worktree), więc przez import mają też AGENTS.md.
   Zdanie „przeczytaj AGENTS.md” jest słabe — Claude otworzy plik tylko, jeśli sam zdecyduje.
   Symlink zamiast importu nie działa poprawnie na Windows. Zalecany rozmiar < 200 linii na plik.
 - **Antigravity (aplikacja i CLI `agy`)**: przed dodaniem osobnego pliku reguł sprawdź
   w dokumentacji używanej wersji, czy czyta AGENTS.md (np. krótkim zleceniem „wypisz polecenie
   testów z zasad projektu” bez wskazywania pliku). Jeśli nie — jego plik reguł zawiera tylko
-  odesłanie do AGENTS.md i różnice narzędziowe. Zlecenia i tak zawierają „PRZECZYTAJ: AGENTS.md”.
+  odesłanie do AGENTS.md i różnice narzędziowe. Zlecenia dla CLI i tak zawierają „PRZECZYTAJ: AGENTS.md”.
 
 Wynikające zasady:
 - AGENTS.md = jedyne źródło zasad wspólnych; CLAUDE.md = `@AGENTS.md` + krótka sekcja tylko dla
@@ -42,7 +43,9 @@ Wynikające zasady:
 - Reguła powstaje z obserwowanego błędu (drugi raz ten sam) albo z twardej konwencji, nie „na zapas”.
 - Instrukcje to wskazówki. Co musi być przestrzegane zawsze → uprawnienia, hook, CI.
 - Katalog o innych zasadach (np. `frontend/` z innym stosem) → zagnieżdżony AGENTS.md tylko
-  z różnicami. Codex użyje go, gdy pracuje w tym katalogu; Claude Code — gdy czyta z niego pliki.
+  z różnicami. Codex użyje go, gdy pracuje w tym katalogu. Claude Code sam go nie wczyta (CLAUDE.md
+  w drzewie wyłącza automatyczne czytanie AGENTS.md) — połóż obok `frontend/CLAUDE.md` z jedną linią
+  `@AGENTS.md`; Claude Code dołączy go, gdy pracuje na plikach z tego katalogu.
 - Kontrola: w Claude Code `/context` (czy plik się wczytał) i `/doctor prompt-audit`
   (sprzeczności, nieistniejące polecenia i ścieżki).
 
@@ -67,6 +70,7 @@ Puste pozycje usuń. Kolejność ma znaczenie (Codex obcina od końca).
 - Bazy: <np. testowa SQLite w tests/ — wolno; produkcyjna (zmienna DB_PROD_URL) — NIE dotykać>
 - Usługi zewnętrzne: <np. wysyłka maili — w testach wyłącznie mock; płatne API X — tylko za zgodą właściciela>
 - Sekrety: tylko w .env (poza Gitem), wzór w .env.example. Nie wypisuj wartości.
+- Świeży worktree: <co trzeba zrobić, żeby testy ruszyły — np. `cp .env.example .env`, uruchomić usługę X>
 
 ## Struktura
 - `<katalog>/` — <rola; tylko najważniejsze katalogi>
@@ -80,19 +84,23 @@ Puste pozycje usuń. Kolejność ma znaczenie (Codex obcina od końca).
 - Zmieniaj tylko to, czego dotyczy zadanie. Pomysły spoza zakresu wpisz w raporcie.
 - Najprostsze rozwiązanie spełniające kryteria. Bez warstw, interfejsów, flag i konfiguracji
   „na przyszłość”.
+- Nowe testy tylko tam, gdzie wymaga ich zadanie (kryteria, Definition of Done, konwencje wyżej).
+  Jednorazowe skrypty sprawdzające trzymaj poza repozytorium i nie zamieniaj ich w stałe testy.
 - Nie edytuj docs/TODO.md, docs/PROJEKT.md ani kryteriów zadania — prowadzi je kierownik.
 - Nie osłabiaj, nie usuwaj i nie wyłączaj testów, żeby przeszły. Uzasadnioną zmianę testu opisz.
 - Bez merge, push i przepisywania historii — robi to kierownik.
-- Brak informacji: zapisz pytanie w raporcie zamiast zgadywać.
+- Brak informacji: luka blokująca → zatrzymaj się i zapisz pytanie w raporcie; nieblokująca → przyjmij
+  najprostsze założenie zgodne z kodem i zapisz je w raporcie.
 
 ## Definition of Done
-- Kryteria spełnione i pokazane dowodem (polecenie → wynik, scenariusz użycia).
+- Kryteria spełnione i pokazane dowodem (polecenie → wynik, scenariusz użycia). Sprawdzenie, które nie
+  wystartowało, albo sama kontrola składni nie są dowodem — takie przypadki w „NIE SPRAWDZONO”.
 - Testy i lint przechodzą; pominięte testy wymienione w raporcie.
 - README zaktualizowane, jeśli zmieniło się uruchamianie lub zachowanie widoczne dla użytkownika.
 - Jeśli zadanie ma docs/tasks/T-NNN.md: zaktualizowane „Postęp”, „Odkrycia i decyzje”, „Wynik”.
 
 ## Raport po zadaniu (≤ 15 linii)
-    T-NNN | gałąź | sha
+    T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy (ścieżka worktree)
     ZMIANY: 1–3 zdania; liczba plików
     TESTY: `<polecenie>` → exit <n>; passed/failed/skipped
     SCENARIUSZ: co uruchomiono jak użytkownik → wynik
@@ -101,7 +109,8 @@ Puste pozycje usuń. Kolejność ma znaczenie (Codex obcina od końca).
 
 ## Weryfikacja cudzej zmiany
 - Nie poprawiaj kodu i nie commituj. Sprawdź każde kryterium w działaniu, nie tylko w testach.
-- Kod wyjścia 0 nie dowodzi kryterium: sprawdź pominięte testy i ostrzeżenia.
+- Kod wyjścia 0 nie dowodzi kryterium: sprawdź pominięte testy i ostrzeżenia. Sama lektura kodu to nie
+  dowód — kryterium, którego nie dało się sprawdzić, oznacz NIE SPRAWDZONO (powód), nie OK.
 - BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
   „na przyszłość”, sekret. Resztę oznacz jako OPCJONALNE.
 
@@ -181,7 +190,8 @@ jak przejść główny scenariusz ręcznie.>
 ## 5. docs/TODO.md (plan rozwoju i stan, ≤ ~150 linii)
 
 Prowadzi wyłącznie kierownik. Nagłówek odpowiada na pięć pytań: cel, plan, w toku,
-co zweryfikowane, następny krok.
+co zweryfikowane, następny krok. W kolumnach „wyk.” / „rec.” wpisuj klasę modelu albo alias faktycznie
+użyty (np. `sonnet`, `opus`) — to zapis zdarzenia, nie reguła.
 
 ```markdown
 # TODO — <projekt>
@@ -191,15 +201,15 @@ Prowadzi kierownik. Agenci: wyłącznie odczyt.
 Cel: <1 zdanie z PROJEKT.md>
 Etap: E2 — <nazwa>: <obserwowalny cel etapu> (3/5 GOTOWE)
 main @ <sha> | ostatni zweryfikowany: <sha> (<data>, <co potwierdzono>)
-W toku: T-007 | W TOKU | kier-wykonawca (Sonnet) | task/T-007-import
+W toku: T-007 | W TOKU | kier-wykonawca (<klasa>) | task/T-007-import
 Blokady: brak
 Następny krok: <konkretnie: zadanie, wykonawca, czynność>
-Ustalenia: <np. odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
+Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
 
 ## E2 — <nazwa>: <obserwowalny cel etapu>
-- [ ] T-006 | DO SPRAWDZENIA | wyk. Sonnet → rec. Opus | <opis>
+- [ ] T-006 | DO SPRAWDZENIA | wyk. <klasa> → rec. <klasa> | <opis>
       Kryteria: <obserwowalne>; `<polecenie testu>`
-- [ ] T-007 | W TOKU | wyk. Opus | <opis> (po T-006) | plan: docs/tasks/T-007.md
+- [ ] T-007 | W TOKU | wyk. <klasa> | <opis> (po T-006) | plan: docs/tasks/T-007.md
       Kryteria: <…>
 - [ ] T-008 | TODO | — | <opis> (po T-007)
       Kryteria: <…>
@@ -214,7 +224,7 @@ Ustalenia: <np. odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO
 - <pomysł> (<źródło>, <data>) — <zgodność z celem>
 
 ## Zrobione (10 ostatnich; starsze w docs/DONE.md)
-- [x] T-005 | <opis> | <sha scalenia> | zweryf.: <kto>, <data> |
+- [x] T-005 | <opis> | <sha scalenia> | zweryf.: <kto, klasa>, <data> |
       dowód: `<polecenie>` → <wynik>; scenariusz: <co zaobserwowano>
 - [x] E1 zamknięty | <sha> | dowód E2E: <środowisko, dane, czynności, wynik>
 ```
@@ -222,8 +232,10 @@ Ustalenia: <np. odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO
 
 ## 6. docs/tasks/T-NNN.md (żywy plan zadania)
 
-Tylko dla ryzyka ŚREDNIEGO/WYSOKIEGO albo pracy na więcej niż jedną sesję. Uproszczony ExecPlan
-OpenAI: musi wystarczyć nowej sesji bez żadnej historii.
+Tylko dla ryzyka ŚREDNIEGO/WYSOKIEGO albo zadania, którego nie da się pociąć na jednosesyjne kroki.
+Uproszczony ExecPlan OpenAI: musi wystarczyć nowej sesji bez żadnej historii. Sekcje Cel–Plan pisze
+architekt lub kierownik przed startem; Postęp, Odkrycia i decyzje, Wynik — wykonawca. Recenzent czyta
+tylko Cel, Kontekst, Zakres i Kryteria.
 
 ```markdown
 # T-NNN — <tytuł>
@@ -273,38 +285,72 @@ Status: proponowana | przyjęta | zastąpiona przez NNNN      Data: <…>
 ```
 
 
-## 8. .claude/settings.json (uprawnienia dla pętli kierownika)
+## 8. .claude/settings.json (uprawnienia i ustawienia sesji kierownika)
 
-Cel: Claude Code nie pyta o bezpieczne, powtarzalne polecenia, a niebezpieczne są zablokowane.
-Kolejność oceny reguł: deny → ask → allow. Wzorce dla Bash to pas bezpieczeństwa, nie pancerz
-(dają się obejść nietypową składnią) — prawdziwą ochroną main jest ochrona gałęzi na GitHubie.
-Polecenia testów dopasuj do projektu. Sprawdzenie: `/permissions`.
+Cel: Claude Code nie pyta o bezpieczne, powtarzalne polecenia, a niebezpieczne są zablokowane albo
+pytają. Kolejność oceny reguł: deny → ask → allow. Wzorce dla Bash są prefiksowe i stanowią pas
+bezpieczeństwa, nie pancerz (dają się obejść nietypową składnią) — prawdziwą ochroną main jest ochrona
+gałęzi na GitHubie przed force push i usunięciem (nie „wymagaj pull requesta”: pętla scala lokalnie
+i pcha main bezpośrednio). Polecenia testów dopasuj do projektu. Sprawdzenie: `/permissions`.
+
+Opcjonalnie zapisz tu także model i effort kierownika — zastępują ręczne `/model` i `/effort` w każdej
+sesji; wpis obowiązuje każdą sesję Claude Code w tym projekcie (gdy ma dotyczyć wszystkich projektów,
+wpisz go w `~/.claude/settings.json`). Próg kompaktowania ma trwały odpowiednik `autoCompactWindow`
+(wartość w tokenach, np. 400000); do czasu sprawdzenia formatu w dokumentacji wystarczy `/autocompact`
+w sesji.
+
+`worktree.baseRef: head` — worktree subagenta (`isolation: worktree`) odgałęzia się od bieżącego HEAD
+sesji, nie od `origin/HEAD`; bez tego klucza baza może nie zawierać niewypchniętych commitów kierownika.
+Wykonawca i tak ustawia bazę jawnie przez sha ze zlecenia, więc ten klucz jest pasem bezpieczeństwa,
+nie warunkiem działania.
 
 ```json
 {
+  "model": "opus",
+  "worktree": { "baseRef": "head" },
   "permissions": {
     "allow": [
       "Bash(<polecenie testów> *)",
       "Bash(<polecenie lintu> *)",
       "Bash(codex exec *)",
       "Bash(agy *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git fetch *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git switch *)",
       "Bash(git checkout *)",
       "Bash(git merge *)",
+      "Bash(git revert *)",
       "Bash(git worktree *)",
       "Bash(git branch *)",
-      "Bash(git revert *)",
       "Bash(git push origin *)"
+    ],
+    "ask": [
+      "Bash(git push origin --delete *)",
+      "Bash(git push origin -d *)",
+      "Bash(git branch -D *)",
+      "Bash(git worktree remove --force *)",
+      "Bash(git worktree remove * --force*)"
     ],
     "deny": [
       "Bash(git push --force*)",
       "Bash(git push -f*)",
       "Bash(git push * --force*)",
       "Bash(git push * -f*)",
+      "Bash(git push origin +*)",
       "Bash(git reset --hard*)",
       "Bash(git clean *)",
+      "Bash(cat .env*)",
+      "Bash(cat ./.env*)",
+      "Bash(head .env*)",
+      "Bash(tail .env*)",
+      "Bash(printenv*)",
+      "Bash(env)",
       "Read(./.env)",
       "Read(./.env.*)"
     ]
@@ -312,32 +358,53 @@ Polecenia testów dopasuj do projektu. Sprawdzenie: `/permissions`.
 }
 ```
 
-Uwaga: `Read(./.env.*)` blokuje też `.env.example` — jeśli przeszkadza, zawęź regułę.
-Alternatywą jest tryb auto w Claude Code (klasyfikator zamiast pytań); reguły deny działają
-także w nim.
+Uwagi:
+- `ask` odpowiada liście PYTASZ z SKILL.md, sekcja 6 (usuwanie gałęzi i worktree z niezapisaną pracą):
+  pytanie, nie blokada. `git branch -d` zostaje w allow — odmawia usunięcia niescalonej gałęzi, więc
+  sprzątanie po scaleniu nie pyta. Forma `git push origin :<gałąź>` nie jest objęta: wzorzec kończący się
+  na `:*` koliduje ze składnią prefiksu reguł i zablokowałby każdy push do origin — nie dodawaj go.
+- Reguły `.env*` blokują też `.env.example` — jeśli przeszkadza, zawęź je. Reguły uprawnień działają
+  osobno dla każdego narzędzia, a wzorce Bash są prefiksowe: `Read(./.env*)` nie zatrzymuje `cat .env`,
+  stąd osobne wpisy Bash; `grep`/`sed` na .env, ścieżki bezwzględne i narzędzie Grep nadal nie są objęte.
+  Gdy sekrety są krytyczne, dodaj hook PreToolUse odrzucający polecenia zawierające `.env`. Reguły deny
+  obejmują także subagentów (ich pytania o uprawnienia trafiają do sesji głównej).
+- `"effortLevel": "high"` dopisz tylko wtedy, gdy właściciel chce wyższego effortu kierownika niż domyślny
+  modelu (SKILL.md, sekcja 1, krok 6).
+- Tryb auto w Claude Code (klasyfikator zamiast pytań): `"permissions": {"defaultMode": "auto"}` działa
+  tylko w ustawieniach użytkownika (`~/.claude/settings.json`) albo z flagi CLI — w tym pliku projektu
+  wartość `auto` jest ignorowana. Reguły `deny` działają także w trybie auto.
+- Worktree subagenta to świeży checkout bez plików nieśledzonych. Jeśli testy potrzebują `.env`, dodaj
+  w korzeniu projektu `.worktreeinclude` (składnia .gitignore) z nazwami plików do skopiowania do każdego
+  nowego worktree — Claude Code skopiuje tylko te, które są jednocześnie ignorowane przez Git.
 
 
 ## 9. Lista kontrolna przeglądu (koniec etapu albo po powtórzonym błędzie)
 
 - [ ] Polecenia w AGENTS.md działają (użyte w tym etapie).
-- [ ] „Środowisko i koszty” zgodne ze stanem faktycznym (AGENTS.md i PROJEKT.md mówią to samo).
+- [ ] „Środowisko i koszty” zgodne ze stanem faktycznym (AGENTS.md i PROJEKT.md mówią to samo),
+      łącznie z tym, co trzeba zrobić w świeżym worktree.
 - [ ] Brak stanu, dat i list zadań w AGENTS.md / CLAUDE.md.
 - [ ] AGENTS.md ≤ ~150 linii; łącznie z zagnieżdżonymi plikami < 32 KiB.
 - [ ] CLAUDE.md zaczyna się od `@AGENTS.md` i nie powtarza jego treści.
 - [ ] Brak sprzecznych reguł (`/doctor prompt-audit`).
 - [ ] Pułapki z tego etapu dopisane, nieaktualne usunięte.
 - [ ] PROJEKT.md opisuje stan po etapie (moduły, przepływ, stan funkcjonalny).
+- [ ] Brak osieroconych gałęzi `worktree-*` i worktree w `.claude/worktrees/` (`git worktree list`).
 
 
-## Źródła (sprawdzone 2026-10-03/04)
+## Źródła (sprawdzone 2026-10-03/06)
 - Anthropic — CLAUDE.md i AGENTS.md: https://code.claude.com/docs/en/memory
 - Anthropic — Best practices for Claude Code: https://code.claude.com/docs/en/best-practices
 - Anthropic — Skills: https://code.claude.com/docs/en/skills
 - Anthropic — Subagents: https://code.claude.com/docs/en/sub-agents
+- Anthropic — Worktrees (w tym izolacja subagentów): https://code.claude.com/docs/en/worktrees
+- Anthropic — Model configuration (aliasy, effort): https://code.claude.com/docs/en/model-config
 - Anthropic — Permissions: https://code.claude.com/docs/en/permissions
+- Anthropic — Settings: https://code.claude.com/docs/en/settings
 - Anthropic — Effective harnesses for long-running agents:
   https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
 - OpenAI — AGENTS.md: https://developers.openai.com/codex/guides/agents-md (zachowanie sprawdzone
   w kodzie: https://github.com/openai/codex/blob/main/codex-rs/core/src/agents_md.rs)
+- OpenAI — Codex `exec` (flagi `-o`, `--json`, stdin): https://github.com/openai/codex/blob/main/codex-rs/exec/src/cli.rs
 - OpenAI — ExecPlans: https://github.com/openai/openai-cookbook/blob/main/articles/codex_exec_plans.md
 - OpenAI — Codex best practices: https://developers.openai.com/codex/learn/best-practices

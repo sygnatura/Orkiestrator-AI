@@ -1,4 +1,4 @@
-# ANALIZA I DECYZJE (v9)
+# ANALIZA I DECYZJE (v10)
 
 Do czytania, gdy chcesz zmieniać system. Do codziennej pracy niepotrzebne.
 
@@ -9,46 +9,85 @@ Kierownika technicznego, któremu można powierzyć projekt: rozumie system, ma 
 sesjami bez tłumaczenia od nowa, sam deleguje i sprawdza pracę, scala zweryfikowane zmiany,
 pyta tylko o decyzje właściciela, nie dryfuje, nie przeinżynierowuje — i nie rozdyma własnego
 wątku, bo to najdroższy zasób (każde wczytanie zjada limit, a pełny kontekst pogarsza decyzje).
+Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypisany do dzisiejszych modeli.
 
 
-## 2. Lekcje z v6 / v7 (dlaczego tamte wersje zawodziły)
+## 2. Lekcje z poprzednich wersji (dlaczego zawodziły)
 
-| Objaw w praktyce | Przyczyna w prompcie | Zmiana w v8 |
+| Objaw w praktyce | Przyczyna w prompcie | Zmiana |
 |---|---|---|
-| Kierownik ma słabe pojęcie o projekcie, decyzje mylące | Zakaz czytania kodu i uruchamiania testów; w repo tylko cel (VISION) i lista zadań (TODO), brak opisu działania systemu | `docs/PROJEKT.md` — opis systemu budowany przez subagentów przy przejęciu i aktualizowany po każdym etapie; kierownik może czytać i uruchamiać wszystko |
-| Pyta o zgodę na testy z „płatnym LLM”, choć projekt używa lokalnego | Brak faktów o środowisku + granice „pytaj, gdy może kosztować” bez obowiązku sprawdzenia | Sekcja „Środowisko i koszty” w PROJEKT.md i AGENTS.md; zasada „zanim zapytasz, sprawdź, czy ryzyko jest realne” |
-| Nic nie może zrobić, o wszystko pyta | Granice oparte na nieufności (edytuje tylko TODO.md, uruchamia tylko odczyt, merge/push robi właściciel) | Autonomia według ryzyka: lista „robisz sam” / „pytasz”; scalanie i push zweryfikowanych zmian bez pytania |
-| Nie wywołuje subagentów, właściciel kopiuje zlecenia | Model „właściciel jako kurier” | Kierownik sam uruchamia subagentów Claude i `codex exec` |
-| Każdy nowy wątek = wklejanie 30 KB promptu | Prompt jako wklejka | Skill `/kierownik` instalowany raz; nowy wątek = `/clear` + `/kierownik` |
-| Oszczędzanie kontekstu przez niewiedzę | „Czytaj tylko `git --stat`” | Oszczędzanie przez delegowanie: ciężkie czytanie robią subagenci, do kierownika wracają streszczenia |
+| Kierownik ma słabe pojęcie o projekcie, decyzje mylące | Zakaz czytania kodu i uruchamiania testów; w repo tylko cel (VISION) i lista zadań (TODO), brak opisu działania systemu | (v8) `docs/PROJEKT.md` — opis systemu budowany przez subagentów przy przejęciu i aktualizowany po każdym etapie; kierownik może czytać i uruchamiać wszystko |
+| Pyta o zgodę na testy z „płatnym LLM”, choć projekt używa lokalnego | Brak faktów o środowisku + granice „pytaj, gdy może kosztować” bez obowiązku sprawdzenia | (v8) Sekcja „Środowisko i koszty” w PROJEKT.md i AGENTS.md; zasada „zanim zapytasz, sprawdź, czy ryzyko jest realne” |
+| Nic nie może zrobić, o wszystko pyta | Granice oparte na nieufności (edytuje tylko TODO.md, uruchamia tylko odczyt, merge/push robi właściciel) | (v8) Autonomia według ryzyka: lista „robisz sam” / „pytasz”; scalanie i push zweryfikowanych zmian bez pytania |
+| Nie wywołuje subagentów, właściciel kopiuje zlecenia | Model „właściciel jako kurier” | (v8) Kierownik sam uruchamia subagentów Claude i CLI |
+| Każdy nowy wątek = wklejanie 30 KB promptu | Prompt jako wklejka | (v8) Skill `/kierownik` instalowany raz; nowy wątek = `/clear` + `/kierownik` |
+| Oszczędzanie kontekstu przez niewiedzę | „Czytaj tylko `git --stat`” | (v8) Oszczędzanie przez delegowanie: ciężkie czytanie robią subagenci, do kierownika wracają streszczenia |
+| Po wyjściu nowego modelu trzeba poprawiać pięć plików; recenzent „inny model niż autor” przestaje być jednoznaczny | Nazwy i wersje modeli (Opus 5.5, Fable 5.1) wpisane w SKILL.md, README, ZESPOL.md, ANALIZA | (v10) Klasy modeli; aliasy tylko w ZESPOL.md i we frontmatter agentów (decyzja 9) |
+| Pętla poprawek i recenzja nie działają z worktree subagentów | Instrukcje zakładały, że subagent wraca do tego samego worktree, odgałęzia się od lokalnego main i że jedną gałąź da się wyewidencjonować w dwóch worktree | (v10) Przepływ Git napisany pod faktyczną mechanikę `isolation: worktree` (decyzja 10) |
+| Kierownik „ustawia effort” subagentowi, którego ustawić nie może | Założenie, że effort jest parametrem wywołania | (v10) Effort tylko we frontmatter agentów; przy wywołaniu zmienia się wyłącznie klasę modelu |
 
 
-## 3. Kluczowe decyzje (v8, zaktualizowane w v9)
+## 3. Kluczowe decyzje (v8–v10)
 
 1. **Skill zamiast promptu.** `disable-model-invocation: true` sprawia, że opis skilla nie trafia
    do kontekstu innych sesji, a treść ładuje się tylko po `/kierownik`. Pliki pomocnicze
-   (SZABLONY, ZESPOL) ładują się na żądanie. Format Agent Skills jest otwarty — w awaryjnym
-   trybie inny agent może przeczytać SKILL.md jako zwykły plik.
+   (SZABLONY, ZESPOL) ładują się na żądanie z `${CLAUDE_SKILL_DIR}`. SKILL.md zakłada narzędzia
+   Claude Code (subagenci `kier-*`, worktree, komendy `/…`), więc inny agent nie poprowadzi według niego
+   projektu; zapas (Codex, `agy`) działa wyłącznie w rolach wykonawcy i recenzenta (SKILL.md, sekcja 7).
 2. **Dwa pliki stanu projektu**: PROJEKT.md (jak działa system — zmienia się wolno) i TODO.md
    (plan i stan — zmienia się po każdym zadaniu). VISION.md wchłonięty przez PROJEKT.md.
-3. **(v9) Claude Max jako główny zespół.** Przy dużym zapasie limitów Claude cała pętla działa
-   na subagentach Claude Code z modelem dobranym do roli: analityk Sonnet, wykonawca Sonnet/Opus,
-   recenzent Opus/Fable, architekt Fable 5.1, kierownik Opus 5.5. Subagenci są zdefiniowani w
-   `agents/kier-*.md` (model, effort, narzędzia, worktree), więc zlecenia są krótkie, a zasady ról
-   nie rozjeżdżają się między sesjami.
-4. **(v9) Niezależność weryfikacji w jednej rodzinie**: recenzent to inny model niż autor
-   (Sonnet → Opus, Opus → Fable), świeży kontekst, tylko kryteria + diff + polecenia — wzorzec
-   recenzji zalecany przez Anthropic. Recenzja innej rodziny (Antigravity / Codex) jest wybiórcza:
-   bezpieczeństwo, dane, pieniądze, kontrakty zewnętrzne, sprzeczne sygnały, dwie nieudane rundy,
-   cel etapu kluczowego dla MVP. Codex i Antigravity są też zapasem, gdy Claude jest niedostępny;
-   wybór zawsze według stanu limitów w ZESPOL.md — schemat nie zakłada wolnego limitu żadnego z nich.
+3. **Claude Max jako główny zespół.** Przy dużym zapasie limitów Claude cała pętla działa na subagentach
+   Claude Code z klasą modelu dobraną do roli: analityk STANDARDOWY (trywialne pytania → SZYBKI),
+   wykonawca STANDARDOWY/MOCNY, recenzent MOCNY/NAJMOCNIEJSZY, architekt NAJMOCNIEJSZY, kierownik MOCNY
+   (mapowanie klas na aliasy Claude Code: kierownik/ZESPOL.md). Subagenci są zdefiniowani w
+   `agents/kier-*.md` (model, effort, narzędzia, worktree), więc zlecenia są krótkie, a zasady ról nie
+   rozjeżdżają się między sesjami.
+4. **Niezależność weryfikacji w jednej rodzinie**: recenzent to model klasy wyżej niż autor
+   (STANDARDOWY → MOCNY, MOCNY → NAJMOCNIEJSZY), świeży kontekst, tylko kryteria + diff + polecenia —
+   wzorzec recenzji zalecany przez Anthropic. Gdy klasa NAJMOCNIEJSZY jest poza limitem, pracę klasy
+   MOCNY recenzuje ta sama klasa (świeży kontekst, testy uruchomione przez kierownika) i jest to
+   odnotowane. Recenzja innej rodziny (Antigravity / Codex) jest wybiórcza: bezpieczeństwo, dane,
+   pieniądze, kontrakty zewnętrzne, sprzeczne sygnały nierozstrzygnięte przez klasę NAJMOCNIEJSZY, dwie
+   nieudane rundy, cel etapu kluczowego dla MVP. Codex i Antigravity są też zapasem, gdy Claude jest
+   niedostępny; wybór zawsze według stanu limitów w ZESPOL.md — schemat nie zakłada wolnego limitu
+   żadnego z nich.
 5. **Pięć statusów**: TODO, W TOKU, DO SPRAWDZENIA, GOTOWE, ZABLOKOWANE. Status „do scalenia”
-   zniknął, bo kierownik scala sam zaraz po weryfikacji.
+   zniknął, bo kierownik scala sam zaraz po weryfikacji. Werdykt recenzenta ma trzy wartości:
+   ZALICZONE, DO POPRAWY (są uwagi blokujące), ZABLOKOWANE (kryterium niesprawdzalne — kierownik usuwa
+   przeszkodę i powtarza recenzję).
 6. **Uwagi recenzenta BLOKUJĄCE vs OPCJONALNE** — tylko blokujące wracają do poprawy (Anthropic:
-   recenzent zawsze coś znajdzie, gonienie wszystkiego prowadzi do przeinżynierowania).
+   recenzent zawsze coś znajdzie, gonienie wszystkiego prowadzi do przeinżynierowania). Dowodem jest
+   polecenie uruchomione w sesji recenzenta; kryterium bez dowodu to NIE SPRAWDZONO, nie OK.
 7. **Punkt kontrolny po każdym zadaniu** (commit TODO.md) — wątek można zamknąć w dowolnej chwili.
 8. **AGENTS.md jako jedyne źródło zasad, CLAUDE.md = `@AGENTS.md`** — zgodnie z aktualną
-   dokumentacją obu firm (szczegóły: kierownik/SZABLONY.md, sekcja 1).
+   dokumentacją obu firm (szczegóły: kierownik/SZABLONY.md, sekcja 1). Subagenci Claude dostają
+   CLAUDE.md projektu automatycznie, także w worktree, więc zlecenia dla nich nie powtarzają zasad.
+9. **(v10) Klasy modeli zamiast nazw.** Nazwy i wersje modeli wpisane w prompty degradują się po
+   każdym nowym wydaniu (Anthropic, prompt-audit), a aliasy Claude Code (`haiku`, `sonnet`, `opus`,
+   `fable`) wskazują zawsze najnowszy model danej linii. Dlatego SKILL.md, README i szablony mówią
+   o klasach SZYBKI / STANDARDOWY / MOCNY / NAJMOCNIEJSZY, a jedyne mapowanie klasa → alias → model —
+   wraz z effortem ról i procedurą aktualizacji po wyjściu nowego modelu lub nowej linii — jest
+   w ZESPOL.md. Alias zostaje tylko tam, gdzie wymaga go Claude Code: `model:` we frontmatter
+   `agents/kier-*.md` oraz parametr `model` narzędzia Agent przy nadpisaniu domyślnej klasy. Effort żyje
+   wyłącznie we frontmatter agentów (Claude Code nie ma go w parametrach wywołania). Nowa wersja
+   w tej samej linii = zero zmian; nowa linia = jedna tabela w ZESPOL.md i pole `model:` u agentów tej
+   klasy. Poziomy effort dobrane według zaleceń Anthropic dla obecnej generacji: `high` tylko dla
+   recenzenta i architekta (plan to długi dokument — `xhigh` podwaja tokeny bez zmierzonego zysku),
+   `medium` dla wykonawcy i analityka (zalecany punkt wyjścia dla agentowego kodowania; `low` pomija
+   weryfikację), effort kierownika domyślny dla modelu.
+10. **(v10) Przepływ Git pod mechanikę worktree Claude Code.** Subagent z `isolation: worktree`
+   dostaje za każdym razem nowy worktree w `.claude/worktrees/<nazwa>` na gałęzi `worktree-<nazwa>`,
+   odgałęzionej domyślnie od `origin/HEAD` (nie od HEAD sesji), widzi tylko commity, a worktree
+   z commitami nie znika sam. Stąd: wykonawca tworzy gałąź zadania jawnie od sha bazy ze zlecenia,
+   kierownik commituje wszystko przed zleceniem i proponuje `worktree.baseRef: head`, przed rundą
+   poprawek usuwa stary worktree (jedna gałąź nie może być w dwóch worktree), recenzent pracuje
+   w worktree autora (CLI: w odłączonym worktree), scalenie i revert są dokładnym skryptem
+   (`git revert -m 1`, revert rewertu przed ponownym scaleniem), sprzątanie obejmuje gałąź
+   `worktree-*`, a `.claude/worktrees/` jest wykluczony z Gita.
+11. **(v10) Jedno źródło dla każdej informacji.** Tabela ról istnieje tylko w ZESPOL.md (README
+   i SKILL.md odsyłają), zasady wykonawcy i recenzenta tylko w ich definicjach (szablony zleceń
+   powtarzają je wyłącznie w wierszach `[CLI]` dla narzędzi zapasowych), raport wykonawcy ma jeden
+   wzór w AGENTS.md i definicji agenta.
 
 
 ## 4. Czy to ma sens — uczciwa ocena
@@ -60,35 +99,39 @@ to dokładnie to, co Anthropic i OpenAI opisują jako sprawdzone praktyki długi
 Ograniczenia, o których trzeba wiedzieć:
 - To nadal instrukcje dla modelu, nie program. Model może je łamać; dlatego ważne reguły mają
   zabezpieczenie techniczne (uprawnienia, ochrona gałęzi), a stan jest kontrolowalny w Gicie.
-- Delegowanie ma narzut (zlecenie, worktree, raport, recenzja). Dla drobnych zmian kierownik
-  robi je sam — inaczej system byłby wolniejszy niż zwykła sesja Claude Code.
+- Delegowanie ma narzut (zlecenie, worktree, instalacja zależności w świeżym worktree, raport,
+  recenzja). Dla drobnych zmian kierownik robi je sam — inaczej system byłby wolniejszy niż zwykła
+  sesja Claude Code.
 - Weryfikacja w obrębie jednej rodziny (Claude → Claude) jest słabsza niż między rodzinami
-  (wspólne ślepe punkty). Łagodzą to: inny model, świeży kontekst, testy uruchamiane niezależnie
+  (wspólne ślepe punkty). Łagodzą to: klasa wyżej, świeży kontekst, testy uruchamiane niezależnie
   i recenzja innej rodziny w przypadkach ryzykownych.
-- Okno 1M tokenów kusi, żeby nie przekazywać wątku. Koszt każdej tury i jakość decyzji nadal
-  zależą od długości wątku — stąd przekazanie po etapie i bezpiecznik `/autocompact 400k`.
-- Dla małego projektu lub jednorazowej zmiany wystarczy zwykła sesja Claude Code z trybem planu;
-  kierownik zaczyna się opłacać, gdy ciągłość między sesjami staje się problemem.
+- Duże okno kontekstu kusi, żeby nie przekazywać wątku. Koszt każdej tury i jakość decyzji nadal
+  zależą od długości wątku — stąd przekazanie po etapie i bezpiecznik `/autocompact` (wartość
+  w ZESPOL.md).
+- Effortu subagenta nie da się zmienić przy wywołaniu — tylko w pliku agenta. Eskalacja trudnego
+  zadania to zmiana klasy modelu, nie effortu; to świadomy kompromis, żeby nie mnożyć definicji agentów.
 - Zapasowe `codex exec` i `agy` wymagają zalogowania i działania bez interakcji na tej maszynie —
   kierownik sprawdza to testem dymnym przy pierwszym uruchomieniu.
-- `agy --dangerously-skip-permissions` to agent bez żadnych pytań o zgodę. Ryzyko ogranicza
-  praca wyłącznie w worktree zadania i kontrola `git status` po każdym przebiegu, ale nie usuwa
-  go całkowicie (agent ma dostęp do całej maszyny). Producent zaleca kontener lub sandbox —
-  warto rozważyć, jeśli na tej maszynie są cenne dane poza repozytorium. Bez flagi `agy -p`
-  po cichu pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek
-  czytania stderr.
+- `agy --dangerously-skip-permissions` to agent bez żadnych pytań o zgodę i bez sandboxa. Worktree
+  porządkuje zmiany w repozytorium, ale nie ogranicza dostępu do maszyny. Producent zaleca kontener
+  lub sandbox — właściciel może wyłączyć `agy` jednym wpisem w ZESPOL.md. Bez flagi `agy -p` po cichu
+  pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek czytania stderr.
 - Zestawu nie przetestowano jeszcze na prawdziwym projekcie. Zalecany pilot: jeden istniejący
   projekt, jeden etap; poprawki SKILL.md na podstawie tego, gdzie kierownik się pomylił.
 
 
 ## 5. Świadomie pominięte
 
-Osobne prompty ról, PROJECT_WORKFLOW.md w repozytorium, pliki REPORT/REVIEW dla każdego zadania,
-osobny PLAN.md, statusy DRAFT/READY/ACCEPTED, lista funkcji w JSON, lokalny model w zespole,
-hooki „na wszelki wypadek”. Każdy z tych elementów można dodać, gdy pojawi się konkretny problem,
-którego obecny układ nie rozwiązuje.
+Długie osobne prompty ról powielające wspólne zasady (rolę opisuje krótka definicja subagenta
+`agents/kier-*.md`, zasady wspólne są tylko w AGENTS.md, zlecenia to szablony A–C z SKILL.md — zapas CLI
+dostaje pełny szablon), osobne definicje agentów na każdy poziom effortu, PROJECT_WORKFLOW.md
+w repozytorium, pliki REPORT/REVIEW dla każdego zadania, osobny PLAN.md, statusy DRAFT/READY/ACCEPTED,
+lista funkcji w JSON, lokalny model w zespole, trwała pamięć subagentów (`memory:` w frontmatter —
+wiedza ma być w plikach repo, nie w pamięci agenta), hooki „na wszelki wypadek”. Każdy z tych
+elementów można dodać, gdy pojawi się konkretny problem, którego obecny układ nie rozwiązuje.
 
 
 ## 6. Źródła
-Lista w kierownik/SZABLONY.md (sekcja „Źródła”). Poprzednia analiza (v7) z oceną materiałów
-wejściowych: archiwum/ANALIZA_v7.md.
+Lista w kierownik/SZABLONY.md (sekcja „Źródła”). Fakty o mechanice Claude Code (frontmatter subagentów
+i skilli, worktree, aliasy modeli, effort, uprawnienia) sprawdzone w dokumentacji 2026-10-06.
+Poprzednia analiza (v7) z oceną materiałów wejściowych: archiwum/ANALIZA_v7.md.
