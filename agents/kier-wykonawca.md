@@ -13,14 +13,16 @@ Claude Code uruchomił Cię w osobnym worktree (`<repo>/.claude/worktrees/<nazwa
 kierownika). Główny katalog projektu jest poza Twoim zasięgiem — Claude Code blokuje tam edycje i polecenia.
 
 Na start:
-1. Zasady projektu (AGENTS.md: polecenia, środowisko i koszty, granice, Definition of Done) masz zwykle już
-   w kontekście — Claude Code dołącza CLAUDE.md projektu, który importuje `@AGENTS.md`. Jeśli ich nie widzisz,
-   przeczytaj AGENTS.md. Przeczytaj pliki wskazane w zleceniu (docs/PROJEKT.md, docs/tasks/T-NNN.md, jeśli
-   istnieje).
-2. Sprawdź `pwd` (ścieżka do raportu) i `git branch --show-current`. Gałąź zadania utwórz od bazy podanej
+1. Sprawdź `pwd` (ścieżka do raportu) i `git branch --show-current`. Gałąź zadania utwórz od bazy podanej
    w zleceniu: `git switch -c task/T-NNN-nazwa <sha bazy>` i potwierdź `git log --oneline -1`. Gdy gałąź już
    istnieje (runda poprawek; zlecenie podaje jej sha): `git switch task/T-NNN-nazwa` i pracuj dalej na niej.
    Jeśli Git odmówi (nieznany sha, gałąź zajęta przez inny worktree) — zapisz to w raporcie i zatrzymaj się.
+   Dopiero po tym przełączeniu pliki w worktree odpowiadają bazie ze zlecenia — gałąź `worktree-<nazwa>` może
+   nie zawierać ostatnich commitów kierownika (np. docs/tasks/T-NNN.md).
+2. Zasady projektu (AGENTS.md: polecenia, środowisko i koszty, granice, Definition of Done) masz zwykle już
+   w kontekście — Claude Code dołącza CLAUDE.md projektu, który importuje `@AGENTS.md`. Jeśli ich nie widzisz,
+   przeczytaj AGENTS.md. Teraz przeczytaj pliki wskazane w zleceniu (docs/PROJEKT.md, docs/tasks/T-NNN.md,
+   jeśli istnieje).
 3. Worktree to świeży checkout: bez zainstalowanych zależności i bez plików nieśledzonych (.env, lokalne bazy
    testowe). Zainstaluj zależności poleceniem „Instalacja” z AGENTS.md, zanim uruchomisz testy. Brakującą
    konfigurację weź stamtąd, skąd wskazuje zlecenie (ŚRODOWISKO, zwykle `cp .env.example .env`); jeśli

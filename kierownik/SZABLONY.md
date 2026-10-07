@@ -319,7 +319,13 @@ nie warunkiem działania.
       "Bash(git log *)",
       "Bash(git diff *)",
       "Bash(git show *)",
+      "Bash(git fetch)",
       "Bash(git fetch *)",
+      "Bash(git pull --ff-only*)",
+      "Bash(git rev-parse *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(git remote -v)",
+      "Bash(git remote *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git switch *)",
@@ -328,7 +334,7 @@ nie warunkiem działania.
       "Bash(git revert *)",
       "Bash(git worktree *)",
       "Bash(git branch *)",
-      "Bash(git push origin *)"
+      "Bash(git push origin main)"
     ],
     "ask": [
       "Bash(git push origin --delete *)",
@@ -360,8 +366,12 @@ nie warunkiem działania.
 
 Uwagi:
 - `ask` odpowiada liście PYTASZ z SKILL.md, sekcja 6 (usuwanie gałęzi i worktree z niezapisaną pracą):
-  pytanie, nie blokada. `git branch -d` zostaje w allow — odmawia usunięcia niescalonej gałęzi, więc
-  sprzątanie po scaleniu nie pyta. Forma `git push origin :<gałąź>` nie jest objęta: wzorzec kończący się
+  pytanie, nie blokada. `git branch -d` i `git worktree remove` bez `--force` zostają w allow — Git sam
+  odmawia przy niescalonej gałęzi albo plikach spoza commitów, więc rutynowe sprzątanie po scaleniu nie pyta.
+- Allow dla push to dokładne polecenie `git push origin main` (dopasuj do nazwy gałęzi głównej), nie prefiks:
+  każdy push z dodatkowymi flagami pyta. Wzorce `deny` z `*` w środku polecenia (np. `git push * --force*`)
+  nie są potwierdzone w dokumentacji — po wklejeniu sprawdź w `/permissions`, czy `git push origin main --force`
+  jest odrzucany. Forma `git push origin :<gałąź>` nie jest objęta: wzorzec kończący się
   na `:*` koliduje ze składnią prefiksu reguł i zablokowałby każdy push do origin — nie dodawaj go.
 - Reguły `.env*` blokują też `.env.example` — jeśli przeszkadza, zawęź je. Reguły uprawnień działają
   osobno dla każdego narzędzia, a wzorce Bash są prefiksowe: `Read(./.env*)` nie zatrzymuje `cat .env`,

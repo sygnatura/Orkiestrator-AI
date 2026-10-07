@@ -22,7 +22,7 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
 | Nie wywołuje subagentów, właściciel kopiuje zlecenia | Model „właściciel jako kurier” | (v8) Kierownik sam uruchamia subagentów Claude i CLI |
 | Każdy nowy wątek = wklejanie 30 KB promptu | Prompt jako wklejka | (v8) Skill `/kierownik` instalowany raz; nowy wątek = `/clear` + `/kierownik` |
 | Oszczędzanie kontekstu przez niewiedzę | „Czytaj tylko `git --stat`” | (v8) Oszczędzanie przez delegowanie: ciężkie czytanie robią subagenci, do kierownika wracają streszczenia |
-| Po wyjściu nowego modelu trzeba poprawiać pięć plików; recenzent „inny model niż autor” przestaje być jednoznaczny | Nazwy i wersje modeli (Opus 5.5, Fable 5.1) wpisane w SKILL.md, README, ZESPOL.md, ANALIZA | (v10) Klasy modeli; aliasy tylko w ZESPOL.md i we frontmatter agentów (decyzja 9) |
+| Po wyjściu nowego modelu trzeba poprawiać pięć plików; recenzent „inny model niż autor” przestaje być jednoznaczny | Nazwy i wersje modeli (Opus 5.5, Fable 5.1) wpisane w SKILL.md, README, ZESPOL.md, ANALIZA | (v10) Klasy modeli; mapowanie klasa → alias tylko w ZESPOL.md (decyzja 9) |
 | Pętla poprawek i recenzja nie działają z worktree subagentów | Instrukcje zakładały, że subagent wraca do tego samego worktree, odgałęzia się od lokalnego main i że jedną gałąź da się wyewidencjonować w dwóch worktree | (v10) Przepływ Git napisany pod faktyczną mechanikę `isolation: worktree` (decyzja 10) |
 | Kierownik „ustawia effort” subagentowi, którego ustawić nie może | Założenie, że effort jest parametrem wywołania | (v10) Effort tylko we frontmatter agentów; przy wywołaniu zmienia się wyłącznie klasę modelu |
 
@@ -31,7 +31,7 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
 
 1. **Skill zamiast promptu.** `disable-model-invocation: true` sprawia, że opis skilla nie trafia
    do kontekstu innych sesji, a treść ładuje się tylko po `/kierownik`. Pliki pomocnicze
-   (SZABLONY, ZESPOL) ładują się na żądanie z `${CLAUDE_SKILL_DIR}`. SKILL.md zakłada narzędzia
+   (ZESPOL, ZLECENIA, SZABLONY) ładują się na żądanie z `${CLAUDE_SKILL_DIR}`. SKILL.md zakłada narzędzia
    Claude Code (subagenci `kier-*`, worktree, komendy `/…`), więc inny agent nie poprowadzi według niego
    projektu; zapas (Codex, `agy`) działa wyłącznie w rolach wykonawcy i recenzenta (SKILL.md, sekcja 7).
 2. **Dwa pliki stanu projektu**: PROJEKT.md (jak działa system — zmienia się wolno) i TODO.md
@@ -67,8 +67,11 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    `fable`) wskazują zawsze najnowszy model danej linii. Dlatego SKILL.md, README i szablony mówią
    o klasach SZYBKI / STANDARDOWY / MOCNY / NAJMOCNIEJSZY, a jedyne mapowanie klasa → alias → model —
    wraz z effortem ról i procedurą aktualizacji po wyjściu nowego modelu lub nowej linii — jest
-   w ZESPOL.md. Alias zostaje tylko tam, gdzie wymaga go Claude Code: `model:` we frontmatter
-   `agents/kier-*.md` oraz parametr `model` narzędzia Agent przy nadpisaniu domyślnej klasy. Effort żyje
+   w ZESPOL.md. Poza nim alias stoi tylko tam, gdzie wymaga go Claude Code albo jedno polecenie dla
+   właściciela: `model:` we frontmatter `agents/kier-*.md`, parametr `model` narzędzia Agent przy nadpisaniu
+   domyślnej klasy oraz `/model <alias>` w README i jego trwały odpowiednik `"model"` we wzorze settings.json
+   (oba obejmuje procedura z ZESPOL.md, gdy zmienia się alias klasy MOCNY); pozostałe wzmianki to przykłady,
+   nie routing. Effort żyje
    wyłącznie we frontmatter agentów (Claude Code nie ma go w parametrach wywołania). Nowa wersja
    w tej samej linii = zero zmian; nowa linia = jedna tabela w ZESPOL.md i pole `model:` u agentów tej
    klasy. Poziomy effort dobrane według zaleceń Anthropic dla obecnej generacji: `high` tylko dla
@@ -84,10 +87,14 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    w worktree autora (CLI: w odłączonym worktree), scalenie i revert są dokładnym skryptem
    (`git revert -m 1`, revert rewertu przed ponownym scaleniem), sprzątanie obejmuje gałąź
    `worktree-*`, a `.claude/worktrees/` jest wykluczony z Gita.
-11. **(v10) Jedno źródło dla każdej informacji.** Tabela ról istnieje tylko w ZESPOL.md (README
-   i SKILL.md odsyłają), zasady wykonawcy i recenzenta tylko w ich definicjach (szablony zleceń
-   powtarzają je wyłącznie w wierszach `[CLI]` dla narzędzi zapasowych), raport wykonawcy ma jeden
-   wzór w AGENTS.md i definicji agenta.
+11. **(v10) Jedno źródło; powtórzenia tylko świadome.** Mapowanie klasa → alias jest tylko w ZESPOL.md;
+   domyślna klasa i effort roli działają we frontmatter `agents/kier-*.md`, a tabela ról w ZESPOL.md je
+   streszcza (zmieniasz jedno, zmieniasz drugie). Routing klas do zadań prowadzi SKILL.md, sekcja 7 (bez
+   aliasów i effortu); README podaje tylko domyślne klasy i odsyła do ZESPOL.md. Zasady wspólne dla wszystkich
+   narzędzi (granice, Definition of Done, weryfikacja cudzej zmiany, wzór raportu) stoją w AGENTS.md projektu;
+   definicje `kier-*` powtarzają z nich to, co dotyczy roli — żeby rola działała także bez kompletnego
+   AGENTS.md — a szablony zleceń (ZLECENIA.md) tylko w wierszach `[CLI]` dla narzędzi zapasowych, które widzą
+   wyłącznie AGENTS.md i zlecenie. Powtórzone reguły muszą orzekać to samo: zmiana reguły = oba miejsca.
 
 
 ## 4. Czy to ma sens — uczciwa ocena
@@ -108,6 +115,8 @@ Ograniczenia, o których trzeba wiedzieć:
 - Duże okno kontekstu kusi, żeby nie przekazywać wątku. Koszt każdej tury i jakość decyzji nadal
   zależą od długości wątku — stąd przekazanie po etapie i bezpiecznik `/autocompact` (wartość
   w ZESPOL.md).
+- Dla małego projektu lub jednorazowej zmiany wystarczy zwykła sesja Claude Code z trybem planu; kierownik
+  zaczyna się opłacać, gdy ciągłość między sesjami staje się problemem.
 - Effortu subagenta nie da się zmienić przy wywołaniu — tylko w pliku agenta. Eskalacja trudnego
   zadania to zmiana klasy modelu, nie effortu; to świadomy kompromis, żeby nie mnożyć definicji agentów.
 - Zapasowe `codex exec` i `agy` wymagają zalogowania i działania bez interakcji na tej maszynie —

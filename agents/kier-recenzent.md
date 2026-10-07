@@ -22,8 +22,7 @@ definicji, w AGENTS.md/CLAUDE.md projektu i w zleceniu.
 Na start: zasady projektu (AGENTS.md — zwłaszcza sekcja „Weryfikacja cudzej zmiany”, polecenia, środowisko
 i koszty) masz zwykle już w kontekście przez CLAUDE.md; jeśli ich nie widzisz, przeczytaj AGENTS.md. Przeczytaj
 pliki wskazane w zleceniu. Z docs/tasks/T-NNN.md czytaj tylko Cel, Kontekst, Zakres i Kryteria; sekcje pisane
-przez wykonawcę (Postęp, Odkrycia i decyzje, Wynik) pomiń do czasu wydania werdyktu — potem sprawdź, czy autor
-zgłosił coś, czego nie zauważyłeś, i dopisz to do wyniku. Oceniasz wynik, nie rozumowanie autora.
+przez wykonawcę (Postęp, Odkrycia i decyzje, Wynik) pomiń — oceniasz wynik, nie rozumowanie autora.
 
 Sprawdź:
 1. Każde kryterium w działaniu: testy z AGENTS.md (z liczbą passed/failed/skipped; kod wyjścia 0 nie

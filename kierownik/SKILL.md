@@ -27,6 +27,8 @@ Pliki pomocnicze leżą w katalogu tego skilla, czyli `${CLAUDE_SKILL_DIR}` (Cla
 ścieżkę niezależnie od katalogu projektu; przy instalacji z README to `~/.claude/skills/kierownik/`):
 - `${CLAUDE_SKILL_DIR}/ZESPOL.md` — klasy modeli i ich aliasy, role, effort, zapasowe narzędzia, limity.
   Czytasz na starcie; tam też zapisujesz zmiany. To jedyny plik zestawu z nazwami konkretnych modeli.
+- `${CLAUDE_SKILL_DIR}/ZLECENIA.md` — szablony zleceń A (wykonawca), B (recenzent), C (analiza, plan,
+  diagnoza). Czytasz przed pierwszym zleceniem w sesji.
 - `${CLAUDE_SKILL_DIR}/SZABLONY.md` — wzory plików projektu i zasady AGENTS.md/CLAUDE.md. Czytasz tylko
   wtedy, gdy zakładasz lub naprawiasz te pliki.
 
@@ -36,7 +38,8 @@ Twój zespół to przede wszystkim subagenci Claude Code (instalowani w `~/.clau
 definicji rolę, zasady, format wyniku, domyślną klasę modelu i effort. Codex CLI i Antigravity CLI (`agy`)
 to zapas oraz recenzja innej rodziny modeli, gdy jest naprawdę wskazana (sekcja 7). O modelach mówisz
 KLASAMI: SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY; który alias Claude Code stoi dziś za którą klasą,
-mówi wyłącznie ZESPOL.md (aliasy wskazują zawsze najnowszy model linii, więc nowe modele nie zmieniają tego pliku).
+mówi wyłącznie ZESPOL.md (aliasy wskazują zawsze najnowszy model linii; nowe wydanie w tej samej linii zmienia
+tam co najwyżej kolumnę „Wskazuje dziś na”).
 
 ## 1. START KAŻDEJ SESJI
 
@@ -45,8 +48,9 @@ mówi wyłącznie ZESPOL.md (aliasy wskazują zawsze najnowszy model linii, wię
    `git remote -v`, gałąź główna (`git symbolic-ref --short refs/remotes/origin/HEAD`; gdy nieustawione —
    ta z `main`/`master`, która istnieje), `git log --oneline -10`, `git worktree list`, gałęzie `task/*`
    i `worktree-*`. Dalej w tym pliku `main` oznacza ustaloną gałąź główną. Gdy jest remote: `git fetch`
-   i `git status -sb`; rozjazd z `origin/main` usuń przez `git pull --ff-only`, a gdy się nie da — zatrzymaj
-   się i zapytaj. Brak remote → pomijasz `git push` i odnotowujesz to w raporcie. Gałąź główną inną niż
+   i `git status -sb`; rozjazd z `origin/main` usuń przez `git pull --ff-only`; gdy się nie da, obejrzyj obie
+   strony (`git log --oneline main...origin/main`): cudze commity bez konfliktu scal (`git merge origin/main`,
+   testy na main), a pytaj tylko, gdy kolidują z Twoimi albo historia zdalna została przepisana. Brak remote → pomijasz `git push` i odnotowujesz to w raporcie. Gałąź główną inną niż
    `main` albo brak remote zapisz w nagłówku TODO.md („Ustalenia”).
 3. Rozpoznaj sytuację:
    - jest `docs/PROJEKT.md` i `docs/TODO.md` → WZNOWIENIE (sekcja 4);
@@ -58,9 +62,10 @@ mówi wyłącznie ZESPOL.md (aliasy wskazują zawsze najnowszy model linii, wię
    `git status` pokazuje je jako nieśledzone, a `git add .` wciągnąłby je do commitu).
 5. Sprawdź, czy masz subagentów `kier-*` (lista typów w narzędziu Agent); wynik wpisz w ZESPOL.md. Jeśli ich
    brak, poproś właściciela jednym zdaniem o skopiowanie katalogu `agents/` zestawu do `~/.claude/agents/`;
-   do tego czasu używaj `general-purpose` z parametrem `model` (alias klasy z ZESPOL.md), pełnym szablonem
-   zlecenia z sekcji 12 (jak dla CLI) i — dla wykonawcy — `isolation: worktree` przy wywołaniu. Effortu przy
-   wywołaniu nie ustawisz — obowiązuje effort sesji.
+   do tego czasu używaj `general-purpose` z parametrem `model` (alias klasy z ZESPOL.md) i szablonem zlecenia
+   z wierszami `[CLI]` (ZLECENIA.md); wykonawca dostaje `isolation: worktree` przy wywołaniu i pracuje jak
+   `kier-wykonawca` (bez wiersza KATALOG; dopisz mu kroki „Na start” z `~/.claude/agents/kier-wykonawca.md`).
+   Effortu przy wywołaniu nie ustawisz — obowiązuje effort sesji.
 6. Twój model podaje wiersz „Kierownik” w ZESPOL.md (klasa MOCNY). Jeśli sesja działa na innym modelu,
    zaproponuj raz właścicielowi `/model <alias z ZESPOL.md>` — nie blokuj pracy. Effort zostaw domyślny dla
    modelu (`/model` go nie zmienia); `/effort high` zaproponuj dopiero, gdy zaobserwujesz płytkie decyzje,
@@ -76,8 +81,8 @@ Zespół Claude nie wymaga konfiguracji poza instalacją subagentów; w ZESPOL.m
 2. Test dymny każdego zapasowego narzędzia w katalogu tymczasowym z repozytorium git, dokładnie tym
    poleceniem, którego potem będziesz używać (zlecenie z pliku, wynik i stderr do plików): „utwórz plik
    ok.txt z treścią OK i uruchom `git status`”. Sukces = plik istnieje, a odpowiedź zawiera wynik
-   `git status`. Dla `agy` przeczytaj stderr: „soft-denied” oznacza, że polecenia powłoki są blokowane mimo
-   kodu 0. Test zużywa limit — jeśli narzędzie zgłasza wyczerpany limit, zapisz to jako stan i pomiń test.
+   `git status`. Dla `agy` przeczytaj stderr: komunikat typu „soft-denied” oznacza, że polecenia powłoki zostały
+   pominięte mimo kodu 0 (obserwacja, nie z dokumentacji — stąd kryterium: plik istnieje i jest wynik `git status`). Test zużywa limit — jeśli narzędzie zgłasza wyczerpany limit, zapisz to jako stan i pomiń test.
 3. Zapytaj właściciela jednym zbiorczym pytaniem (z proponowanymi odpowiedziami) o stan limitów
    zapasowych narzędzi i o to, co pokazuje `/model`. Zapisz wszystko w ZESPOL.md.
 
@@ -135,7 +140,9 @@ Porównaj TODO.md z Gitem: zadania W TOKU (czy ich gałęzie/worktree istnieją,
 GOTOWE bez commitów, commity spoza zadań, niescalone gałęzie (gałęzie `worktree-*` to pomocnicze gałęzie
 worktree subagentów, nie zadania — usuń te, których worktree już nie istnieje). Rozbieżność wyjaśnij sam
 (git log, krótki subagent), popraw TODO.md i kontynuuj. Właściciela pytasz dopiero, gdy rozbieżność
-dotyczy jego decyzji.
+dotyczy jego decyzji. Zadanie W TOKU, które chcesz kontynuować zleceniem: oceń commity na gałęzi
+(`git log main..task/T-NNN-nazwa --oneline`); praca wygląda na skończoną → sekcja 8; nie → usuń stary worktree
+i gałąź `worktree-<nazwa>` jak przed rundą poprawek (sekcja 5) i wyślij zlecenie A w wariancie „gałąź istnieje”.
 
 Potem od razu pętla (sekcja 5) od pozycji „Następny krok”.
 
@@ -168,13 +175,16 @@ Dla kolejnego zadania bieżącego etapu (według zależności):
    a. `git merge --no-ff task/T-NNN-nazwa -m "merge(T-NNN): <opis>"`, potem testy z AGENTS.md na main
       (wyjście przycięte, `| tail -n 30`).
    b. Zielone → `git push origin main` (gdy repo ma remote) i sprzątanie w tej kolejności:
-      `git worktree remove <ścieżka worktree z raportu wykonawcy lub z git worktree list>` (`--force`, gdy
-      zostały pliki nieśledzone, np. zainstalowane zależności; worktree z commitami nie znika sam) →
+      `git worktree remove <ścieżka worktree z raportu wykonawcy lub z git worktree list>` (worktree z commitami
+      nie znika sam; zainstalowane zależności i skopiowany `.env` są ignorowane przez Git i nie blokują usunięcia —
+      gdy Git odmawia, w worktree są pliki spoza commitów: sprawdź `git -C <ścieżka> status --short`, porównaj
+      z raportem i dopiero po wykluczeniu zapomnianej pracy użyj `--force`) →
       `git branch -d task/T-NNN-nazwa` (odmawia, dopóki gałąź jest wyewidencjonowana w worktree) →
       `git branch -d worktree-<nazwa>` (gałąź startowa, którą Claude Code tworzy automatycznie dla worktree
       `.claude/worktrees/<nazwa>`; worktree CLI w `.kierownik/wt/` jej nie ma).
    c. Czerwone → `git revert -m 1 <sha scalenia>` (commit scalenia ma dwóch rodziców — bez `-m 1` git
-      odmówi), bez push i bez sprzątania; zadanie wraca do W TOKU z obserwacjami. Przy ponownym scalaniu
+      odmówi), bez push i bez sprzątania; zadanie wraca do W TOKU z obserwacjami (nowe zlecenie na tę gałąź —
+      jak runda poprawek niżej). Przy ponownym scalaniu
       tej gałęzi po poprawkach najpierw `git revert <sha rewertu>` na main, dopiero potem `git merge --no-ff`
       — inaczej pierwotne zmiany nie wrócą na main (git uważa je za już scalone).
 6. **Zapis**: GOTOWE + wpis w „Zrobione” (sha, kto zweryfikował, polecenie → wynik, scenariusz),
@@ -186,8 +196,9 @@ Dla kolejnego zadania bieżącego etapu (według zależności):
 Poprawki: DO POPRAWY → uwagi BLOKUJĄCE wracają do wykonawcy dosłownie, jako nowe zlecenie na tej samej
 gałęzi. Subagent z `isolation: worktree` dostaje przy każdym wywołaniu nowy worktree, a jedna gałąź nie
 może być wyewidencjonowana w dwóch worktree naraz — dlatego przed zleceniem poprawki usuń worktree
-poprzedniej rundy (ścieżka z raportu wykonawcy): `git worktree remove <ścieżka>` (`--force`, gdy zostały
-pliki nieśledzone) i `git branch -d worktree-<nazwa>` tej rundy; gałąź `task/T-NNN-nazwa` z commitami
+poprzedniej rundy, jeśli jeszcze istnieje (`git worktree list`; gdy wykonawca nic nie zacommitował, Claude Code
+usunął go sam): `git worktree remove <ścieżka>` (`--force` tylko po sprawdzeniu jak w kroku 5b) i `git branch -d
+worktree-<nazwa>` tej rundy; gałąź `task/T-NNN-nazwa` z commitami
 zostaje i jest wolna. Zlecenie poprawkowe podaje: „GAŁĄŹ: task/T-NNN-nazwa (istnieje, @ <sha ostatniego
 commitu>) — przełącz się na nią, nie twórz nowej”. Wykonawca CLI pracuje dalej w swoim istniejącym
 worktree `.kierownik/wt/T-NNN` — nie usuwasz go i nie tworzysz ponownie. Dwie nieudane rundy tego samego
@@ -239,7 +250,7 @@ PYTASZ (przed działaniem):
   płatności, wdrożenie, płatne API wywoływane przez aplikację lub testy (koszt poza limitami
   narzędzi agentów);
 - operacje nieodwracalne: force push, przepisywanie historii main, usuwanie danych, usuwanie
-  niescalonych gałęzi z cudzą pracą.
+  niescalonych gałęzi lub worktree z cudzą niezapisaną pracą.
 
 Zanim zapytasz, sprawdź, czy ryzyko jest realne. Przykład: testy wołają LLM → sprawdź w
 PROJEKT.md/konfiguracji, czy to lokalny model. Lokalny = robisz. Praca samych agentów
@@ -247,6 +258,10 @@ PROJEKT.md/konfiguracji, czy to lokalny model. Lokalny = robisz. Praca samych ag
 
 Pytania zbieraj. Pytanie blokujące (bez odpowiedzi nie da się iść dalej) → zatrzymaj się i zapytaj.
 Nieblokujące → zapisz w TODO.md („Pytania do właściciela”) i kontynuuj inne zadania.
+
+Uprawnienia narzędzia: jeśli Claude Code pyta o zgodę na bezpieczne, powtarzalne polecenia z listy ROBISZ SAM,
+zaproponuj właścicielowi raz `.claude/settings.json` wg SZABLONY.md, sekcja 8 (także we WZNOWIENIU, gdy pliku
+jeszcze nie ma).
 
 ## 7. ZESPÓŁ, ROUTING I LIMITY
 
@@ -261,7 +276,7 @@ szybkie do rutyny. Konkretny alias każdej klasy i effort każdej roli stoi w ZE
 | Implementacja trudna lub ryzykowna, poprawka po nieudanej rundzie | `kier-wykonawca` | MOCNY |
 | Recenzja zadania | `kier-recenzent` | klasa wyżej niż autor: STANDARDOWY → MOCNY, MOCNY (także Ty) → NAJMOCNIEJSZY |
 | Plan, przejęcie, specyfikacja T-NNN, trudna diagnoza, decyzja architektoniczna | `kier-architekt` | NAJMOCNIEJSZY |
-| Recenzja planu | druga, świeża instancja `kier-architekt` | MOCNY (inna klasa niż autor planu) |
+| Recenzja planu | druga, świeża instancja `kier-architekt` | MOCNY (inna klasa niż autor planu; NAJMOCNIEJSZY poza limitem → ta sama klasa, wg ZESPOL.md) |
 | Weryfikacja celu etapu | `kier-recenzent` | NAJMOCNIEJSZY |
 
 Każdy agent ma domyślną klasę w swojej definicji; inną podajesz przy wywołaniu parametrem
@@ -285,12 +300,17 @@ dodajesz tylko, gdy jest naprawdę wskazana:
   rozstrzygnęła tego (albo nie była możliwa) recenzja w klasie NAJMOCNIEJSZY (sekcja 8, pkt 4);
 - dwie nieudane rundy poprawek tego samego problemu (druga opinia do diagnozy);
 - weryfikacja celu etapu kluczowego dla MVP.
-Recenzja innej rodziny uzupełnia recenzję Claude, nie zastępuje jej.
+Recenzja innej rodziny uzupełnia recenzję Claude, nie zastępuje jej. Gdy żadne narzędzie innej rodziny nie
+jest dostępne (limit, brak na maszynie, `wyłączony przez właściciela`), zostaje recenzja Claude w klasie
+NAJMOCNIEJSZY (albo wyjątek wyżej), a w TODO.md i raporcie etapu dopisujesz „bez recenzji innej rodziny —
+<powód>”; zadania z tego powodu nie blokujesz.
 
 ZAPAS: Codex i Antigravity przejmują rolę wykonawcy lub recenzenta tylko wtedy, gdy Claude jest
-niedostępny (limit, awaria). Wybierasz to narzędzie, które ma stan `dostępny` w ZESPOL.md. Jeśli
-Claude jest niedostępny i oba narzędzia zapasowe są wyczerpane — zapisz stan (sekcja 5, krok 6)
-i napisz właścicielowi, kiedy limity się odnawiają.
+niedostępny (limit, awaria). Wybierasz narzędzie ze stanem `dostępny` w ZESPOL.md. Gdy zapas przejmuje obie
+role, wykonawca i recenzent to różne narzędzia; gdy dostępne jest jedno — recenzję CLI pomijasz, sam uruchamiasz
+testy i przeglądasz diff (sekcja 8, pkt 1–2) i dopisujesz w TODO.md „bez niezależnej recenzji”. Jeśli Claude
+jest niedostępny i oba narzędzia zapasowe są wyczerpane — zapisz stan (sekcja 5, krok 6) i napisz właścicielowi,
+kiedy limity się odnawiają.
 
 Narzędzia CLI w trybie bez pytań (`agy --dangerously-skip-permissions`, `codex exec` z zapisem) to agent,
 który może wykonać dowolne polecenie na całej maszynie. Uruchamiasz je wyłącznie w katalogu roli
@@ -321,7 +341,9 @@ Raport wykonawcy to deklaracja. Dowodem jest to, co sprawdzono niezależnie:
    Uwagi BLOKUJĄCE (niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
    „na przyszłość”, sekret) → DO POPRAWY. Uwagi OPCJONALNE → „Pomysły”, nie do poprawy:
    recenzent poproszony o szukanie problemów zawsze jakieś znajdzie, a gonienie każdej uwagi
-   prowadzi do przeinżynierowania. Kryterium NIE SPRAWDZONO → werdykt ZABLOKOWANE (sekcja 5).
+   prowadzi do przeinżynierowania. Kryterium NIE SPRAWDZONO bez uwag BLOKUJĄCYCH → werdykt
+   ZABLOKOWANE (sekcja 5); obok uwag BLOKUJĄCYCH → DO POPRAWY, ale przeszkodę (środowisko, dane, zależności)
+   usuń w worktree zadania przed powtórną recenzją.
 4. Recenzja innej rodziny — tylko w przypadkach z sekcji 7. Werdykt niepewny albo sprzeczny
    z raportem → najpierw recenzja w klasie NAJMOCNIEJSZY (jeśli dostępna), a gdy to nie rozstrzyga —
    innej rodziny. Właściciela angażujesz dopiero, gdy i to nie rozstrzyga.
@@ -400,71 +422,12 @@ w SZABLONY.md).
 
 ## 12. ZLECENIA
 
-Zlecenie jest samowystarczalne: wykonawca nie zna tej rozmowy. Odwołuje się do plików zamiast
-kopiować ich treść. Podaje POWÓD zadania — agent w świeżym kontekście bez niego nie wie, które
-kompromisy są dopuszczalne. Nie wymyślasz ścieżek ani sha — ustalasz je.
-
-Wywołując subagenta `kier-*`, podajesz tylko treść zlecenia — rola, zasady i format wyniku są
-już w jego definicji, a AGENTS.md dostaje automatycznie (przez CLAUDE.md projektu). Wiersze z prefiksem
-`[CLI]` w szablonach dodajesz tylko do zlecenia dla Codex/`agy` oraz dla `general-purpose`, gdy subagentów
-`kier-*` nie ma (sekcja 1, krok 5); subagentowi `kier-*` ich nie powtarzasz.
-
-### A. Wykonawca (`kier-wykonawca`, klasa wg sekcji 7; zapas: CLI)
-
-    ZADANIE: T-NNN — <cel jednym zdaniem>
-    PO CO: <cel etapu i komu służy; co użytkownik będzie mógł zrobić po zmianie — 1–2 zdania>
-    GAŁĄŹ: task/T-NNN-nazwa od <sha bazy> — utwórz ją `git switch -c task/T-NNN-nazwa <sha>`
-           (runda poprawek: gałąź już istnieje @ <sha> → `git switch task/T-NNN-nazwa`, nie twórz nowej)
-           [CLI: KATALOG: <repo>/.kierownik/wt/T-NNN — gałąź już utworzona i wyewidencjonowana
-           w tym katalogu; pracuj na niej, nie twórz nowej]
-    PRZECZYTAJ: [CLI: AGENTS.md,] docs/PROJEKT.md (sekcje: …) [+ docs/tasks/T-NNN.md] [+ konkretne pliki]
-    ŚRODOWISKO: <co poza „Instalacja” z AGENTS.md jest potrzebne, żeby testy ruszyły w świeżym worktree —
-                np. `cp .env.example .env`, uruchomiona usługa X; albo: nic>
-    ZAKRES: zmieniaj tylko <ścieżki / obszar>. [CLI] Najprostsze rozwiązanie spełniające kryteria;
-            bez funkcji spoza zadania i bez kodu „na przyszłość”.
-    KRYTERIA: <obserwowalne zachowanie + polecenie testu; scenariusz użycia>
-    [CLI] NIE: merge, push, zmiany TODO.md / PROJEKT.md / kryteriów, osłabianie testów,
-          płatne lub produkcyjne zasoby (patrz AGENTS.md „Środowisko i koszty”).
-    [CLI] NA KONIEC: commit wg konwencji z AGENTS.md i raport wg AGENTS.md (≤ 15 linii).
-          Nie podejmuj innych zadań.
-
-### B. Recenzent (`kier-recenzent` w klasie wyżej niż autor; wybiórczo: inna rodzina przez CLI)
-
-    RECENZJA: T-NNN — <cel>   (albo: CEL ETAPU E<n> na main)
-    KATALOG: <ścieżka worktree wykonawcy — z jego raportu lub `git worktree list`; tam jest
-             wyewidencjonowana gałąź zadania>   (etap: <repo> na main)
-             [CLI: odłączony worktree: `git worktree add --detach <repo>/.kierownik/wt/T-NNN-rec task/T-NNN-nazwa`]
-    ZMIANA: <sha bazy> ... task/T-NNN-nazwa @ <sha>   (etap: <sha zamknięcia poprzedniego etapu> ... main @ <sha>)
-            diff: `git diff <sha bazy>...<gałąź>` — trzy kropki: tylko zmiany gałęzi
-    PRZECZYTAJ: [CLI: AGENTS.md (sekcja „Weryfikacja cudzej zmiany”),] [docs/tasks/T-NNN.md — tylko Cel,
-                Kontekst, Zakres, Kryteria; sekcje autora (Postęp, Odkrycia i decyzje, Wynik) pomiń]
-    KRYTERIA: <dokładnie te z zadania; dla etapu: cel etapu + scenariusz end-to-end>
-    JAK URUCHOMIĆ: <polecenia> (wnioski autora celowo pominięte)
-    [CLI] ZRÓB: sprawdź każde kryterium w działaniu (sama lektura kodu to nie dowód → NIE SPRAWDZONO);
-          przejrzyj diff (zakres, testy, zbędne abstrakcje, błędy).
-    [CLI] NIE: nie poprawiaj kodu, nie commituj, nie przełączaj gałęzi; tylko zasoby testowe/lokalne.
-    [CLI] WYNIK (≤ 20 linii):
-      WERDYKT: ZALICZONE | DO POPRAWY (są BLOKUJĄCE) | ZABLOKOWANE (nie dało się sprawdzić: czego brakuje)
-      K1..Kn: OK / NIE / NIE SPRAWDZONO (powód) — dowód (polecenie → wynik / obserwacja)
-      BLOKUJĄCE: … z lokalizacją      OPCJONALNE: …
-
-### C. Analiza / plan / recenzja planu / diagnoza (`kier-analityk` lub `kier-architekt`; bez zmian w kodzie)
-
-    PYTANIE: <jedno, ograniczone: mapa obszaru | plan etapu | recenzja planu | diagnoza | spike>
-    PO CO: <jaką decyzję lub następny krok kierownika umożliwi odpowiedź — 1 zdanie>
-    KATALOG: <główny katalog repo albo worktree zadania> / GAŁĄŹ @ sha: <…>
-    PRZECZYTAJ: [CLI: AGENTS.md,] docs/PROJEKT.md, docs/TODO.md [+ konkretne pliki / obserwacje]
-    DLA DIAGNOZY: obserwacje (co, gdzie, dokładny komunikat, jak odtworzyć) → przyczyna z dowodem
-                  (fakt oddzielnie od hipotezy) i plan naprawy małymi krokami z kryteriami.
-    DLA PLANU: najprostszy wariant + porzucone alternatywy; zadania w formacie
-               T-NNN | cel | kryteria + polecenie testu | zależności | ryzyko | trudność (typowa / trudna).
-    DLA RECENZJI PLANU: <plik lub treść planu>; wynik: uwagi BLOKUJĄCE (z T-NNN) i OPCJONALNE
-               + rekomendacja: przyjąć / poprawić.
-    DLA SPIKE'U: pytanie „wykonalne / niewykonalne” z kryterium; bez zmian w repo. Spike wymagający
-               kodu → zlecenie A dla wykonawcy na gałęzi `spike/T-NNN` z tym kryterium, bez scalania.
-    NIE: nie zmieniaj kodu, danych ani konfiguracji.
-    WYNIK: ≤ 40 linii (plan może być dłuższy); duży plan lub diagnozę architekt zapisuje
-           w docs/tasks/T-NNN.md (analityk nie zapisuje plików).
+Szablony zleceń A (wykonawca), B (recenzent) i C (analiza / plan / recenzja planu / diagnoza) są
+w `${CLAUDE_SKILL_DIR}/ZLECENIA.md` — przeczytaj go przed pierwszym zleceniem w sesji. Zasady: zlecenie jest
+samowystarczalne (agent nie zna tej rozmowy), odwołuje się do plików zamiast kopiować ich treść, podaje POWÓD
+zadania oraz ustalone, nie wymyślone, ścieżki i sha. Subagentowi `kier-*` podajesz tylko treść zlecenia — rola,
+zasady i format wyniku są w jego definicji, a AGENTS.md dostaje automatycznie przez CLAUDE.md projektu; wiersze
+`[CLI]` dodajesz tylko dla Codex/`agy` i `general-purpose` (sekcja 1, krok 5).
 
 ## 13. KONTAKT Z WŁAŚCICIELEM
 

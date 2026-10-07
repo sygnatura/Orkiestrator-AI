@@ -27,9 +27,9 @@ subagentów są widoczne w każdej sesji — to kilka linii.
 Kopiuj tylko instrukcje; `ZESPOL.md` to stan Twojej maszyny — nie nadpisuj go.
 
     # Linux / macOS
-    cp kierownik/SKILL.md kierownik/SZABLONY.md ~/.claude/skills/kierownik/ && cp agents/*.md ~/.claude/agents/
+    cp kierownik/SKILL.md kierownik/ZLECENIA.md kierownik/SZABLONY.md ~/.claude/skills/kierownik/ && cp agents/*.md ~/.claude/agents/
     # Windows (PowerShell)
-    Copy-Item .\kierownik\SKILL.md, .\kierownik\SZABLONY.md $HOME\.claude\skills\kierownik\
+    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md $HOME\.claude\skills\kierownik\
     Copy-Item .\agents\*.md $HOME\.claude\agents\
 
 Jeśli zmienił się szablon ZESPOL.md, porównaj go ręcznie ze swoim.
@@ -89,10 +89,10 @@ kluczowego dla MVP. Gdy Claude jest niedostępny, zapas przejmuje wykonawstwo i 
 Niezależne zadania etapu idą równolegle (do 4 wykonawców naraz, każdy w swoim worktree).
 
 **Nowe modele.** Aliasy `opus`, `sonnet`, `haiku`, `fable` wskazują zawsze najnowszy model swojej
-linii, więc po wydaniu nowej wersji nic nie zmieniasz. Gdy pojawi się nowa linia (inna nazwa) albo
-chcesz przestawić rolę na inny model, napisz: `zespół: model <nazwa> dostępny w planie — użyj go
-w roli <architekt|recenzent|wykonawca|analityk>`; kierownik zaktualizuje ZESPOL.md oraz pole `model:`
-(w razie potrzeby także `effort:`) w `~/.claude/agents/kier-<rola>.md` — pełne ID modelu też działa.
+linii, więc po wydaniu nowej wersji nic nie zmieniasz. Gdy pojawi się nowa linia (inna nazwa), napisz:
+`zespół: wyszedł nowy model <nazwa>` — kierownik zaproponuje, do której klasy (SZYBKI…NAJMOCNIEJSZY) go
+przypisać, a po Twoim potwierdzeniu zaktualizuje tabelę klas w ZESPOL.md i pole `model:` (alias albo pełne ID
+modelu; w razie potrzeby także `effort:`) u agentów tej klasy w `~/.claude/agents/kier-*.md`.
 Czy model mieści się w limicie planu, widzisz w `/model`: dopisek „Requires usage credits” oznacza, że
 pobiera kredyty — zgłoś to `zespół: <alias> wymaga credits`, a kierownik przestawi rolę na inną klasę
 z planu i odnotuje to w ZESPOL.md.
@@ -160,7 +160,7 @@ worktree, `/clear`, `/model`), więc Codex ani `agy` nie poprowadzą według nie
 etapu modele Claude mają limit lub awarię, kierownik przekazuje role wykonawcy i recenzenta zapasowym
 CLI (SKILL.md, sekcja 7 „ZAPAS”). Gdy Claude jest niedostępny całkiem, nic nie przepada: stan projektu
 jest w plikach (`docs/TODO.md`, `docs/PROJEKT.md`, `AGENTS.md`) — możesz ręcznie zlecić pojedyncze
-zadanie Codexowi lub `agy` szablonem A z SKILL.md (sekcja 12), a po powrocie Claude kierownik wznowi
+zadanie Codexowi lub `agy` szablonem A z `kierownik/ZLECENIA.md`, a po powrocie Claude kierownik wznowi
 pracę z Gita i TODO.md (tryb WZNOWIENIE).
 
 ## Pliki tego repozytorium
@@ -169,6 +169,7 @@ pracę z Gita i TODO.md (tryb WZNOWIENIE).
 |---|---|
 | `kierownik/SKILL.md` | Metoda pracy kierownika |
 | `kierownik/ZESPOL.md` | Klasy modeli i aliasy, role, effort, zapas, limity (jeden na maszynę) |
+| `kierownik/ZLECENIA.md` | Szablony zleceń dla wykonawcy, recenzenta i analityka/architekta |
 | `kierownik/SZABLONY.md` | Wzory plików projektu + zasady AGENTS.md/CLAUDE.md wg OpenAI i Anthropic |
 | `agents/kier-*.md` | Definicje subagentów: analityk, wykonawca, recenzent, architekt |
 | `ANALIZA.md` | Dlaczego tak; lekcje z poprzednich wersji; źródła |

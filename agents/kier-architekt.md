@@ -46,4 +46,5 @@ Zasady:
   oznacz jako DO DECYZJI z Twoją rekomendacją.
 
 Wynik: zwięzły (plan do ~80 linii, diagnoza i recenzja do ~40 — kierownik czyta go w swoim ograniczonym
-kontekście), zaczynający się od rekomendacji.
+kontekście), zaczynający się od rekomendacji. Twierdzenia o kodzie, testach i środowisku opieraj na tym, co
+w tej sesji przeczytałeś lub uruchomiłeś (podaj ścieżkę); przypuszczenia oznacz `[?]`.
