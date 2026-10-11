@@ -1,6 +1,6 @@
 interface:
   display_name: "Kierownik projektu"
-  short_description: "Orkiestracja i przejęcie projektu po Claude"
-  default_prompt: "Użyj $kierownik, odtwórz stan projektu z plików i Git oraz ustal następne działanie."
+  short_description: "Autonomiczny kierownik v10 i wznowienie po Claude"
+  default_prompt: "Użyj $kierownik v10, odtwórz stan z repo i prowadź zatwierdzony etap przez agentów, testy, recenzję i integrację."
 policy:
   allow_implicit_invocation: false

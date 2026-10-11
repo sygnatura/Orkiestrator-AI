@@ -1,0 +1,38 @@
+{
+  "source_repository": "sygnatura/Orkiestrator-AI",
+  "source_branch": "claude/eloquent-meitner-98b5px",
+  "source_commit": "c45c525445034b7859f66dda158e2226489db4b2",
+  "source_version": "v10",
+  "files": {
+    "ANALIZA.md": {
+      "sha256": "d978e82f5446c5cc93ac0cbafc415343e939de91c92089ab3e61d549b3712c49"
+    },
+    "README.md": {
+      "sha256": "481d31080daa162c840abcaad746857f93961eba2ff0623a6b0fd40ec92665f1"
+    },
+    "agents/kier-analityk.md": {
+      "sha256": "39d09e0056c384ebb64b53d8541e795afe727490ee4eb5d2da6dbe4f2de76908"
+    },
+    "agents/kier-architekt.md": {
+      "sha256": "a955b221d130178b7bf618781886181958b3628522c8398d53ad2b7ea411abba"
+    },
+    "agents/kier-recenzent.md": {
+      "sha256": "1bd5abfc12e36d4083721ea5ec7e884c80da692132ecd781b877af804cfbf5dc"
+    },
+    "agents/kier-wykonawca.md": {
+      "sha256": "13f8f05034002099383435ddc20d8371f67b96edb35aa879b9b8d9bd0f90c137"
+    },
+    "kierownik/SKILL.md": {
+      "sha256": "6e1ce92749dd33f904503740daa6c579a03aae8ba6faa6ddcbd2abe2923cc1a8"
+    },
+    "kierownik/SZABLONY.md": {
+      "sha256": "945ebc1d463baf4138f0473a4a231aa0dbbc2e74759351386c7c6f9a201fe210"
+    },
+    "kierownik/ZESPOL.md": {
+      "sha256": "1180b688095d0eb8b5c4f1dde824932cd0aaffdd529c2676b25f223a38f9021b"
+    },
+    "kierownik/ZLECENIA.md": {
+      "sha256": "a426f1dab08242cbee6e3db4d9c3eab0008bc89f7e024777e1cc476eb3b0247a"
+    }
+  }
+}

@@ -1,111 +1,147 @@
-# Orkiestracja projektu w Codex
+# Kierownik v10 dla Codex
 
-Pakiet przenosi role z `ORKIESTRATOR_PROJEKTU.md` (v6),
-`ORKIESTRATOR_PROJEKTU_SDD.md`, `ARCHITEKT_PROJEKTU.md` i
-`PROJECT_WORKFLOW.md` do skills Codex. Oryginały pozostają bez zmian.
+Odpowiednik **kierownika v10 z gałęzi
+`claude/eloquent-meitner-98b5px`**, commit
+[`c45c525`](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2).
+Zastępuje wcześniejszy port v6/SDD w tym folderze. Oryginalne pliki na
+`main` oraz gałąź Claude pozostają bez zmian.
 
-Wyniki sprawdzenia pakietu i jego ograniczenia zapisano w
-[VALIDATION.md](VALIDATION.md).
+Po `$kierownik` Codex sam prowadzi zatwierdzony etap: analizuje projekt,
+deleguje wykonanie, uruchamia testy, odbiera niezależną recenzję, integruje
+i wypycha sprawdzone zmiany według procesu repo. Drobiazgi może robić sam.
+Pyta o decyzje właściciela i rzeczywiste ryzyko, zgodnie z autonomią v10.
+Stan i wiedza pozostają w **tych samych `docs/PROJEKT.md` i `docs/TODO.md`**,
+więc przełączenie Claude ↔ Codex nie wymaga nowej kolejki ani odtwarzania planu.
 
-`kierownik` prowadzi kolejkę, przygotowuje zlecenia i odbiera dowody.
-`architekt` przygotowuje plan i specyfikacje oraz diagnozuje problemy przekrojowe.
-Wykonawca i weryfikator dostają osobne zlecenia; kierownik nie implementuje
-ani nie recenzuje własnej pracy. Domyślnie właściciel uruchamia te sesje,
-tak jak w oryginalnym v6. Dostępna jest także jawnie włączana delegacja
-przez narzędzia agentów Codex, jeśli klient je udostępnia.
+## Instalacja
 
-## Instalacja w repozytorium prowadzonego projektu
-
-Wymagane: Python 3, Git i klient Codex obsługujący skills. Pakiet nie wymaga
-zewnętrznych bibliotek, kluczy API ani zmiany konfiguracji modeli.
-
-Z katalogu tego pakietu uruchom, podstawiając **repozytorium projektu**:
+Wymagane: Python **3.11+**, Git i klient Codex ze skills. Nie ma zależności
+Python do instalowania. Z katalogu `codex/` na swojej maszynie:
 
 ```bash
-python3 install.py --project /sciezka/do/projektu
+python3 install.py --user --register-agents
 ```
 
-W PowerShell:
+PowerShell:
 
 ```powershell
-py .\install.py --project 'C:\dev\projekt'
+py .\install.py --user --register-agents
 ```
 
-Instalator kopiuje dwa samowystarczalne foldery do
-`<projekt>/.agents/skills/kierownik/` i `<projekt>/.agents/skills/architekt/`.
-Nie zastępuje istniejących skills, `AGENTS.md`, `CLAUDE.md` ani dokumentacji
-projektu. Powtórna instalacja identycznej wersji jest bez zmian; kolizja
-przerywa instalację przed kopiowaniem. Aktualizację różniącej się wersji
-wykonaj osobno po przejrzeniu różnic i zachowaniu swoich zmian.
+Instalacja raz na maszynę: skill w `~/.agents/skills/kierownik`, cztery role
+TOML wewnątrz niego, brakujące wpisy `agents.kier-*` w `~/.codex/config.toml`.
+Model, uprawnienia, MCP i inne ustawienia nie są zastępowane. Konflikt
+istniejącej roli przerywa przed instalacją; nie nadpisujemy cudzej definicji.
+Installer nie zmienia oryginalnych skills/agentów/settings Claude.
 
-Otwórz nową sesję Codex w **repozytorium projektu**, aby klient odświeżył
-katalog skills. Wywołaj skill przez `$kierownik` (lub wybierz go w interfejsie
-klienta). Przykładowy prompt:
+Alternatywnie tylko w jednym repozytorium:
+
+```bash
+python3 install.py --project /sciezka/do/projektu --register-agents
+```
+
+Wtedy instalacja trafia do `<projekt>/.agents/skills/kierownik` i dodaje role
+do `<projekt>/.codex/config.toml`. Klient może wymagać zaufania repo, aby
+odczytać projektowy config; installer nie nadaje zaufania automatycznie.
+Nie instaluj obu wariantów o tej samej nazwie dla tego samego projektu;
+sprawdź w kliencie, którą instalację skill faktycznie wybrano.
+
+`--register-agents` jest opcjonalne: bez niego dostępne pozostają skill
+i helper CLI, który odczytuje te same instrukcje ról. Jeśli klient blokuje
+narzędzia native, to nie powód do wyłączenia sandboxa.
+
+## Start i kontynuacja po Claude
+
+Otwórz **nową sesję Codex w repozytorium prowadzonego projektu** i wpisz:
 
 ```text
 $kierownik
-Przejmij projekt po kierowniku Claude. Odtwórz stan z istniejącej kolejki,
-Git, planu oraz raportów i recenzji. Zachowaj proces i kontynuuj od ostatniego
-potwierdzonego punktu. Domyślnie przygotowuj mi zlecenia do osobnych sesji.
 ```
 
-Opcjonalnie można wskazać handoff lub rzeczywistą ścieżkę rejestru:
+Do przejęcia:
 
 ```text
-$kierownik Kontynuuj według handoff w WORKBOARD.md; aktywne zadanie CDI-17.
+$kierownik Przejmij projekt po kierowniku Claude v10. Wznów z istniejących
+PROJEKT.md, TODO.md i Git. Zachowaj aktywne zadania, statusy i zatwierdzony
+plan; kontynuuj zapisany następny krok bez ponownego zlecania trwającej pracy.
 ```
 
-Architekta wywołuj w osobnej sesji przez `$architekt`, przekazując zlecenie
-kierownika. Pakiet przechowywany w `codex/skills/` jest materiałem do
-instalacji; samo dodanie go do tego repo nie rejestruje skills w innym projekcie.
+Najlepiej wcześniej poprosić Claude o aktualny checkpoint/handoff w TODO.
+Codex wykorzystuje te same statusy **TODO, W TOKU, DO SPRAWDZENIA, GOTOWE,
+ZABLOKOWANE**, karty `docs/tasks/T-NNN.md`, DONE i ADR. Zachowuje istniejące
+odpowiedniki. Nie wymaga osobnego PLAN/WORKFLOW/TASK/VERIFY/REPORT/REVIEW.
 
-## Różnice względem Claude Code
+Ukryta pamięć Claude, niezapisane pliki i działające procesy na innej
+maszynie nie przenoszą się automatycznie. Udostępnij aktualny checkout
+lub utrwal/przenieś potrzebne artefakty. Kierownik ustala los istniejącego
+wykonawcy przed kolejnym zleceniem. Po powrocie do Claude jego `/kierownik`
+odczyta ten sam wspólny stan. `codex resume` dotyczy wyłącznie sesji Codex.
 
-| Obszar | Wersja Codex |
+## Zespół i architektura Codex
+
+| Rola | Zadanie |
 |---|---|
-| Wejście w rolę | `SKILL.md` z nazwą i opisem; `$kierownik` / `$architekt` |
-| Reguły projektu | Codex używa `AGENTS.md`; przy przejęciu czyta także istotne `CLAUDE.md` i wskazane w nim pliki. Nie zakłada obsługi importu `@AGENTS.md`. |
-| Stan | Ta sama kolejka i te same ID, plan, TASK/VERIFY, REPORT/REVIEW i Git; bez odrębnej kolejki Codex |
-| Starszy v6 | Zachowanie statusów `TODO`, `DO SPRAWDZENIA` i płaskich `docs/tasks/T-NNN.md`; żadnej automatycznej migracji do SDD |
-| Delegacja | Ręczna domyślnie; natywna po autoryzacji i sprawdzeniu narzędzi klienta. Brak narzędzi oznacza gotowy prompt, nie pozorne uruchomienie. |
-| Recenzja | Osobna sesja **i inny model niż autor**, najlepiej inna rodzina; subagent z tym samym modelem daje tylko dodatkowe sprawdzenie |
-| Uprawnienia | Skill nie zmienia sandboxa ani zgód; ograniczenia klienta nadal obowiązują |
-| Wznowienie | Odtworzenie stanu z plików i Git. `codex resume` dotyczy sesji Codex; nie importuje sesji Claude. |
-| Cloud | Korzystanie z istniejącego checkoutu w izolowanym zadaniu; bez tworzenia worktree, chyba że właściciel tego zażąda |
+| Kierownik | Główna sesja: stan, routing, testy, integracja, raport etapu |
+| `kier-analityk` | Odczyt i krótkie streszczenia |
+| `kier-wykonawca` | Jeden task w wskazanym katalogu, commit i raport |
+| `kier-recenzent` | Świeży kontekst, kryteria/diff/scenariusz; bez napraw |
+| `kier-architekt` | Plan, recenzja planu, specyfikacja i diagnoza |
 
-Wywołanie `$kierownik` nie uruchamia lokalnego Claude, Qwen ani zewnętrznego
-modelu. Dostępność sesji/modelu trzeba sprawdzić. Nie zapisujemy arbitralnych
-identyfikatorów modeli, profili ani wymaganej flagi `multi_agent`: zależą od
-wersji klienta i uprawnień konta. Prompt nie jest techniczną kontrolą dostępu.
+Konkretnych modeli nie pinujemy. [ZESPOL.md](skills/kierownik/ZESPOL.md)
+mapuje klasy na modele dostępne na Twoim koncie. TOML ról początkowo
+dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
+Recenzent preferuje klasę wyżej niż autor; wyjątek v10 dopuszcza tę samą
+klasę/model w świeżym kontekście z własnymi testami kierownika i zapisem
+odstępstwa. Recenzja innej rodziny jest wybiórcza, a jej brak jest odnotowany.
 
-## Przejęcie bez utraty punktu kontynuacji
+Natywny subagent Codex nie jest automatycznie worktree Claude. Jeśli API
+nie zapewnia osobnego katalogu, kierownik uruchamia świeże `codex exec`
+przez [run_agent.py](skills/kierownik/scripts/run_agent.py), z określonym `-C`,
+rolą w developer_instructions, zleceniem przez stdin i raportem/stderr do
+plików. Nie ma ręcznego kopiowania zleceń przez właściciela jako domyślnej pętli.
+Helper zachowuje kod CLI i odrzuca recenzję, która zmieniła HEAD/źródła/status.
+Sandbox recenzenta dopuszcza lokalne wyniki testów, ale nie naprawianie kodu.
 
-Najlepiej przed zmianą narzędzia poprosić Claude o `/handoff` zapisany
-w dotychczasowej kolejce. Codex może też przejąć projekt bez tego: odczyta
-stan i wskaże tylko brakujący dowód lub decyzję. Nie przenosi ukrytej pamięci,
-niezatwierdzonych ustaleń z czatu, nieobecnych plików, lokalnych gałęzi ani
-żywych procesów z innej maszyny. Przenieś potrzebne artefakty lub udostępnij
-checkout, w którym istnieją. Nie oznaczaj projektu jako ukończonego na podstawie
-samego streszczenia rozmowy.
+Lokalnie niezależne taski mogą działać w maksymalnie czterech osobnych
+worktree; kierownik tworzy je jawnie od SHA bazy i scala pojedynczo.
+W cloud istniejący checkout jest już izolowany: bez dodatkowego worktree,
+chyba że właściciel zażąda, i tylko jeden zapisujący agent naraz. Proces
+integracji/PR/ochrona gałęzi platformy nadal obowiązuje. Kod nie jest
+GOTOWE przed dowodem z rzeczywiście zintegrowanej wersji.
 
-`status`, `gotowe T-NNN`, `pomysl` i `handoff` są poleceniami w treści
-wiadomości do kierownika. Zapisy `/status` i `/handoff` zachowują znaczenie
-z oryginałów, ale klient może przechwytywać ukośnik jako własną komendę;
-wtedy napisz np. `$kierownik wykonaj handoff`.
+Claude CLI/Antigravity lub skonfigurowane inne narzędzie są zapasem
+i recenzją innej rodziny. Ich aktualne flagi, autoryzację i limity sprawdza
+kierownik. Pakiet nie zakłada, że są zainstalowane lub zalogowane, i nie
+wyłącza ich zabezpieczeń. Uprawnienia klienta mogą wymagać osobnej decyzji
+technicznej mimo autoryzacji pracy w skill.
 
-Przed produkcyjnym użyciem sprawdź na kopii projektu: przejęcie aktywnego
-ZLECONE bez ponownego zlecenia; odbiór raportu bez recenzji; odrzucenie recenzji
-autora; brak potwierdzenia integracji; kontynuację po handoff. Oczekiwane
-działania opisuje [procedura przejęcia](skills/kierownik/references/PRZEJECIE.md).
+## Aktualizacja i stan zespołu
 
-## Źródła techniczne i zakres sprawdzenia
+```bash
+python3 install.py --user --register-agents --upgrade
+```
 
-- [Skills Codex](https://developers.openai.com/codex/skills)
-- [Reguły AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
-- [Agenci Codex](https://developers.openai.com/codex/multi-agent)
-- [Publiczny parser skills](https://github.com/openai/codex/blob/main/codex-rs/skills/src/parser.rs)
+Odpowiednio użyj `--project` przy instalacji projektowej. Różniący się skill
+bez `--upgrade` jest zachowany. Aktualizacja zachowuje lokalny ZESPOL i całą
+poprzednią instalację w `.agents/backups/`, poza katalogiem discovery skills.
+Własne zmiany instrukcji/role models porównaj z backupem i przenieś potrzebne
+ustawienia; nowe role są wzorcami z modelami dziedziczonymi. Kierownik sprawdza
+zgodność ZESPOL z faktycznie działającą konfiguracją, nie z samą tabelą.
 
-Rozpoznawanie skills można sprawdzić bez wywoływania modelu przez `skills/list`
-w lokalnym app-server Codex. Takie sprawdzenie potwierdza format i wykrywanie
-pakietu, ale nie dowodzi poprawnego prowadzenia rzeczywistego projektu przez
-model. Pełna kontynuacja wymaga repozytorium projektu i jego dowodów.
+Jeśli instalowałeś pierwszy port, zaktualizuj `kierownik` z `--upgrade`.
+Starszego osobnego `$architekt` installer nie usuwa; v10 korzysta z roli
+`kier-architekt`, a nie z tamtego skilla.
+
+## Skróty i sprawdzenie
+
+`status`, `dalej`, `pomysł:`, `zmiana:`, `zespół:`, `stop`, `handoff` to
+wiadomości do kierownika. Nowy wątek + `$kierownik` odtwarza checkpoint;
+nie potrzeba komend `/clear` ani `/autocompact` Claude.
+
+```bash
+python3 -B -m unittest discover -s tests -v
+```
+
+[VALIDATION.md](VALIDATION.md) rozróżnia wykonane testy adaptera i konfiguracji
+od niewykonanego pilota z modelem. [ANALIZA.md](ANALIZA.md) wyjaśnia różnice
+architektury; [SOURCE.json](SOURCE.json) wskazuje dokładne źródła v10.

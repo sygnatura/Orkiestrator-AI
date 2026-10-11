@@ -1,41 +1,61 @@
-# Sprawdzenie pakietu Codex
+# Sprawdzenie portu v10
 
-Data: 2026-10-11. Dostępny klient: `codex-cli 0.159.2`.
-Sprawdzenia wykonano w tym środowisku oraz w tymczasowych repozytoriach
-pod `/tmp`. Nie instalowano skills do oryginalnego projektu ani globalnie.
+2026-10-11. Źródło: gałąź `claude/eloquent-meitner-98b5px`, pełny commit
+`c45c525445034b7859f66dda158e2226489db4b2`. Klient dostępny w maszynie:
+`codex-cli 0.159.2`; Python 3.12.14. Testy wykonywane na repozytoriach
+tymczasowych, bez instalacji globalnej ani zmiany oryginałów.
 
-## Potwierdzone
+## Wykonane
 
-- Wszystkie cztery oryginalne dokumenty są identyczne bajtowo z HEAD
-  `2fb079b3474d560618872de87c31fea7a5de6d1b`.
-- Wszystkie lokalne odsyłacze Markdown w pakiecie prowadzą do istniejących plików.
-- Dwie samowystarczalne kopie WORKFLOW są identyczne i zawierają niezmieniony
-  oryginalny kontrakt SDD, poprzedzony adapterem dla Codex i starszego v6.
-- Oba SKILL.md przeszły publiczny walidator OpenAI
-  [quick_validate.py](https://github.com/openai/codex/blob/main/codex-rs/skills/src/assets/samples/skill-creator/scripts/quick_validate.py)
-  uruchomiony na ich folderach. To sprawdza format, nie decyzje modelu.
-- Instalacja przez `install.py --project <repo-testowe>` tworzy oba skills.
-  Powtórzenie identycznej instalacji nie zmienia plików.
-- Istniejący CLAUDE.md pozostaje bez zmian. Kolizja z inną wersją architekta
-  przerywa przed kopiowaniem kierownika i zachowuje plik użytkownika.
-- Katalog bez repozytorium Git oraz dowiązanie docelowego `.agents`
-  są odrzucane bez zapisu poza projektem.
-- Metadane `agents/openai.yaml` obu skills mają poprawny YAML,
-  wskazują właściwą nazwę skill i wymagają jawnego wywołania.
+`python3 -B -m unittest discover -s codex/tests -v`: **17 passed, 0 failed**.
 
-## Niewykonane i ograniczenia
+- Instalacja projektowa i użytkownika, zachowanie innych skills i CLAUDE.
+- Dodanie czterech ról bez zastępowania uprawnień/ustawień Codex.
+- Ponowna instalacja zachowuje ZESPOL i bajty niezmienionej konfiguracji.
+- Aktualizacja archiwizuje pełną poprzednią instalację i zachowuje ZESPOL.
+- Kolizje skill/roli, dowiązanie docelowe i katalog bez Git nie nadpisują danych.
+- Helper: świeże `exec`, rzeczywisty katalog, instrukcje roli i literalny stdin,
+  model/effort w argumentach, zachowany exit, brak raportu nie jest sukcesem.
+- Recenzent/analityk zmieniający źródła, untracked plik lub commit z czystym
+  statusem zostaje odrzucony. Istniejący raport pozostaje bez zmian.
 
-Wykrywanie przez `skills/list` w lokalnym app-server **nie zostało
-potwierdzone**. Dostępny binarny klient próbuje zapisać swój stan w
-`/run/codex-environment/codex-home`, który jest zamontowany tylko do odczytu.
-Po skierowaniu bazy SQLite do `/tmp` start nadal wymaga zapisu
-`installation_id` w tym chronionym katalogu. Nie zmieniano jego plików,
-uprawnień, HOME ani CODEX_HOME. To ograniczenie dodatkowego procesu
-CLI w tej maszynie, a nie wykryty błąd formatu skills.
+Testy CLI helpera używają kontrolowanego zastępstwa procesu. Sprawdzają
+argumenty, efekty w prawdziwym Git i rozpoznanie błędów; **nie udają pracy LLM**.
 
-Nie wykonano scenariuszy zachowania modelu z PRZEJECIE.md ani rzeczywistego
-przejęcia projektu po Claude. Repozytorium źródłowe zawiera prompty i
-kontrakt, bez prowadzonego projektu, kolejki, aktywnego taska lub raportów.
-Kompatybilność przejęcia jest opisana w instrukcjach; nie jest potwierdzonym
-wynikiem kontynuacji konkretnego projektu. Weryfikację wykonaj po instalacji
-w kliencie Codex i na kopii prowadzonego repozytorium.
+Dodatkowo cztery pliki ról TOML przeszły walidację względem publicznego
+`codex-rs/core/config.schema.json`. Lokalne `codex -c ... features list`
+przyjmuje dodaną rejestrację ról; multi_agent jest w tej wersji aktywne.
+To nie jest sprawdzenie uruchomienia każdej roli ani dostępności różnych modeli.
+Metadane YAML skilla/UI zostały sparsowane, jawne wywołanie jest ustawione.
+SKILL.md przeszedł także publiczny walidator OpenAI `quick_validate.py`.
+Wszystkie lokalne odsyłacze Markdown prowadzą do istniejących plików.
+Oryginalne cztery dokumenty main sprawdzono bajtowo względem początkowego HEAD.
+
+## Zgodność metody v10
+
+Przeczytano SKILL, ZESPOL, ZLECENIA, SZABLONY, cztery definicje agentów,
+README i ANALIZA z przypiętego źródła. SOURCE.json zawiera sumy źródeł.
+Port zachowuje 13 obszarów procesu: start, konfigurację, przejęcie/nowy
+projekt, wznowienie, pętlę, autonomię, routing, weryfikację, kontekst/handoff,
+kierunek, dokumentację, zlecenia i kontakt. Zmiany mechaniki klienta opisano
+w ANALIZA.md, zamiast kopiować nieobsługiwane polecenia Claude.
+
+## Niewykonane
+
+Nie wykonano pełnego pilota: przejęcia realnego aktywnego projektu Claude,
+pracy modeli w czterech rolach, integracji produktu i powrotu kierownika
+Claude. Repozytorium wejściowe jest pakietem instrukcji, bez takiego projektu.
+Nie potwierdzono discovery skills przez app-server w tej maszynie.
+
+Lokalna diagnostyka `codex doctor` ładuje konfigurację, ale raportuje brak
+dostępu do endpointu inference (proxy HTTP CONNECT 403). Katalog runtime
+Codex jest zamontowany tylko do odczytu. To ogranicza dodatkowe lokalne
+sesje CLI w tej maszynie; nie zmieniano HOME/CODEX_HOME, uwierzytelniania,
+ustawień zarządzanych ani weryfikacji TLS. Testy adaptera nie dowodzą
+poprawnego działania całej pętli modeli w takim runtime.
+
+Pilot po instalacji w swoim kliencie: jeden task ze wspólnego TODO po
+Claude → wykonanie → świeża recenzja → testy integracji → checkpoint →
+nowy wątek Codex → odczyt tego samego stanu przez Claude. Sprawdź także
+W TOKU z nieznanym losem wykonawcy, recenzję już ukończonego SHA i brak
+artefaktu z innej maszyny: żaden nie powinien powodować duplikatu implementacji.

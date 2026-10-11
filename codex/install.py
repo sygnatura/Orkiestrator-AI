@@ -1,62 +1,150 @@
 #!/usr/bin/env python3
-"""Install the orchestration skills without replacing existing project files."""
+"""Install/update the Codex v10 skill; preserve machine state and existing configuration."""
 
 import argparse
-import filecmp
+import json
 from pathlib import Path
 import shutil
 import subprocess
+import tempfile
+import tomllib
+
+ROLES = ('kier-analityk', 'kier-wykonawca', 'kier-recenzent', 'kier-architekt')
+DESCRIPTIONS = (
+    'Odczyt i krótkie analizy projektu; bez zmian.',
+    'Implementacja jednego zadania w katalogu wskazanym przez kierownika.',
+    'Świeża niezależna recenzja kryteriów, diffu i działania; bez naprawiania.',
+    'Plan, recenzja planu, specyfikacje i diagnozy; bez implementacji.',
+)
 
 
 def identical(source: Path, target: Path) -> bool:
-    source_files = {p.relative_to(source) for p in source.rglob('*') if p.is_file()}
-    target_files = {p.relative_to(target) for p in target.rglob('*') if p.is_file()}
-    if source_files != target_files or any(p.is_symlink() for p in target.rglob('*')):
-        return False
-    return all(filecmp.cmp(source / p, target / p, shallow=False) for p in source_files)
+    left = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()}
+    right = {p.relative_to(target): p.read_bytes() for p in target.rglob('*') if p.is_file()}
+    # ZESPOL is user-maintained machine state; never replace it on reinstall.
+    left.pop(Path('ZESPOL.md'), None)
+    right.pop(Path('ZESPOL.md'), None)
+    return left == right
 
 
-def main() -> None:
+def config_addition(path: Path, skill: Path) -> str:
+    original = path.read_text(encoding='utf-8') if path.exists() else ''
+    config = tomllib.loads(original)
+    agents = config.get('agents', {})
+    if not isinstance(agents, dict):
+        raise ValueError('Istniejąca konfiguracja agents nie jest tabelą TOML.')
+    blocks = []
+    for role, description in zip(ROLES, DESCRIPTIONS):
+        role_path = (skill / 'roles' / (role + '.toml')).as_posix()
+        existing = agents.get(role)
+        if existing is not None:
+            if not isinstance(existing, dict) or existing.get('config_file') != role_path:
+                raise ValueError(f'Kolizja istniejącej konfiguracji roli {role}; zachowano config.toml.')
+            continue
+        blocks.append(f'[agents.{role}]\ndescription = {json.dumps(description, ensure_ascii=False)}\n'
+                      f'config_file = {json.dumps(role_path, ensure_ascii=False)}\n')
+    if not blocks:
+        return original
+    result = original.rstrip('\n') + '\n\n# Kierownik Codex v10 — role\n' + '\n'.join(blocks)
+    tomllib.loads(result)
+    return result
+
+
+def reject_symlink(path: Path) -> None:
+    if path.is_symlink():
+        raise ValueError(f'Dowiązanie w ścieżce docelowej: {path}')
+
+
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--project', type=Path, required=True, help='Existing project Git root')
-    args = parser.parse_args()
-    project = args.project.resolve()
-    if not project.is_dir():
-        parser.error('Katalog projektu nie istnieje.')
-    result = subprocess.run(
-        ['git', '-C', str(project), 'rev-parse', '--show-toplevel'],
-        capture_output=True, text=True, check=False,
-    )
-    if result.returncode or Path(result.stdout.strip()).resolve() != project:
-        parser.error('--project musi wskazywać katalog główny istniejącego repozytorium Git.')
+    location = parser.add_mutually_exclusive_group(required=True)
+    location.add_argument('--project', type=Path, help='Existing project Git root')
+    location.add_argument('--user', action='store_true', help='Install once in ~/.agents/skills')
+    parser.add_argument('--register-agents', action='store_true', help='Add native roles to config.toml')
+    parser.add_argument('--upgrade', action='store_true', help='Back up existing skill, retain ZESPOL, update')
+    args = parser.parse_args(argv)
+    source = Path(__file__).resolve().parent / 'skills' / 'kierownik'
 
-    source_root = Path(__file__).resolve().parent / 'skills'
-    destination = project / '.agents' / 'skills'
-    for path in (project / '.agents', destination):
-        if path.is_symlink() or (path.exists() and not path.is_dir()):
-            parser.error(f'Nieobsługiwana ścieżka docelowa: {path}')
+    if args.project:
+        root = args.project.resolve()
+        result = subprocess.run(['git', '-C', str(root), 'rev-parse', '--show-toplevel'],
+                                capture_output=True, text=True, check=False)
+        if result.returncode or Path(result.stdout.strip()).resolve() != root:
+            raise ValueError('--project musi wskazywać główny katalog istniejącego repozytorium Git.')
+    else:
+        root = Path.home()
+    agents_root, config_root = root / '.agents', root / '.codex'
+    skills = agents_root / 'skills'
+    target = skills / 'kierownik'
+    config_path = config_root / 'config.toml'
+    for path in (agents_root, skills, target):
+        reject_symlink(path)
+        if path.exists() and not path.is_dir():
+            raise ValueError(f'Kolizja z plikiem: {path}')
+    if target.exists() and any(p.is_symlink() for p in target.rglob('*')):
+        raise ValueError('Istniejący skill zawiera dowiązania; zachowano instalację.')
+    if args.register_agents:
+        reject_symlink(config_root)
+        reject_symlink(config_path)
+        if config_root.exists() and not config_root.is_dir():
+            raise ValueError('Katalog .codex jest zajęty przez plik.')
+        new_config = config_addition(config_path, target)
+    else:
+        new_config = None
+    same = target.exists() and identical(source, target)
+    if target.exists() and not same and not args.upgrade:
+        raise ValueError('Istniejący skill różni się; do aktualizacji z kopią zapasową użyj --upgrade.')
 
-    pending = []
-    for name in ('kierownik', 'architekt'):
-        source, target = source_root / name, destination / name
-        if not (source / 'SKILL.md').is_file():
-            parser.error(f'Niekompletny pakiet: {source}')
-        if target.is_symlink() or (target.exists() and not target.is_dir()):
-            parser.error(f'Kolizja ścieżki: {target}')
-        if target.exists():
-            if not identical(source, target):
-                parser.error(f'Istniejący skill różni się od pakietu; zachowano pliki: {target}')
-        else:
-            pending.append((source, target))
+    if not same:
+        agents_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='kierownik-stage-', dir=agents_root) as stage_root:
+            staged = Path(stage_root) / 'kierownik'
+            shutil.copytree(source, staged)
+            if target.exists() and (target / 'ZESPOL.md').is_file():
+                shutil.copy2(target / 'ZESPOL.md', staged / 'ZESPOL.md')
+            backup = None
+            if target.exists():
+                backup_root = agents_root / 'backups'
+                reject_symlink(backup_root)
+                backup_root.mkdir(exist_ok=True)
+                archive = Path(tempfile.mkdtemp(prefix='kierownik-', dir=backup_root))
+                backup = archive / 'kierownik'
+                target.rename(backup)
+            try:
+                skills.mkdir(parents=True, exist_ok=True)
+                staged.rename(target)
+            except OSError:
+                if backup is not None:
+                    backup.rename(target)
+                raise
+            print(f'Zainstalowano: {target}')
+            if backup is not None:
+                print(f'Zachowano poprzedni skill i zmiany użytkownika: {backup}')
+    else:
+        print('Skill już zainstalowany; ZESPOL i pliki bez zmian.')
 
-    destination.mkdir(parents=True, exist_ok=True)
-    for source, target in pending:
-        shutil.copytree(source, target)
-        print(f'Zainstalowano: {target}')
-    if not pending:
-        print('Oba skills są już zainstalowane w identycznej wersji; bez zmian.')
-    print('Otwórz nową sesję Codex w tym projekcie i wywołaj $kierownik.')
+    if new_config is not None:
+        old = config_path.read_text(encoding='utf-8') if config_path.exists() else None
+        if new_config != old:
+            config_root.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=config_root,
+                                             prefix='kierownik-config-', delete=False) as output:
+                output.write(new_config)
+                temporary = Path(output.name)
+            try:
+                if config_path.exists():
+                    temporary.chmod(config_path.stat().st_mode & 0o777)
+                temporary.replace(config_path)
+            finally:
+                temporary.unlink(missing_ok=True)
+            print(f'Dodano brakujące role bez zastępowania ustawień: {config_path}')
+    print('Otwórz nową sesję Codex w projekcie i wywołaj $kierownik.')
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        raise SystemExit(main())
+    except (OSError, ValueError) as error:
+        print(f'Instalacja przerwana: {error}')
+        raise SystemExit(2)
