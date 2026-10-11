@@ -3,8 +3,10 @@
 Odpowiednik **kierownika v10 z gałęzi
 `claude/eloquent-meitner-98b5px`**, commit
 [`c45c525`](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2).
-Zastępuje wcześniejszy port v6/SDD w tym folderze. Oryginalne pliki na
-`main` oraz gałąź Claude pozostają bez zmian.
+Zastępuje wcześniejszy port v6/SDD w tym folderze.
+[Oryginał Claude v10](../claude/README.md) jest w `../claude/`, a
+[starsze wersje](../archiwum/README.md) w `../archiwum/`. Ich treść oraz
+źródłowa gałąź Claude pozostają bez zmian.
 
 Po `$kierownik` Codex sam prowadzi zatwierdzony etap: analizuje projekt,
 deleguje wykonanie, uruchamia testy, odbiera niezależną recenzję, integruje
@@ -142,6 +144,6 @@ nie potrzeba komend `/clear` ani `/autocompact` Claude.
 python3 -B -m unittest discover -s tests -v
 ```
 
-[VALIDATION.md](VALIDATION.md) rozróżnia wykonane testy adaptera i konfiguracji
-od niewykonanego pilota z modelem. [ANALIZA.md](ANALIZA.md) wyjaśnia różnice
-architektury; [SOURCE.json](SOURCE.json) wskazuje dokładne źródła v10.
+[VALIDATION.md](docs/VALIDATION.md) rozróżnia wykonane testy adaptera i konfiguracji
+od niewykonanego pilota z modelem. [ANALIZA.md](docs/ANALIZA.md) wyjaśnia różnice
+architektury; [SOURCE.json](docs/SOURCE.json) wskazuje dokładne źródła v10.

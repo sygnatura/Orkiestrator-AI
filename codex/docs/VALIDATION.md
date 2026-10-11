@@ -29,7 +29,12 @@ To nie jest sprawdzenie uruchomienia każdej roli ani dostępności różnych mo
 Metadane YAML skilla/UI zostały sparsowane, jawne wywołanie jest ustawione.
 SKILL.md przeszedł także publiczny walidator OpenAI `quick_validate.py`.
 Wszystkie lokalne odsyłacze Markdown prowadzą do istniejących plików.
-Oryginalne cztery dokumenty main sprawdzono bajtowo względem początkowego HEAD.
+Oryginalne cztery dokumenty main sprawdzono bajtowo względem początkowego HEAD;
+obecnie znajdują się w głównym `archiwum/` (orkiestrator ma dopisek `_v6`).
+Po uporządkowaniu katalogów sprawdzono również zgodność bajtową całego
+`claude/` i starszych wersji z przypiętym źródłem, odsyłacze Markdown oraz
+ponownie 17 testów pakietu Codex. Zmieniono układ dokumentacji; kod
+instalatora, skilla i ról pozostał bez zmian.
 
 ## Zgodność metody v10
 
