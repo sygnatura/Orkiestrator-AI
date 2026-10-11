@@ -1,0 +1,6 @@
+interface:
+  display_name: "Kierownik projektu"
+  short_description: "Orkiestracja i przejęcie projektu po Claude"
+  default_prompt: "Użyj $kierownik, odtwórz stan projektu z plików i Git oraz ustal następne działanie."
+policy:
+  allow_implicit_invocation: false

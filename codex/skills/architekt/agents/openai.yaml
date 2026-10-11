@@ -1,0 +1,6 @@
+interface:
+  display_name: "Architekt projektu"
+  short_description: "Plan, specyfikacje i diagnozy dla kierownika"
+  default_prompt: "Użyj $architekt do wykonania zlecenia planowania lub analizy, zgodnie z istniejącym workflow projektu."
+policy:
+  allow_implicit_invocation: false
