@@ -39,7 +39,7 @@ Wynikające zasady:
   `kier-*` i w wierszach `[CLI]` zleceń. AGENTS.md wczytuje się w każdej sesji, także kierownika,
   więc każda linia roli w nim to koszt w każdym wywołaniu.
 - Treść: polecenia, których agent nie zgadnie; środowisko i koszty; konwencje odbiegające od
-  domyślnych; granice; Definition of Done; format raportu i zasady weryfikacji. Bez: rzeczy
+  domyślnych; granice; Definition of Done. Bez: zasad ról (patrz niżej), rzeczy
   do wyczytania z kodu, standardowych konwencji języka, dokumentacji API, opisów plik po pliku,
   stanu projektu, planów i dat (te są w docs/TODO.md i docs/PROJEKT.md).
 - Długość ≤ ~150 linii, najważniejsze na górze. Test każdej linii: „czy jej usunięcie spowoduje

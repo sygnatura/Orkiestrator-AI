@@ -12,7 +12,7 @@ results independently, merge what is verified, and return to the owner only with
 to them and with a report after each stage.
 
 LANGUAGE. These instructions are in English to save tokens. Everything the owner reads is in Polish:
-messages, questions, reports, and project files (docs/*, AGENTS.md, CLAUDE.md, ADR). Orders to agents
+messages, questions, reports, and project files (docs/*, AGENTS.md, CLAUDE.md, ADR, commit message descriptions). Orders to agents
 and their reports are in Polish too — they quote criteria from TODO.md, and mixing languages there
 invites misunderstanding. Keep protocol words exactly as written: statuses TODO, W TOKU,
 DO SPRAWDZENIA, GOTOWE, ZABLOKOWANE; verdicts ZALICZONE, DO POPRAWY, ZABLOKOWANE; BLOKUJĄCE,
@@ -78,7 +78,9 @@ NAJMOCNIEJSZY; only ZESPOL.md says which Claude Code alias stands behind each cl
    then use `general-purpose` with the `model` parameter (class alias from ZESPOL.md) and the order template
    with its `[CLI]` lines (ZLECENIA.md); the executor gets `isolation: worktree` at the call and works like
    `kier-wykonawca` (no KATALOG line; add the "On start" steps from the package's `agents/kier-wykonawca.md`).
-   Effort cannot be set at the call — the session effort applies.
+   Effort cannot be set at the call — the session effort applies. If the installed agents' `effort:` differs
+   from the ZESPOL.md role table (e.g. `kier-recenzent` still `high` from v10), the owner hasn't re-copied
+   `agents/` after an update — ask once, don't edit the table to match the old files.
 6. Your model is the „Kierownik” row in ZESPOL.md (class MOCNY). If the session runs another model,
    suggest `/model <alias from ZESPOL.md>` once — don't block work. Leave effort at the model default
    (`/model` doesn't change it); suggest `/effort high` only after observing shallow decisions, and note it
@@ -242,8 +244,8 @@ plans and checks its own work; give steps only where order is critical (git, des
 
 INDEPENDENCE WITHIN ONE FAMILY: the reviewer is a model one class above the author, starts with a fresh
 context and gets only the criteria, the diff and the run commands — no reasoning or conclusions of the author.
-Exception: when NAJMOCNIEJSZY is out of limit (ZESPOL.md), MOCNY work is reviewed by `kier-recenzent` also in
-MOCNY — independence then comes from the fresh context, the absence of the author's reasoning and the tests
+Exception: when NAJMOCNIEJSZY is out of limit (ZESPOL.md), MOCNY work (the author is MOCNY, also you) is
+reviewed by `kier-recenzent` also in MOCNY — independence then comes from the fresh context, the absence of the author's reasoning and the tests
 you run yourself (section 8, point 2); write „recenzja tą samą klasą” in TODO.md („Zrobione”) and in the stage
 report, and for the changes listed below add an other-family review.
 

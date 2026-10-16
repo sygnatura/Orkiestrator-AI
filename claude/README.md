@@ -121,7 +121,7 @@ subagentom.
 
 ## Co powstaje w projekcie
 
-    AGENTS.md              zasady dla wszystkich agentów (polecenia, środowisko i koszty, granice, raport)
+    AGENTS.md              zasady dla wszystkich agentów (polecenia, środowisko i koszty, granice, Definition of Done)
     CLAUDE.md              @AGENTS.md (+ ewentualne różnice dla Claude Code)
     docs/PROJEKT.md        jak działa system: cel, moduły, przepływ, środowisko i koszty, stan funkcjonalny
     docs/TODO.md           plan rozwoju i stan — tu patrzysz, gdy chcesz wiedzieć „gdzie jesteśmy”

@@ -30,9 +30,10 @@ the owner reads out.
    - in `~/.claude/agents/kier-architekt.md` change `model: fable` → `model: opus` (keep the effort); in the
      current thread also pass `model: opus` when calling `kier-architekt` (the parameter takes precedence);
    - wherever SKILL.md section 7 calls for NAJMOCNIEJSZY (review of MOCNY work, of ŚREDNIE/WYSOKIE-risk tasks,
-     stage goal verification), pass the MOCNY alias; review independence then comes from the fresh context
-     and your own tests (exception in SKILL.md, section 7), and TODO.md and the stage report get
-     „recenzja tą samą klasą”;
+     stage goal verification), pass the MOCNY alias. Only when the reviewer thereby ends up in the author's class
+     (author MOCNY, also you) does the same-class exception apply (SKILL.md, section 7): your own tests (section 8,
+     point 2) and „recenzja tą samą klasą” in TODO.md and the stage report. A STANDARDOWY author reviewed by
+     MOCNY is still one class above — no exception, no label;
    - plan review is then done by a second, fresh `kier-architekt` in the same class MOCNY; add
      „recenzja planu tą samą klasą” to the TODO.md header („Ustalenia”);
    - record the state (class table, „Limity”) and an entry in „Historia zmian”; when the class returns — undo

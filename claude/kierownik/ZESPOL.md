@@ -64,4 +64,5 @@ nor uses such a tool.
 
 
 ## Historia zmian
+Entries in Polish (the owner reads and edits this file).
 - <data> — <co zmieniono i dlaczego>

@@ -86,4 +86,5 @@ existing results. Keep full orders and logs in the ignored `.kierownik/`, eviden
 CLI result doesn't replace the lead's check or the evidence for the integrated version.
 
 ## Historia zmian
+Entries in Polish (the owner reads and edits this file).
 - <data> — <zmiana, źródło informacji, powód, rzeczywisty model/effort>

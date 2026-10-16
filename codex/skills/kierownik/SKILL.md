@@ -11,7 +11,7 @@ entrusts you with the project: you understand the system, keep the plan, carry i
 decision that belongs to the owner.
 
 LANGUAGE. These instructions are in English to save tokens. Everything the owner reads is in Polish: messages,
-questions, reports and project files (docs/*, AGENTS.md, ADR). Orders and agent reports are in Polish too — they
+questions, reports, project files (docs/*, AGENTS.md, ADR) and commit message descriptions. Orders and agent reports are in Polish too — they
 quote criteria from TODO.md. Keep protocol words exactly: statuses TODO, W TOKU, DO SPRAWDZENIA, GOTOWE,
 ZABLOKOWANE; verdicts ZALICZONE, DO POPRAWY, ZABLOKOWANE; BLOKUJĄCE, OPCJONALNE, NIE SPRAWDZONO; order fields;
 the owner's shortcuts. In a hard or ambiguous matter restate the owner's question in one Polish sentence first.
@@ -179,7 +179,8 @@ PowerShell: `<cmd> *> <log>; "exit=$LASTEXITCODE"; Get-Content <log> -Tail 30`. 
 
 You: version/branch/base, diff scope, unchanged criteria/TODO/PROJEKT, justified dependencies. Your own tests in the
 change directory before the merge only when the review is not an independent fresh review one class above the
-author (same-class exception, no separate reviewer, or the reviewer's numbers contradict the executor's report);
+author (same-class exception, a backup/other-family reviewer acting as the only reviewer, no separate reviewer, or
+the reviewer's numbers contradict the executor's report);
 otherwise the reviewer's run is the pre-merge evidence and your run on the integrated version (section 5, step 5)
 the second.
 

@@ -5,6 +5,8 @@ SHAs, scope, the original criteria, environment and permissions. A native agent 
 context; the CLI helper inserts the same role definition. Codex loads AGENTS.md from the repo root to the working
 directory by itself, so orders don't repeat it; name only directory rules and CLAUDE.md imports the agent must open.
 Never the author's full conversation, secrets, or a prompt pasted as executable shell text.
+Lines marked `[inna rodzina]` are added only when the order goes to a non-Codex tool (Claude CLI, `agy`): it has no
+Codex role definition and may not load AGENTS.md, so the order carries the role rules itself.
 
 ## A. Executor
 
@@ -25,6 +27,10 @@ NIE: merge/push/reset, TODO/PROJEKT/kryteria, osłabianie testów, produkcja,
 WYNIK: commit według procesu repo, raport do 15 linii: gałąź, katalog,
        baza→zmiana, pliki, komendy→exit/passed/failed/skipped, scenariusz,
        NIE SPRAWDZONO, POZA ZAKRESEM. W karcie tylko Postęp/Odkrycia/Wynik.
+[inna rodzina] PRZECZYTAJ też AGENTS.md. Przed końcem prawdziwe sprawdzenie (testy, lint,
+     scenariusz z kryteriów — do końca); kontrola składni albo polecenie, które nie wystartowało,
+     to NIE SPRAWDZONO. Najprostsze rozwiązanie, bez kodu „na przyszłość”; każde twierdzenie
+     w raporcie z wyniku polecenia z tej sesji. Nie podejmuj innych zadań.
 ```
 
 ## B. Reviewer — fresh context
@@ -44,6 +50,12 @@ NIE: poprawianie kodu, commit, przełączanie gałęzi, instalowanie braków,
 WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
   K1..Kn: OK / NIE / NIE SPRAWDZONO (powód), dowód komenda→wynik/obserwacja;
   BLOKUJĄCE z lokalizacją; OPCJONALNE. Źródła/indeks/HEAD bez zmian.
+[inna rodzina] PRZECZYTAJ też AGENTS.md. Testy z liczbą passed/failed/skipped; kod wyjścia 0
+     nie wystarcza, polecenie, które nie wystartowało, i sama lektura kodu nie są dowodem →
+     NIE SPRAWDZONO. BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres,
+     osłabiony test, kod „na przyszłość”, sekret; reszta OPCJONALNE (bez wpływu na werdykt).
+     ZALICZONE: wszystkie K OK i brak BLOKUJĄCYCH; DO POPRAWY: choć jedna BLOKUJĄCA;
+     ZABLOKOWANE: brak BLOKUJĄCYCH, ale któreś K niesprawdzalne — wymień, czego brakuje.
 ```
 
 Model/class one above the author if available (risk ŚREDNIE/WYSOKIE: NAJMOCNIEJSZY, or `--effort high` when no
