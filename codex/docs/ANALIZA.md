@@ -60,3 +60,18 @@ Obecne testy sprawdzają mechanikę instalacji/wywołań, nie poprawność wszys
 decyzji modelu. Pilot: kopia projektu v10, aktywny task z Claude, jedna pętla
 wykonanie→recenzja→integracja→checkpoint, nowa sesja Codex i powrót do Claude.
 Przy błędzie reguły poprawia się z dowodu, nie rozbudowuje system na zapas.
+
+## v11 — optymalizacja tokenów
+
+Te same zmiany co w Claude (claude/ANALIZA.md, decyzja 12): instrukcje SKILL,
+ZESPOL, ZLECENIA, PRZEJECIE i ról po angielsku, komunikacja z właścicielem,
+pliki projektu, zlecenia i raporty po polsku, słowa protokołu bez zmian.
+Codex sam wczytuje AGENTS.md od korzenia repo do katalogu roboczego, więc role
+i zlecenia nie każą go czytać drugi raz; jawnie otwiera się tylko importy
+CLAUDE.md. Zasady ról wyjęte z szablonu AGENTS. Recenzent na effort `medium`
+z eskalacją klasy przy ryzyku ŚREDNIM/WYSOKIM, a gdy mocniejszej klasy brak —
+`--effort high` w run_agent.py (Codex, w odróżnieniu od Claude, ma effort per
+wywołanie). Własne testy kierownika przed scaleniem tylko przy recenzji
+niezależnej inaczej niż klasą wyżej. Testy kierownika z pełnym logiem
+w `.kierownik/log/` i zachowanym kodem wyjścia. SOURCE.json nadal opisuje
+źródło v10, z którego powstał port.

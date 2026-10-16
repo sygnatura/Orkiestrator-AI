@@ -1,6 +1,7 @@
 # SZABLONY — pliki projektu i zasady plików instrukcji
 
 Czyta kierownik, gdy zakłada lub naprawia pliki projektu (oraz wykonawca, któremu to zlecono).
+Szablony są po polsku, bo pliki projektu czyta właściciel.
 
 1. Zasady AGENTS.md i CLAUDE.md (stan wytycznych OpenAI i Anthropic na 2026-10-06)
 2. AGENTS.md
@@ -34,6 +35,9 @@ Jak wczytują je narzędzia:
 Wynikające zasady:
 - AGENTS.md = jedyne źródło zasad wspólnych; CLAUDE.md = `@AGENTS.md` + krótka sekcja tylko dla
   Claude Code; pliki innych narzędzi tylko odsyłają. Nic nie jest kopiowane między plikami.
+- Zasady ról (format raportu wykonawcy, sposób recenzji) nie należą do AGENTS.md: są w definicjach
+  `kier-*` i w wierszach `[CLI]` zleceń. AGENTS.md wczytuje się w każdej sesji, także kierownika,
+  więc każda linia roli w nim to koszt w każdym wywołaniu.
 - Treść: polecenia, których agent nie zgadnie; środowisko i koszty; konwencje odbiegające od
   domyślnych; granice; Definition of Done; format raportu i zasady weryfikacji. Bez: rzeczy
   do wyczytania z kodu, standardowych konwencji języka, dokumentacji API, opisów plik po pliku,
@@ -98,21 +102,6 @@ Puste pozycje usuń. Kolejność ma znaczenie (Codex obcina od końca).
 - Testy i lint przechodzą; pominięte testy wymienione w raporcie.
 - README zaktualizowane, jeśli zmieniło się uruchamianie lub zachowanie widoczne dla użytkownika.
 - Jeśli zadanie ma docs/tasks/T-NNN.md: zaktualizowane „Postęp”, „Odkrycia i decyzje”, „Wynik”.
-
-## Raport po zadaniu (≤ 15 linii)
-    T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy (ścieżka worktree)
-    ZMIANY: 1–3 zdania; liczba plików
-    TESTY: `<polecenie>` → exit <n>; passed/failed/skipped
-    SCENARIUSZ: co uruchomiono jak użytkownik → wynik
-    NIE SPRAWDZONO: …
-    POZA ZAKRESEM: propozycje (niewdrożone)
-
-## Weryfikacja cudzej zmiany
-- Nie poprawiaj kodu i nie commituj. Sprawdź każde kryterium w działaniu, nie tylko w testach.
-- Kod wyjścia 0 nie dowodzi kryterium: sprawdź pominięte testy i ostrzeżenia. Sama lektura kodu to nie
-  dowód — kryterium, którego nie dało się sprawdzić, oznacz NIE SPRAWDZONO (powód), nie OK.
-- BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
-  „na przyszłość”, sekret. Resztę oznacz jako OPCJONALNE.
 
 ## Pułapki
 - <nieoczywiste zachowania; dopisywane, gdy agent potknie się drugi raz>
@@ -296,7 +285,7 @@ i pcha main bezpośrednio). Polecenia testów dopasuj do projektu. Sprawdzenie: 
 Opcjonalnie zapisz tu także model i effort kierownika — zastępują ręczne `/model` i `/effort` w każdej
 sesji; wpis obowiązuje każdą sesję Claude Code w tym projekcie (gdy ma dotyczyć wszystkich projektów,
 wpisz go w `~/.claude/settings.json`). Próg kompaktowania ma trwały odpowiednik `autoCompactWindow`
-(wartość w tokenach, np. 400000); do czasu sprawdzenia formatu w dokumentacji wystarczy `/autocompact`
+(wartość w tokenach, np. 200000); do czasu sprawdzenia formatu w dokumentacji wystarczy `/autocompact`
 w sesji.
 
 `worktree.baseRef: head` — worktree subagenta (`isolation: worktree`) odgałęzia się od bieżącego HEAD
@@ -395,6 +384,8 @@ Uwagi:
       łącznie z tym, co trzeba zrobić w świeżym worktree.
 - [ ] Brak stanu, dat i list zadań w AGENTS.md / CLAUDE.md.
 - [ ] AGENTS.md ≤ ~150 linii; łącznie z zagnieżdżonymi plikami < 32 KiB.
+- [ ] AGENTS.md nie ma sekcji ról („Raport po zadaniu”, „Weryfikacja cudzej zmiany”) — od v11 są
+      w definicjach `kier-*` i w wierszach `[CLI]` zleceń; jeśli są, usuń je.
 - [ ] CLAUDE.md zaczyna się od `@AGENTS.md` i nie powtarza jego treści.
 - [ ] Brak sprzecznych reguł (`/doctor prompt-audit`).
 - [ ] Pułapki z tego etapu dopisane, nieaktualne usunięte.

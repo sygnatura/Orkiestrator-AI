@@ -1,10 +1,15 @@
-# Kierownik projektu AI — instrukcja (v10, Claude Max)
+# Kierownik projektu AI — instrukcja (v11, Claude Max)
 
 Skill dla Claude Code, który robi z sesji Claude kierownika technicznego projektu: rozumie system,
 prowadzi plan rozwoju i stan w repozytorium, deleguje pracę zespołowi subagentów Claude (model
 dobierany do zadania spośród klas od najszybszego do najmocniejszego), niezależnie weryfikuje, scala
 i wypycha to, co zweryfikowane, a do Ciebie wraca z raportem po etapie albo z decyzją, która należy do
 Ciebie. Codex i Antigravity są zapasem oraz dodatkową recenzją innej rodziny modeli, gdy jest wskazana.
+
+Instrukcje dla modeli (skill i subagenci) są od v11 po angielsku — to mniej tokenów w każdej sesji
+i każdym wywołaniu subagenta. Kierownik pisze do Ciebie wyłącznie po polsku, a pliki projektu
+(`docs/`, `AGENTS.md`), zlecenia i raporty zostają po polsku. Statusy i pola zleceń są te same co
+w v10, więc istniejące projekty działają bez migracji.
 
 ## Instalacja (raz na maszynę)
 
@@ -27,19 +32,23 @@ subagentów są widoczne w każdej sesji — to kilka linii.
 Kopiuj tylko instrukcje; `ZESPOL.md` to stan Twojej maszyny — nie nadpisuj go.
 
     # Linux / macOS
-    cp kierownik/SKILL.md kierownik/ZLECENIA.md kierownik/SZABLONY.md ~/.claude/skills/kierownik/ && cp agents/*.md ~/.claude/agents/
+    cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
     # Windows (PowerShell)
-    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md $HOME\.claude\skills\kierownik\
+    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md, .\kierownik\START_PROJEKTU.md, .\kierownik\ZESPOL_PROCEDURY.md $HOME\.claude\skills\kierownik\
     Copy-Item .\agents\*.md $HOME\.claude\agents\
 
-Jeśli zmienił się szablon ZESPOL.md, porównaj go ręcznie ze swoim.
+Aktualizacja z v10: Twój stary `ZESPOL.md` zawiera procedury, które od v11 są w `ZESPOL_PROCEDURY.md`.
+Kierownik przy pierwszym starcie zostawi w nim tylko tabele stanu (Twoje odstępstwa od poleceń CLI
+przeniesie do tabeli zapasu) i ustawi próg `/autocompact` na 200k. Jeśli w `~/.claude/agents/kier-*.md`
+zmieniałeś `model:` (np. architekt na `opus`, gdy `fable` wymaga credits), po skopiowaniu agentów
+przywróć tę zmianę.
 
 ## Użycie
 
 1. Otwórz Claude Code w katalogu projektu i ustaw model kierownika: `/model opus` (alias — zawsze
    najnowszy model tej linii). `/model` nie zmienia effortu — zostaje domyślny dla modelu; jeśli chcesz
    wyższego, dodaj `/effort high`. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
-   pełnego okna modelu (dziś np. `/autocompact 400k`; wartość prowadzi `kierownik/ZESPOL.md`).
+   pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi `kierownik/ZESPOL.md`).
    Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8).
 2. Wpisz `/kierownik`.
 3. Pierwszy raz na maszynie: kierownik wykryje zapasowe narzędzia (`codex`, `agy`; są opcjonalne —
@@ -76,7 +85,8 @@ effortem, i jakie są bieżące ograniczenia (limity, kredyty) — to jedno miej
 `kierownik/ZESPOL.md` (po instalacji `~/.claude/skills/kierownik/ZESPOL.md`). Kierownik aktualizuje
 ten plik w czasie pracy, dlatego README go nie powiela. Domyślnie: kierownik i recenzent w klasie
 MOCNY, analityk i wykonawca w STANDARDOWY (trudne zadania → MOCNY), architekt i weryfikacja celu
-etapu w NAJMOCNIEJSZY.
+etapu w NAJMOCNIEJSZY. Recenzent pracuje na effort `medium`; ryzykowne zadania (ŚREDNIE/WYSOKIE)
+dostają recenzenta klasy NAJMOCNIEJSZY zamiast wyższego effortu.
 
 Niezależność weryfikacji: recenzent to z zasady model klasy wyżej niż autor (gdy najmocniejsza klasa
 jest poza limitem planu — co najmniej świeży kontekst i niezależnie uruchomione testy), startuje ze
@@ -158,7 +168,7 @@ w trybie auto.
 Kierownikiem jest zawsze sesja Claude Code — SKILL.md zakłada jej narzędzia (subagenci `kier-*`,
 worktree, `/clear`, `/model`), więc Codex ani `agy` nie poprowadzą według niego projektu. Gdy w trakcie
 etapu modele Claude mają limit lub awarię, kierownik przekazuje role wykonawcy i recenzenta zapasowym
-CLI (SKILL.md, sekcja 7 „ZAPAS”). Gdy Claude jest niedostępny całkiem, nic nie przepada: stan projektu
+CLI (SKILL.md, sekcja 7 „BACKUP”). Gdy Claude jest niedostępny całkiem, nic nie przepada: stan projektu
 jest w plikach (`docs/TODO.md`, `docs/PROJEKT.md`, `AGENTS.md`) — możesz ręcznie zlecić pojedyncze
 zadanie Codexowi lub `agy` szablonem A z `kierownik/ZLECENIA.md`, a po powrocie Claude kierownik wznowi
 pracę z Gita i TODO.md (tryb WZNOWIENIE).
@@ -167,10 +177,12 @@ pracę z Gita i TODO.md (tryb WZNOWIENIE).
 
 | Plik | Do czego |
 |---|---|
-| `kierownik/SKILL.md` | Metoda pracy kierownika |
-| `kierownik/ZESPOL.md` | Klasy modeli i aliasy, role, effort, zapas, limity (jeden na maszynę) |
+| `kierownik/SKILL.md` | Metoda pracy kierownika (wczytywana w każdej sesji) |
+| `kierownik/ZESPOL.md` | Stan maszyny: klasy modeli i aliasy, role, effort, zapas, limity (jeden na maszynę) |
+| `kierownik/ZESPOL_PROCEDURY.md` | Konfiguracja maszyny, zmiany zespołu, uruchamianie Codex/`agy` (czytane tylko w razie potrzeby) |
+| `kierownik/START_PROJEKTU.md` | Przejęcie istniejącego projektu i nowy projekt (czytane raz na projekt) |
 | `kierownik/ZLECENIA.md` | Szablony zleceń dla wykonawcy, recenzenta i analityka/architekta |
-| `kierownik/SZABLONY.md` | Wzory plików projektu + zasady AGENTS.md/CLAUDE.md wg OpenAI i Anthropic |
+| `kierownik/SZABLONY.md` | Wzory plików projektu + zasady AGENTS.md/CLAUDE.md wg OpenAI i Anthropic (po polsku) |
 | `agents/kier-*.md` | Definicje subagentów: analityk, wykonawca, recenzent, architekt |
 | `ANALIZA.md` | Dlaczego tak; lekcje z poprzednich wersji; źródła |
 | `archiwum/` | Wersje v6, SDD, v7 |

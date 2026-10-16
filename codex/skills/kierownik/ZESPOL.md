@@ -1,14 +1,12 @@
-# ZESPÓŁ v10 — Codex, klasy i stan tej instalacji
+# ZESPÓŁ v11 — Codex, classes and the state of this installation
 
-Stan wypełnienia: NIEWYPEŁNIONY. Kierownik ustala fakty na starcie, bez
-blokowania pracy dostępnym modelem. Ten plik zachowuj przy aktualizacji.
-Nie kopiuj tu aliasów ani limitów z instalacji Claude jako ustawień Codex.
+Stan wypełnienia: NIEWYPEŁNIONY. The lead establishes the facts at start, without blocking work with the
+available model. Keep this file on updates. Don't copy Claude installation aliases or limits here as Codex settings.
 
-## Klasy modeli
+## Model classes
 
-Jedyny opis mapowania klasa → model. Identyfikatory wpisuj po sprawdzeniu
-modeli dostępnych w kliencie lub po informacji właściciela; nie zakładaj
-istnienia automatycznych aliasów na najnowszą generację.
+The only class → model mapping. Write identifiers after checking the models available in the client or after the
+owner's information; don't assume automatic aliases to the newest generation.
 
 | Klasa | Model dostępny w tym kliencie | Dostępność / data / ograniczenia |
 |---|---|---|
@@ -17,41 +15,36 @@ istnienia automatycznych aliasów na najnowszą generację.
 | STANDARDOWY | model sesji, jeśli brak innego potwierdzonego | NIEZNANE |
 | SZYBKI | do ustalenia; bez pozornego przypisania | NIEZNANE |
 
-Domyślne role działają bez `model`, dziedzicząc konfigurację Codex. To tryb
-startowy, a nie dowód użycia czterech różnych modeli. Dla jednej dostępnej
-klasy obowiązuje wyjątek v10: świeża recenzja i niezależne testy kierownika,
-z zapisanym odstępstwem. Zmiana effortu nie oznacza zmiany modelu.
+Default roles run without `model`, inheriting the Codex configuration. That is the start mode, not proof that four
+different models are used. With a single available class the v10 exception applies: a fresh review and the lead's
+independent tests, with the deviation recorded. Changing effort doesn't change the model.
 
-## Role i effort
+## Roles and effort
 
 | Rola | Definicja | Preferowana klasa | Początkowy effort |
 |---|---|---|---|
 | Kierownik | główna sesja `$kierownik` | MOCNY | ustawienie sesji |
 | Analityk | roles/kier-analityk.toml | STANDARDOWY; rutyna SZYBKI | medium |
 | Wykonawca | roles/kier-wykonawca.toml | STANDARDOWY; trudne MOCNY | medium |
-| Recenzent | roles/kier-recenzent.toml | wyżej niż autor | high |
+| Recenzent | roles/kier-recenzent.toml | wyżej niż autor; ryzyko ŚREDNIE/WYSOKIE NAJMOCNIEJSZY | medium (bez mocniejszej klasy: `--effort high`) |
 | Architekt | roles/kier-architekt.toml | NAJMOCNIEJSZY | high |
 
-Effort/model faktycznie działają w polach TOML ról lub obsługiwanych polach
-wywołania. Tabela jest opisem, nie konfiguracją wykonawczą. Aktualizując model
-roli, uzupełnij `model` w jej lokalnym TOML i odnotuj zmianę tutaj. Native
-może wymagać nowej sesji/reload; helper CLI czyta TOML przy każdym uruchomieniu.
-Tymczasowe `--model`/`--effort` helpera mają pierwszeństwo tylko w danym zleceniu.
-Używaj poziomów obsługiwanych przez konkretny model; odrzucony effort popraw
-zgodnie z jego możliwościami, bez zgadywania modelu.
+Effort/model actually take effect in the role TOML fields or supported call fields. This table describes, it doesn't
+configure. When updating a role's model, set `model` in its local TOML and record the change here. Native roles may
+need a new session/reload; the CLI helper reads the TOML on every run. The helper's temporary `--model`/`--effort`
+take precedence only for that order. Use levels the concrete model supports; fix a rejected effort according to its
+capabilities, without guessing the model.
 
-Natywne role `kier-*`: NIEZWERYFIKOWANE. Obsługa świeżego kontekstu/katalogu:
-NIEZWERYFIKOWANA. Przy braku per-agent cwd wykonawca działa przez CLI.
-Bezpiecznik kontekstu: nie kopiuj tokenowego progu Claude; sprawdź aktualny
-klient i pojemność modelu. W Codex punkty kontrolne i nowy wątek są podstawą.
+Natywne role `kier-*`: NIEZWERYFIKOWANE. Fresh context / directory support: NIEZWERYFIKOWANA. Without per-agent cwd
+the executor runs through the CLI. Context safety net: don't copy Claude's token threshold; check the current client
+and the model's capacity. In Codex checkpoints and a new thread are the basis.
 
-## Routing, dostępność i zapas
+## Routing, availability and backup
 
-Nowy model nie zmienia procesu: przypisz go do klasy na podstawie możliwości
-i kosztu, potwierdź nieznaną istotną zmianę z właścicielem i uzupełnij role.
-Limit: zanotuj źródło komunikatu, czas resetu jeśli podany, wybierz dostępny
-zamiennik. Nie wymyślaj czasu ani planu abonamentowego. Właściciel może
-wyłączyć narzędzie; nie testuj ani nie używaj wtedy jego CLI.
+A new model doesn't change the process: assign it to a class by capability and cost, confirm a significant unknown
+change with the owner and update the roles. Limit: record the message source and the reset time if given, pick an
+available substitute. Don't invent times or subscription plans. The owner may disable a tool; then neither test nor
+use its CLI.
 
 | System | Stan | Test dymny / polecenie używane na tej maszynie |
 |---|---|---|
@@ -60,20 +53,18 @@ wyłączyć narzędzie; nie testuj ani nie używaj wtedy jego CLI.
 | Claude CLI (inna rodzina / zapas) | NIEZNANY | sprawdź `claude --help`, tryb nieinteraktywny i uprawnienia |
 | Antigravity CLI lub inny zapas | NIEZNANY | aktualne `--help`; nie kopiuj flag obchodzących uprawnienia |
 
-Stany: dostępny | niedostępny do <czas, jeśli znany> | wyłączony przez
-właściciela | NIEZNANY. Zapas testuj w tymczasowym Git tym samym poleceniem,
-którego potem użyjesz. Plik OK, git status, exit i stderr są wymaganym
-dowodem. Test dotyczy limitów agentów, a nie zgody na płatne API aplikacji.
+Stany: dostępny | niedostępny do <czas, jeśli znany> | wyłączony przez właściciela | NIEZNANY. Test a backup in a
+temporary Git repo with the same command you will use later. The OK file, git status, exit and stderr are the
+required evidence. The test concerns agent limits, not consent to the app's paid APIs.
 
-## Wykonanie CLI
+## CLI execution
 
-Katalog roli przygotowuje kierownik: lokalny wykonawca w task worktree,
-recenzent w odłączonym worktree ocenianego SHA lub odblokowanym katalogu
-autora. Cloud bez żądania worktree: istniejący checkout, sesje kolejno.
-Recenzenta uruchom dopiero po przygotowaniu zależności/testowej konfiguracji.
-Worktree to organizacja Git, nie kontrola dostępu do całej maszyny.
+The lead prepares the role directory: a local executor in the task worktree, a reviewer in a detached worktree of the
+reviewed SHA or in the author's unlocked directory. Cloud without a worktree request: the existing checkout, sessions
+one after another. Start the reviewer only after preparing dependencies/test configuration. A worktree is Git
+organisation, not access control over the whole machine.
 
-Przykład POSIX (ścieżki podstaw rzeczywistymi, ujętymi w cudzysłowy):
+POSIX example (substitute real, quoted paths):
 
 ```bash
 python3 "$SKILL_DIR/scripts/run_agent.py" \
@@ -88,13 +79,11 @@ py "$SkillDir/scripts/run_agent.py" --role kier-wykonawca --cwd $TaskDir `
   --prompt $OrderFile --result $ResultFile
 ```
 
-To zwykłe zmienne ścieżek ustalone w sesji, nie zmienne wbudowane Codex.
-Helper wstawia instrukcje roli, przekazuje zlecenie przez stdin i loguje
-stderr do `<wynik>.err`. Nie używa powłoki do interpretacji prompta.
-Zachowuje exit CLI; recenzja zmieniająca HEAD/źródła/status zostaje odrzucona.
-Nie nadpisuje istniejących wyników. Pełne zlecenia i logi trzymaj w ignorowanym
-`.kierownik/`, a dowody i wersje w TODO/kartach. Wynik CLI nie zastępuje
-kontroli kierownika ani dowodu zintegrowanej wersji.
+These are ordinary path variables set in the session, not built-in Codex variables. The helper inserts the role
+instructions, passes the order via stdin and logs stderr to `<wynik>.err`. It doesn't use a shell to interpret the
+prompt. It keeps the CLI exit code; a review that changed HEAD/sources/status is rejected. It never overwrites
+existing results. Keep full orders and logs in the ignored `.kierownik/`, evidence and versions in TODO/task files. A
+CLI result doesn't replace the lead's check or the evidence for the integrated version.
 
 ## Historia zmian
 - <data> — <zmiana, źródło informacji, powód, rzeczywisty model/effort>
