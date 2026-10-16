@@ -68,10 +68,8 @@ ZESPOL, ZLECENIA, PRZEJECIE i ról po angielsku, komunikacja z właścicielem,
 pliki projektu, zlecenia i raporty po polsku, słowa protokołu bez zmian.
 Codex sam wczytuje AGENTS.md od korzenia repo do katalogu roboczego, więc role
 i zlecenia nie każą go czytać drugi raz; jawnie otwiera się tylko importy
-CLAUDE.md. Zasady ról wyjęte z szablonu AGENTS. Recenzent na effort `medium`
-z eskalacją klasy przy ryzyku ŚREDNIM/WYSOKIM, a gdy mocniejszej klasy brak —
-`--effort high` w run_agent.py (Codex, w odróżnieniu od Claude, ma effort per
-wywołanie). Własne testy kierownika przed scaleniem tylko przy recenzji
+CLAUDE.md. Zasady ról wyjęte z szablonu AGENTS. Recenzent zostaje na effort `high`,
+z eskalacją klasy przy ryzyku ŚREDNIM/WYSOKIM. Własne testy kierownika przed scaleniem tylko przy recenzji
 niezależnej inaczej niż klasą wyżej. Testy kierownika z pełnym logiem
 w `.kierownik/log/` i zachowanym kodem wyjścia. SOURCE.json nadal opisuje
 źródło v10, z którego powstał port.

@@ -26,7 +26,7 @@ independent tests, with the deviation recorded. Changing effort doesn't change t
 | Kierownik | główna sesja `$kierownik` | MOCNY | ustawienie sesji |
 | Analityk | roles/kier-analityk.toml | STANDARDOWY; rutyna SZYBKI | medium |
 | Wykonawca | roles/kier-wykonawca.toml | STANDARDOWY; trudne MOCNY | medium |
-| Recenzent | roles/kier-recenzent.toml | wyżej niż autor; ryzyko ŚREDNIE/WYSOKIE NAJMOCNIEJSZY | medium (bez mocniejszej klasy: `--effort high`) |
+| Recenzent | roles/kier-recenzent.toml | wyżej niż autor; ryzyko ŚREDNIE/WYSOKIE NAJMOCNIEJSZY | high |
 | Architekt | roles/kier-architekt.toml | NAJMOCNIEJSZY | high |
 
 Effort/model actually take effect in the role TOML fields or supported call fields. This table describes, it doesn't

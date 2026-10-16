@@ -33,7 +33,7 @@ frontmatter). `effort` cannot be changed at the call — need deeper work → ch
 | Kierownik | main thread `/kierownik` | MOCNY (`/model opus`) | session: model default; `/effort high` set by the owner when decisions are shallow | — |
 | Analityk | `kier-analityk` | STANDARDOWY (`sonnet`) | medium | big repo, hard question → MOCNY; trivial → SZYBKI |
 | Wykonawca | `kier-wykonawca` | STANDARDOWY (`sonnet`) | medium | hard, risky, after a failed round → MOCNY |
-| Recenzent | `kier-recenzent` | MOCNY (`opus`) | medium | author in MOCNY (also the lead), task risk ŚREDNIE/WYSOKIE, stage goal → NAJMOCNIEJSZY |
+| Recenzent | `kier-recenzent` | MOCNY (`opus`) | high | author in MOCNY (also the lead), task risk ŚREDNIE/WYSOKIE, stage goal → NAJMOCNIEJSZY |
 | Architekt | `kier-architekt` | NAJMOCNIEJSZY (`fable`) | high | plan review: second, fresh instance in MOCNY |
 
 Context safety net for the lead: `/autocompact 200k` (fixed by cost per turn, not by window size; the lead's

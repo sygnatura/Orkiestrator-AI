@@ -93,8 +93,8 @@ odczyta ten sam wspólny stan. `codex resume` dotyczy wyłącznie sesji Codex.
 Konkretnych modeli nie pinujemy. [ZESPOL.md](skills/kierownik/ZESPOL.md)
 mapuje klasy na modele dostępne na Twoim koncie. TOML ról początkowo
 dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
-Recenzent preferuje klasę wyżej niż autor (effort `medium`; ryzykowne zadania:
-klasa NAJMOCNIEJSZY albo `--effort high`); wyjątek v10 dopuszcza tę samą
+Recenzent preferuje klasę wyżej niż autor (ryzykowne zadania: klasa
+NAJMOCNIEJSZY); wyjątek v10 dopuszcza tę samą
 klasę/model w świeżym kontekście z własnymi testami kierownika i zapisem
 odstępstwa. Recenzja innej rodziny jest wybiórcza, a jej brak jest odnotowany.
 

@@ -60,8 +60,7 @@ WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
      Logi: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę; katalog zmiany ma zostać czysty.
 ```
 
-Model/class one above the author if available (risk ŚREDNIE/WYSOKIE: NAJMOCNIEJSZY, or `--effort high` when no
-stronger class exists); under the v10 exception: fresh context plus your own tests and an explicit record of the
+Model/class one above the author if available (risk ŚREDNIE/WYSOKIE: NAJMOCNIEJSZY); under the v10 exception: fresh context plus your own tests and an explicit record of the
 deviation. The reviewer doesn't need the author's report; its evidence comes from its own checks.
 
 ## C. Analyst / architect / plan review

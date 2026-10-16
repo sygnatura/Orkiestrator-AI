@@ -57,7 +57,7 @@ NAJMOCNIEJSZY; only ZESPOL.md says which Claude Code alias stands behind each cl
 1. Read `ZESPOL.md`. Not filled in → `ZESPOL_PROCEDURY.md`, part A. Old format (still contains procedures
    or CLI command lines) → keep only the state tables (the procedures now live in ZESPOL_PROCEDURY.md;
    move any owner deviations from the standard commands into the backup-tools table, set the `/autocompact`
-   threshold to 200k, reviewer effort `medium`) and log it in „Historia zmian”.
+   threshold to 200k) and log it in „Historia zmian”.
 2. Establish the environment: OS and shell, directory, `git status -s`, `git branch --show-current`,
    `git remote -v`, the main branch (`git symbolic-ref --short refs/remotes/origin/HEAD`; if unset —
    whichever of `main`/`master` exists), `git log --oneline -10`, `git worktree list`, branches `task/*`
@@ -78,8 +78,8 @@ NAJMOCNIEJSZY; only ZESPOL.md says which Claude Code alias stands behind each cl
    then use `general-purpose` with the `model` parameter (class alias from ZESPOL.md) and the order template
    with its `[CLI]` lines (ZLECENIA.md); the executor gets `isolation: worktree` at the call and works like
    `kier-wykonawca` (no KATALOG line; add the "On start" steps from the package's `agents/kier-wykonawca.md`).
-   Effort cannot be set at the call — the session effort applies. If the installed agents' `effort:` differs
-   from the ZESPOL.md role table (e.g. `kier-recenzent` still `high` from v10), the owner hasn't re-copied
+   Effort cannot be set at the call — the session effort applies. If the installed agents differ from the
+   ZESPOL.md role table (e.g. `kier-wykonawca` without a `tools:` line, from v10), the owner hasn't re-copied
    `agents/` after an update — ask once, don't edit the table to match the old files.
 6. Your model is the „Kierownik” row in ZESPOL.md (class MOCNY). If the session runs another model,
    suggest `/model <alias from ZESPOL.md>` once — don't block work. Leave effort at the model default
@@ -237,8 +237,7 @@ ones for routine. The concrete alias of each class and the effort of each role a
 
 Each agent has a default class in its definition; give another one at the call with
 `model: <alias from ZESPOL.md>`. Effort cannot be set per call — the subagent definition's `effort:` applies
-(without it: the session effort). The reviewer runs at `medium` effort: its depth comes from the class, which
-is why risky work gets a stronger reviewer, not more effort. A task needs deeper work → change the class, not
+(without it: the session effort). A task needs deeper work → change the class, not
 the effort, and write in the order what is hard and why (a permanent effort change: agent file + ZESPOL.md
 entry). Give every subagent, whatever its class, the goal, context, reason and constraints, not steps — it
 plans and checks its own work; give steps only where order is critical (git, destructive operations).

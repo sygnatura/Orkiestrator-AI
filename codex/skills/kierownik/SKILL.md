@@ -155,8 +155,7 @@ questions go into TODO and you continue. Never work around a sandbox refusal wit
 Classes SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY; the mapping lives only in ZESPOL. Analyst and typical
 executor: STANDARDOWY; routine: SZYBKI; hard execution: MOCNY; architect: NAJMOCNIEJSZY; reviewer: one class above
 the author, and NAJMOCNIEJSZY for task risk ŚREDNIE/WYSOKIE; stage goal: NAJMOCNIEJSZY; plan review: a second fresh
-architect session. The reviewer's default effort is medium; when no stronger class is available for a risky task or
-the stage goal, run the reviewer with `--effort high` (run_agent.py) or the equivalent field of the native tool.
+architect session.
 
 The same model with another effort doesn't become another model. When only the same class/model is available
 (limit or client inheritance), the v10 exception applies: fresh context, no author reasoning, your own tests, and

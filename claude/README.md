@@ -85,8 +85,7 @@ effortem, i jakie są bieżące ograniczenia (limity, kredyty) — to jedno miej
 `kierownik/ZESPOL.md` (po instalacji `~/.claude/skills/kierownik/ZESPOL.md`). Kierownik aktualizuje
 ten plik w czasie pracy, dlatego README go nie powiela. Domyślnie: kierownik i recenzent w klasie
 MOCNY, analityk i wykonawca w STANDARDOWY (trudne zadania → MOCNY), architekt i weryfikacja celu
-etapu w NAJMOCNIEJSZY. Recenzent pracuje na effort `medium`; ryzykowne zadania (ŚREDNIE/WYSOKIE)
-dostają recenzenta klasy NAJMOCNIEJSZY zamiast wyższego effortu.
+etapu w NAJMOCNIEJSZY. Ryzykowne zadania (ŚREDNIE/WYSOKIE) dostają recenzenta klasy NAJMOCNIEJSZY.
 
 Niezależność weryfikacji: recenzent to z zasady model klasy wyżej niż autor (gdy najmocniejsza klasa
 jest poza limitem planu — co najmniej świeży kontekst i niezależnie uruchomione testy), startuje ze

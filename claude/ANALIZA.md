@@ -108,8 +108,9 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      wczytuje się w każdej sesji, także kierownika. Rola żyje w definicji `kier-*`, a dla CLI w wierszach
      `[CLI]` zlecenia. Definicja wykonawcy nie powtarza „Granic” i „Definition of Done” z AGENTS.md —
      zostawia tylko krótkie twarde ograniczenia na wypadek niepełnego AGENTS.md.
-   - Recenzent na effort `medium`; głębię daje klasa (ryzyko ŚREDNIE/WYSOKIE → NAJMOCNIEJSZY), zgodnie
-     z zasadą „zmień klasę, nie effort”. Kierownik uruchamia własne testy przed scaleniem tylko wtedy, gdy
+   - Recenzent zostaje na effort `high` (decyzja właściciela: recenzja odpowiada za jakość, która w v10
+     się sprawdziła; `medium` rozważyć dopiero na danych z pilota). Ryzyko ŚREDNIE/WYSOKIE → recenzent
+     NAJMOCNIEJSZY. Kierownik uruchamia własne testy przed scaleniem tylko wtedy, gdy
      recenzja nie jest niezależną recenzją Claude klasy wyżej (wyjątek tej samej klasy, recenzent CLI, brak
      recenzenta, sprzeczne liczby) — inaczej dowodem są testy recenzenta i testy na main po scaleniu.
    - Testy kierownika: pełny log do `.kierownik/log/`, do kontekstu kod wyjścia i 30 linii; `| tail` gubił
@@ -121,8 +122,7 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      tymczasowym systemu i czytają kod wyjścia + końcówkę — pełny log w kontekście kosztuje w każdej
      kolejnej turze. Poza repozytorium, żeby `git status` recenzenta został czysty.
    - Pomiar: tokeny sesji wykonawcy i recenzenta zapisywane w „Zrobione”, suma w raporcie etapu.
-   Czego nie zmierzono: rzeczywistej liczby tokenów w sesji i wpływu effortu `medium` na jakość recenzji.
-   Pilot powinien to sprawdzić; przy gorszych recenzjach wróć do `high` (plik agenta + ZESPOL.md).
+   Czego nie zmierzono: rzeczywistej liczby tokenów w sesji — pilot to pokaże (pole tokenów w „Zrobione”).
 
 
 ## 4. Czy to ma sens — uczciwa ocena
@@ -156,7 +156,7 @@ Ograniczenia, o których trzeba wiedzieć:
 - v10 działała u właściciela na prawdziwym projekcie poprawnie, ale kosztownie — to był powód v11.
   v11 nie przeszła jeszcze pilota. Zalecany: jeden etap na projekcie prowadzonym wcześniej na v10;
   porównać tokeny na zadanie („Zrobione”) i to, czy weryfikacja celu etapu znajduje błędy przepuszczone
-  przez recenzenta zadania (sygnał, że effort `medium` nie wystarcza).
+  przez recenzenta zadania.
 
 
 ## 5. Świadomie pominięte
