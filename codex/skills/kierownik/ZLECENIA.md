@@ -1,12 +1,14 @@
-# ZLECENIA v10 — Codex
+# ZLECENIA v11 — Codex
 
-Zlecenie jest samowystarczalne: PO CO, rzeczywiste ścieżki i pełne SHA,
-zakres, oryginalne kryteria, środowisko i prawa. Native otrzymuje właściwą
-rolę i minimalny kontekst; CLI helper wstawia tę samą definicję roli.
-Reguły AGENTS i katalogu agent czyta jawnie. Nigdy pełna rozmowa autora,
-sekrety ani prompt wklejony jako wykonywalny tekst powłoki.
+Order text is in Polish; keep the field names below. An order is self-contained: PO CO, real paths and full
+SHAs, scope, the original criteria, environment and permissions. A native agent gets the right role and minimal
+context; the CLI helper inserts the same role definition. Codex loads AGENTS.md from the repo root to the working
+directory by itself, so orders don't repeat it; name only directory rules and CLAUDE.md imports the agent must open.
+Never the author's full conversation, secrets, or a prompt pasted as executable shell text.
+Lines marked `[inna rodzina]` are added only when the order goes to a non-Codex tool (Claude CLI, `agy`): it has no
+Codex role definition and may not load AGENTS.md, so the order carries the role rules itself.
 
-## A. Wykonawca
+## A. Executor
 
 ```text
 ZADANIE: T-NNN — <jeden cel>
@@ -15,8 +17,8 @@ KATALOG / POWŁOKA: <rzeczywisty katalog roli>
 GAŁĄŹ / BAZA / AKTUALNA WERSJA: <przygotowana gałąź, pełne SHA>
   Gałąź już wyewidencjonowana; nie twórz innej ani worktree.
   Poprawki: ta sama gałąź i ostatni commit poprzedniej rundy.
-PRZECZYTAJ: reguły AGENTS/katalogu, PROJEKT (sekcje ...), karta jeśli istnieje,
-           konkretne pliki. Wskaż rzeczywiste odpowiedniki dokumentów.
+PRZECZYTAJ: PROJEKT (sekcje ...), karta jeśli istnieje, konkretne pliki;
+           [reguły katalogu / importy CLAUDE.md, jeśli dotyczą]. Wskaż rzeczywiste odpowiedniki dokumentów.
 ŚRODOWISKO: <instalacja repo, testowa konfiguracja, usługi, izolacja danych>
 ZAKRES: <obszary IN/OUT; wyłącznie zatwierdzone zadanie>
 KRYTERIA: <oryginalne K1..Kn, komendy, scenariusz użytkownika, wersja kryteriów>
@@ -25,9 +27,14 @@ NIE: merge/push/reset, TODO/PROJEKT/kryteria, osłabianie testów, produkcja,
 WYNIK: commit według procesu repo, raport do 15 linii: gałąź, katalog,
        baza→zmiana, pliki, komendy→exit/passed/failed/skipped, scenariusz,
        NIE SPRAWDZONO, POZA ZAKRESEM. W karcie tylko Postęp/Odkrycia/Wynik.
+[inna rodzina] PRZECZYTAJ też AGENTS.md. Przed końcem prawdziwe sprawdzenie (testy, lint,
+     scenariusz z kryteriów — do końca); kontrola składni albo polecenie, które nie wystartowało,
+     to NIE SPRAWDZONO. Najprostsze rozwiązanie, bez kodu „na przyszłość”; każde twierdzenie
+     w raporcie z wyniku polecenia z tej sesji. Nie podejmuj innych zadań.
+     Logi: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
 ```
 
-## B. Recenzent — świeży kontekst
+## B. Reviewer — fresh context
 
 ```text
 RECENZJA: T-NNN albo CEL ETAPU E<n>
@@ -35,7 +42,7 @@ KATALOG / POWŁOKA: <przygotowany katalog zmiany, odblokowany po autorze>
 BAZA / OCENIANY SHA: <pełne wersje; dla etapu zakres od poprzedniego etapu>
 DIFF: git diff <baza>...<oceniany SHA>
 AUTOR / KLASA / MODEL: <fakty, bez wniosków autora>
-PRZECZYTAJ: reguły i Weryfikacja cudzej zmiany; karta tylko Cel/Kontekst/Zakres/Kryteria.
+PRZECZYTAJ: karta tylko Cel/Kontekst/Zakres/Kryteria; [reguły katalogu, jeśli dotyczą].
 KRYTERIA: <te same K1..Kn; etap: cel i scenariusz E2E>
 JAK URUCHOMIĆ / DANE: <testowe komendy i izolacja, konkretne dozwolone operacje>
 ZRÓB: K w działaniu z własnym dowodem, scenariusz i diff zakres/testy/błędy/nadmiar.
@@ -44,19 +51,25 @@ NIE: poprawianie kodu, commit, przełączanie gałęzi, instalowanie braków,
 WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
   K1..Kn: OK / NIE / NIE SPRAWDZONO (powód), dowód komenda→wynik/obserwacja;
   BLOKUJĄCE z lokalizacją; OPCJONALNE. Źródła/indeks/HEAD bez zmian.
+[inna rodzina] PRZECZYTAJ też AGENTS.md. Testy z liczbą passed/failed/skipped; kod wyjścia 0
+     nie wystarcza, polecenie, które nie wystartowało, i sama lektura kodu nie są dowodem →
+     NIE SPRAWDZONO. BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres,
+     osłabiony test, kod „na przyszłość”, sekret; reszta OPCJONALNE (bez wpływu na werdykt).
+     ZALICZONE: wszystkie K OK i brak BLOKUJĄCYCH; DO POPRAWY: choć jedna BLOKUJĄCA;
+     ZABLOKOWANE: brak BLOKUJĄCYCH, ale któreś K niesprawdzalne — wymień, czego brakuje.
+     Logi: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę; katalog zmiany ma zostać czysty.
 ```
 
-Model/klasa wyżej niż autor jeśli dostępne; przy wyjątku v10 świeży kontekst
-plus własne testy kierownika i jawny zapis odstępstwa. Reviewer nie potrzebuje
-REPORT autora; dowody powstają z jego własnych sprawdzeń.
+Model/class one above the author if available (risk ŚREDNIE/WYSOKIE: NAJMOCNIEJSZY); under the v10 exception: fresh context plus your own tests and an explicit record of the
+deviation. The reviewer doesn't need the author's report; its evidence comes from its own checks.
 
-## C. Analityk / architekt / recenzja planu
+## C. Analyst / architect / plan review
 
 ```text
 PYTANIE: <jedno: mapa | plan | recenzja planu | diagnoza | spike>
 PO CO: <decyzja lub następny krok kierownika>
 KATALOG / GAŁĄŹ @ SHA: <fakty>
-PRZECZYTAJ: reguły, PROJEKT, TODO oraz konkretne pliki/obserwacje.
+PRZECZYTAJ: PROJEKT, TODO oraz konkretne pliki/obserwacje.
 DIAGNOZA: co/gdzie/komunikat/odtworzenie → przyczyna z dowodem; fakt ≠ hipoteza;
          wykonanie czy założenie; małe kroki z kryteriami.
 PLAN: najprostszy wariant i porzucone alternatywy; etapy do celu;
@@ -71,11 +84,9 @@ WYNIK: analizy/diagnozy do 40 linii, plan do 80; rekomendacja i dowody,
        nieznane jako [?], decyzje właściciela oznaczone z rekomendacją.
 ```
 
-## Procedura wysłania i odbioru
+## Sending and receiving
 
-W native wybierz dostępne API, świeży kontekst recenzenta i potwierdzony
-katalog. Nie dziedzicz całej rozmowy autora. Jeśli katalogu nie można
-ustawić/izolować, użyj CLI. Run_agent nie tworzy gałęzi/worktree sam:
-przygotowuje je kierownik. Zachowaj rzeczywisty ID/numer rundy i plik wyniku.
-W trakcie stop nie rozpoczynaj nowego zlecenia. Po zakończeniu sprawdź
-artefakty/Git/stderr; exit 0 nie oznacza ZALICZONE ani GOTOWE.
+Native: choose the available API, a fresh context for the reviewer and a confirmed directory. Don't inherit the
+author's whole conversation. If the directory can't be set or isolated, use the CLI. run_agent.py doesn't create
+branches or worktrees: the lead prepares them. Keep the real ID/round number and the result file. During `stop`
+start no new order. Afterwards check artefacts, Git and stderr; exit 0 doesn't mean ZALICZONE or GOTOWE.

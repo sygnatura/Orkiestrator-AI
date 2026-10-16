@@ -1,4 +1,4 @@
-# SZABLONY v10 — wspólny stan projektu i reguły Codex
+# SZABLONY v11 — wspólny stan projektu i reguły Codex
 
 Czytaj przy tworzeniu/naprawie plików, nie w każdym wznowieniu.
 Wzory PROJEKT/TODO/karty pochodzą z Claude v10. Nie nadpisuj działających
@@ -12,7 +12,8 @@ Nie rozwija importów `@plik`: istotne importy z CLAUDE otwieraj jawnie.
 W zleceniach zawsze wskaż reguły właściwe dla obszaru. Objętość około
 150 linii; najważniejsze na górze. Nie wkładaj skilla kierownika do
 AGENTS wszystkich wykonawców. Definicje ról i uprawnienia nie zastępują
-zasad projektu. Reguły dla wykonawcy nie zabraniają kierownikowi jego
+zasad projektu, a zasady ról (format raportu, sposób recenzji) są w rolach,
+nie w AGENTS — AGENTS wczytuje się w każdej sesji i każdym agencie. Reguły dla wykonawcy nie zabraniają kierownikowi jego
 zatwierdzonych czynności administracyjnych, testowania i integracji.
 
 CLAUDE może pozostać importem AGENTS i różnicami dla Claude. Nie zakładaj
@@ -69,21 +70,6 @@ Puste pozycje usuń. Kolejność ma znaczenie (Codex obcina od końca).
 - Testy i lint przechodzą; pominięte testy wymienione w raporcie.
 - README zaktualizowane, jeśli zmieniło się uruchamianie lub zachowanie widoczne dla użytkownika.
 - Jeśli zadanie ma docs/tasks/T-NNN.md: zaktualizowane „Postęp”, „Odkrycia i decyzje”, „Wynik”.
-
-## Raport po zadaniu (≤ 15 linii)
-    T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy (ścieżka worktree)
-    ZMIANY: 1–3 zdania; liczba plików
-    TESTY: `<polecenie>` → exit <n>; passed/failed/skipped
-    SCENARIUSZ: co uruchomiono jak użytkownik → wynik
-    NIE SPRAWDZONO: …
-    POZA ZAKRESEM: propozycje (niewdrożone)
-
-## Weryfikacja cudzej zmiany
-- Nie poprawiaj kodu i nie commituj. Sprawdź każde kryterium w działaniu, nie tylko w testach.
-- Kod wyjścia 0 nie dowodzi kryterium: sprawdź pominięte testy i ostrzeżenia. Sama lektura kodu to nie
-  dowód — kryterium, którego nie dało się sprawdzić, oznacz NIE SPRAWDZONO (powód), nie OK.
-- BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
-  „na przyszłość”, sekret. Resztę oznacz jako OPCJONALNE.
 
 ## Pułapki
 - <nieoczywiste zachowania; dopisywane, gdy agent potknie się drugi raz>
@@ -196,7 +182,7 @@ Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od ZESPOL.m
 
 ## Zrobione (10 ostatnich; starsze w docs/DONE.md)
 - [x] T-005 | <opis> | <sha scalenia> | zweryf.: <kto, klasa>, <data> |
-      dowód: `<polecenie>` → <wynik>; scenariusz: <co zaobserwowano>
+      dowód: `<polecenie>` → <wynik>; scenariusz: <co zaobserwowano> | tokeny: wyk. <n>k, rec. <n>k
 - [x] E1 zamknięty | <sha> | dowód E2E: <środowisko, dane, czynności, wynik>
 ```
 
@@ -290,6 +276,7 @@ funkcji. Niczego nie instaluj z wyłączoną kontrolą TLS/podpisów/checksum.
 - Środowisko i koszty w AGENTS/PROJEKT zgodne z konfiguracją i użytymi usługami.
 - PROJEKT opisuje obecny system, TODO aktualny plan/dowody/następny krok.
 - AGENTS zwięzły, bez list zadań; CLAUDE zachowany, reguły nie są sprzeczne.
+- AGENTS bez sekcji ról („Raport po zadaniu”, „Weryfikacja cudzej zmiany”) — od v11 są w rolach i zleceniach.
 - Pułapki dopisane po faktycznych błędach, nieaktualne usunięte.
 - Stare Zrobione dopisane do DONE, istotne dowody dostępne w repo.
 - Własne worktree po udanym merge zabezpieczone i posprzątane; cudze zachowane.

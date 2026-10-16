@@ -1,4 +1,4 @@
-# ANALIZA I DECYZJE (v10)
+# ANALIZA I DECYZJE (v10–v11)
 
 Do czytania, gdy chcesz zmieniać system. Do codziennej pracy niepotrzebne.
 
@@ -95,6 +95,34 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    definicje `kier-*` powtarzają z nich to, co dotyczy roli — żeby rola działała także bez kompletnego
    AGENTS.md — a szablony zleceń (ZLECENIA.md) tylko w wierszach `[CLI]` dla narzędzi zapasowych, które widzą
    wyłącznie AGENTS.md i zlecenie. Powtórzone reguły muszą orzekać to samo: zmiana reguły = oba miejsca.
+   (v11: zmienione — patrz decyzja 12.)
+12. **(v11) Optymalizacja tokenów.** Przegląd v10 pokazał, że największy koszt to nie długość wątku, tylko
+   treść wczytywana stale, a rzadko potrzebna, powtórzenia i weryfikacja każdego zadania. Zmiany:
+   - SKILL.md zawiera tylko rdzeń pętli; przejęcie/nowy projekt (`START_PROJEKTU.md`) oraz konfiguracja
+     maszyny, zmiany zespołu i uruchamianie CLI (`ZESPOL_PROCEDURY.md`) czyta się tylko przy wyzwalaczu.
+     `ZESPOL.md` zawiera wyłącznie stan. Numeracja sekcji SKILL.md została, żeby odsyłacze były ważne.
+   - Instrukcje dla modeli po angielsku (polski tekst to wyraźnie więcej tokenów na tę samą treść).
+     Komunikacja z właścicielem, pliki projektu, zlecenia i raporty po polsku; słowa protokołu (statusy,
+     werdykty, pola zleceń, skróty) bez zmian — zgodność z istniejącymi projektami i portem Codex.
+   - Zasady ról wyjęte z AGENTS.md (sekcje „Raport po zadaniu” i „Weryfikacja cudzej zmiany”): AGENTS.md
+     wczytuje się w każdej sesji, także kierownika. Rola żyje w definicji `kier-*`, a dla CLI w wierszach
+     `[CLI]` zlecenia. Definicja wykonawcy nie powtarza „Granic” i „Definition of Done” z AGENTS.md —
+     zostawia tylko krótkie twarde ograniczenia na wypadek niepełnego AGENTS.md.
+   - Recenzent zostaje na effort `high` (decyzja właściciela: recenzja odpowiada za jakość, która w v10
+     się sprawdziła; `medium` rozważyć dopiero na danych z pilota). Ryzyko ŚREDNIE/WYSOKIE → recenzent
+     NAJMOCNIEJSZY. Kierownik uruchamia własne testy przed scaleniem tylko wtedy, gdy
+     recenzja nie jest niezależną recenzją Claude klasy wyżej (wyjątek tej samej klasy, recenzent CLI, brak
+     recenzenta, sprzeczne liczby) — inaczej dowodem są testy recenzenta i testy na main po scaleniu.
+   - Testy kierownika: pełny log do `.kierownik/log/`, do kontekstu kod wyjścia i 30 linii; `| tail` gubił
+     kod wyjścia testów.
+   - `/autocompact 200k` zamiast 400k: próg wynika z kosztu tury, nie z rozmiaru okna; przekazanie wątku po
+     ~8 zadaniach przychodzi dużo wcześniej.
+   - `kier-wykonawca` ma jawną listę narzędzi (bez dziedziczenia wszystkich, w tym MCP).
+   - Subagenci też kierują długie wyjście (instalacja zależności, testy, build) do logu w katalogu
+     tymczasowym systemu i czytają kod wyjścia + końcówkę — pełny log w kontekście kosztuje w każdej
+     kolejnej turze. Poza repozytorium, żeby `git status` recenzenta został czysty.
+   - Pomiar: tokeny sesji wykonawcy i recenzenta zapisywane w „Zrobione”, suma w raporcie etapu.
+   Czego nie zmierzono: rzeczywistej liczby tokenów w sesji — pilot to pokaże (pole tokenów w „Zrobione”).
 
 
 ## 4. Czy to ma sens — uczciwa ocena
@@ -125,8 +153,10 @@ Ograniczenia, o których trzeba wiedzieć:
   porządkuje zmiany w repozytorium, ale nie ogranicza dostępu do maszyny. Producent zaleca kontener
   lub sandbox — właściciel może wyłączyć `agy` jednym wpisem w ZESPOL.md. Bez flagi `agy -p` po cichu
   pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek czytania stderr.
-- Zestawu nie przetestowano jeszcze na prawdziwym projekcie. Zalecany pilot: jeden istniejący
-  projekt, jeden etap; poprawki SKILL.md na podstawie tego, gdzie kierownik się pomylił.
+- v10 działała u właściciela na prawdziwym projekcie poprawnie, ale kosztownie — to był powód v11.
+  v11 nie przeszła jeszcze pilota. Zalecany: jeden etap na projekcie prowadzonym wcześniej na v10;
+  porównać tokeny na zadanie („Zrobione”) i to, czy weryfikacja celu etapu znajduje błędy przepuszczone
+  przez recenzenta zadania.
 
 
 ## 5. Świadomie pominięte

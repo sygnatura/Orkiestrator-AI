@@ -1,51 +1,46 @@
-# Wznowienie kierownika v10 — Claude ↔ Codex
+# Resuming the v11 lead — Claude ↔ Codex
 
-## Źródła wspólne
+## Shared sources
 
-PROJEKT (jak działa), TODO (cel/plan/stan/dowody/następny krok), DONE,
-AGENTS, istniejący CLAUDE, karty `docs/tasks/T-NNN.md`, ADR i rzeczywisty Git.
-Zachowaj ID/statusy oraz zatwierdzenia. Nie twórz osobnych PROJEKT/TODO dla
-Codex, PLAN.md, PROJECT_WORKFLOW.md ani REPORT/REVIEW jako warunku wznowienia.
-Istniejące odpowiedniki/SDD zachowaj z mapowaniem, bez mechanicznej migracji.
+PROJEKT (how it works), TODO (goal/plan/state/evidence/next step), DONE, AGENTS, the existing CLAUDE, task files
+`docs/tasks/T-NNN.md`, ADR and the real Git. Keep IDs/statuses and approvals. Don't create separate PROJEKT/TODO for
+Codex, PLAN.md, PROJECT_WORKFLOW.md or REPORT/REVIEW as a condition of resuming. Keep existing equivalents/SDD with a
+mapping, without a mechanical migration. v10 and v11 use the same statuses and files — no migration between them.
 
-Model/limity zespołu to stan danej instalacji skilla, nie stan projektu.
-Nie nadpisuj `~/.claude/skills/kierownik/ZESPOL.md`, agentów Claude ani jego
-settings podczas przejęcia. Możesz odczytać potrzebne, jawne metadane,
-ale mapowanie Codex prowadź we własnym ZESPOL. Nie importuj sesji/sekretów.
+Team models/limits are the state of a given skill installation, not of the project. Don't overwrite
+`~/.claude/skills/kierownik/ZESPOL.md`, the Claude agents or its settings during a takeover. You may read the explicit
+metadata you need, but keep the Codex mapping in your own ZESPOL. Don't import sessions or secrets.
 
-## Odtworzenie pracy
+## Recovering the work
 
-Odczytaj status/HEAD/gałęzie/worktree/diff i aktualny TODO. Dla wskazanych
-SHA sprawdź istnienie (`git cat-file -t`) i integrację (`merge-base --is-ancestor`).
-Brak relacji po squash/cherry-pick nie dowodzi braku integracji: sprawdź
-zapisany commit docelowy/dowód. Nie przełączaj cudzego checkoutu ani nie resetuj.
+Read status/HEAD/branches/worktrees/diff and the current TODO. For the recorded SHAs check existence
+(`git cat-file -t`) and integration (`merge-base --is-ancestor`). No ancestry after squash/cherry-pick doesn't prove
+the change wasn't integrated: check the recorded target commit/evidence. Don't switch someone else's checkout or reset.
 
-| Zapisany stan | Działanie Codex |
+| Zapisany stan | Codex action |
 |---|---|
-| TODO z zaakceptowanego etapu | Uruchom wykonawcę, nie pytaj ponownie o plan |
-| W TOKU, żywa sesja Claude lub los nieznany | Ustal los istniejącego zlecenia; bez duplikatu |
-| W TOKU, niepełny commit lub niezapisane zmiany | Zachowaj pracę, kontynuuj ten task/katalog po ustaleniu autorstwa |
-| W TOKU, zmiana ukończona | Odbiór formalny, własne testy i recenzja tej wersji |
-| DO SPRAWDZENIA, brak werdyktu | Odbierz trwającą lub uruchom tylko brakującą recenzję |
-| DO SPRAWDZENIA, właściwy ZALICZONE dla SHA | Integracja i testy tej wersji; bez ponownej implementacji |
-| DO POPRAWY jako werdykt | W TOKU, uwagi BLOKUJĄCE na tej samej gałęzi |
-| ZABLOKOWANE | Usuń konkretną przeszkodę lub zbierz brakującą decyzję |
-| Merge i pozytywne testy, TODO nieaktualny | Uzupełnij punkt kontrolny na podstawie dowodów |
-| GOTOWE z dowodem | Zachowaj wynik, następny task |
-| GOTOWE bez dostępnego dowodu | Zapisz lukę i sprawdź obszar, nie cofaj całego etapu |
-| Sam merge bez dowodu zintegrowanej wersji | Sprawdzenie tej wersji, bez ogłoszenia GOTOWE |
+| TODO z zaakceptowanego etapu | Start the executor; don't ask about the plan again |
+| W TOKU, żywa sesja Claude lub los nieznany | Establish the fate of the existing order; no duplicate |
+| W TOKU, niepełny commit lub niezapisane zmiany | Keep the work, continue this task/directory once authorship is clear |
+| W TOKU, zmiana ukończona | Formal acceptance, own tests and a review of this version |
+| DO SPRAWDZENIA, brak werdyktu | Collect the running review or start only the missing one |
+| DO SPRAWDZENIA, właściwy ZALICZONE dla SHA | Integration and tests of this version; no reimplementation |
+| DO POPRAWY jako werdykt | W TOKU, the BLOKUJĄCE remarks on the same branch |
+| ZABLOKOWANE | Remove the concrete obstacle or collect the missing decision |
+| Merge i pozytywne testy, TODO nieaktualny | Complete the checkpoint from the evidence |
+| GOTOWE z dowodem | Keep the result, next task |
+| GOTOWE bez dostępnego dowodu | Record the gap and check the area; don't roll back the whole stage |
+| Sam merge bez dowodu zintegrowanej wersji | Check this version; don't announce GOTOWE |
 
-Używaj istniejących `.claude/worktrees/` tylko po zakończeniu poprzedniego
-wykonawcy i sprawdzeniu dostępu. Codex nie musi usuwać ich i tworzyć nowych.
-Gałąź `task/*` może być wyewidencjonowana tylko w jednym worktree. Odłączony
-checkout recenzenta rozwiązuje kolizję bez przełączania katalogu autora.
-Worktree na innej maszynie nie zostaje przeniesione przez Git push. Brak
-SHA/pliku w cloud oznacza niedostępny artefakt tutaj, nie zgodę na rozpoczęcie
-zadania od nowa. Odzyskaj dostępne commity, poproś tylko o brakującą pracę.
+Use existing `.claude/worktrees/` only after the previous executor finished and access is checked. Codex doesn't have
+to delete them and create new ones. A `task/*` branch can be checked out in only one worktree; a detached reviewer
+checkout solves the collision without switching the author's directory. A worktree on another machine isn't moved by
+`git push`. A missing SHA/file in the cloud means the artefact is unavailable here, not permission to restart the task.
+Recover the available commits, ask only for the missing work.
 
-## Punkt kontrolny i handoff
+## Checkpoint and handoff
 
-Aktualizuj istniejący nagłówek TODO, nie osobny plik. Zapisz:
+Update the existing TODO header, not a separate file. Record (in Polish):
 
 ```text
 Cel / etap / zatwierdzony plan: <ścieżki i źródło decyzji>
@@ -60,11 +55,10 @@ Ustalenia: <proces, mapowanie, zgody z odnośnikami, bez wartości sekretów>
 Następny krok: <jedno konkretne działanie, task, rola, oczekiwany dowód>
 ```
 
-Ważne wyniki przenieś do TODO/karty, bo `.kierownik/` jest lokalne/ignorowane.
-Nie zapisuj w commicie SHA jego samego: identyfikator checkpointu podaj po
-commicie. Dopiero potwierdzony push czyni commity dostępnymi z innej maszyny.
+Move important results into TODO/task files, because `.kierownik/` is local and ignored. Don't write a commit's own
+SHA into that commit: give the checkpoint ID after the commit. Only a confirmed push makes commits available from
+another machine.
 
-Prompt startowy: `$kierownik Wznów z PROJEKT.md i TODO.md; zachowaj aktywne
-zlecenia i kontynuuj zapisany następny krok.` Po powrocie do Claude wystarcza
-jego `/kierownik` z tymi samymi plikami. Zapisane fakty nie zastępują bieżących
-uprawnień ani niedostępnej akceptacji pozostawionej wyłącznie w czacie.
+Start prompt: `$kierownik Wznów z PROJEKT.md i TODO.md; zachowaj aktywne zlecenia i kontynuuj zapisany następny krok.`
+Back in Claude, its `/kierownik` with the same files is enough. Recorded facts don't replace current permissions or an
+acceptance left only in a chat.

@@ -4,14 +4,16 @@
 
 | Folder | Co zawiera | Instrukcja |
 |---|---|---|
-| **`codex/`** | Kierownik v10 przystosowany do Codex; wywołanie `$kierownik` | [Instalacja i użycie](codex/README.md) |
-| **`claude/`** | Oryginalny kierownik v10 dla Claude Code; wywołanie `/kierownik` | [Instalacja i użycie](claude/README.md) |
+| **`codex/`** | Kierownik v11 przystosowany do Codex; wywołanie `$kierownik` | [Instalacja i użycie](codex/README.md) |
+| **`claude/`** | Kierownik v11 dla Claude Code; wywołanie `/kierownik` | [Instalacja i użycie](claude/README.md) |
 | `archiwum/` | Starsze prompty v6, SDD i v7, zachowane do porównania | [Spis archiwum](archiwum/README.md) |
 
-Obie aktualne wersje bazują na gałęzi **`claude/eloquent-meitner-98b5px`**,
-commit [c45c525](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2).
-Pliki w `claude/` są kopią oryginałów bez zmian treści; źródłowa gałąź pozostaje
-niezmieniona. Starsze pliki z głównego katalogu zostały przeniesione do archiwum.
+Obie wersje to v11: v10 z gałęzi **`claude/eloquent-meitner-98b5px`**,
+commit [c45c525](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2),
+po optymalizacji zużycia tokenów (instrukcje dla modeli po angielsku, komunikacja
+i pliki projektu po polsku; uzasadnienie w [claude/ANALIZA.md](claude/ANALIZA.md),
+decyzja 12). Oryginał v10 jest w historii Gita i na źródłowej gałęzi.
+Starsze pliki z głównego katalogu zostały przeniesione do archiwum.
 
 ## Chcę używać Codex
 
@@ -34,9 +36,9 @@ dla jednego projektu są w [instrukcji Codex](codex/README.md).
 
 ## Chcę używać Claude Code
 
-Przejdź do `claude/` i wykonaj polecenia z [oryginalnej instrukcji](claude/README.md#instalacja-raz-na-maszynę).
+Przejdź do `claude/` i wykonaj polecenia z [instrukcji](claude/README.md#instalacja-raz-na-maszynę).
 W prowadzonej sesji Claude Code użyj `/kierownik`.
-Wzmianka o `archiwum/` w oryginalnej instrukcji odnosi się teraz do
+Wzmianka o `archiwum/` w tej instrukcji odnosi się teraz do
 [wspólnego archiwum w głównym katalogu](archiwum/README.md).
 
 ## Chcę kontynuować w Codex po Claude
@@ -44,7 +46,7 @@ Wzmianka o `archiwum/` w oryginalnej instrukcji odnosi się teraz do
 Otwórz ten sam projekt z aktualnym stanem Gita i wpisz:
 
 ```text
-$kierownik Przejmij projekt po kierowniku Claude v10 i kontynuuj
+$kierownik Przejmij projekt po kierowniku Claude v11 i kontynuuj
 z istniejących docs/PROJEKT.md, docs/TODO.md oraz Gita.
 ```
 
@@ -58,10 +60,10 @@ zadania w toku i artefakty, które trzeba przenieść między maszynami.
 
 ```text
 README.md           punkt startowy
-claude/             oryginalny zestaw Claude v10
+claude/             zestaw Claude v11
   kierownik/        skill, zlecenia, szablony i stan zespołu
   agents/           cztery role Claude
-codex/              zestaw Codex v10
+codex/              zestaw Codex v11
   install.py        instalator
   skills/kierownik/ skill i wszystkie jego zasoby
   docs/             analiza portu, wyniki walidacji i źródła

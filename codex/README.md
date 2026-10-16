@@ -1,12 +1,13 @@
-# Kierownik v10 dla Codex
+# Kierownik v11 dla Codex
 
 Odpowiednik **kierownika v10 z gałęzi
 `claude/eloquent-meitner-98b5px`**, commit
 [`c45c525`](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2).
-Zastępuje wcześniejszy port v6/SDD w tym folderze.
-[Oryginał Claude v10](../claude/README.md) jest w `../claude/`, a
-[starsze wersje](../archiwum/README.md) w `../archiwum/`. Ich treść oraz
-źródłowa gałąź Claude pozostają bez zmian.
+Zastępuje wcześniejszy port v6/SDD w tym folderze. Od v11 instrukcje dla modeli
+są po angielsku (mniej tokenów), a kierownik pisze do Ciebie po polsku; pliki
+projektu, zlecenia i raporty zostają po polsku, statusy bez zmian.
+[Wersja Claude](../claude/README.md) jest w `../claude/`, a
+[starsze wersje](../archiwum/README.md) w `../archiwum/`.
 
 Po `$kierownik` Codex sam prowadzi zatwierdzony etap: analizuje projekt,
 deleguje wykonanie, uruchamia testy, odbiera niezależną recenzję, integruje
@@ -63,7 +64,7 @@ $kierownik
 Do przejęcia:
 
 ```text
-$kierownik Przejmij projekt po kierowniku Claude v10. Wznów z istniejących
+$kierownik Przejmij projekt po kierowniku Claude v10/v11. Wznów z istniejących
 PROJEKT.md, TODO.md i Git. Zachowaj aktywne zadania, statusy i zatwierdzony
 plan; kontynuuj zapisany następny krok bez ponownego zlecania trwającej pracy.
 ```
@@ -92,7 +93,8 @@ odczyta ten sam wspólny stan. `codex resume` dotyczy wyłącznie sesji Codex.
 Konkretnych modeli nie pinujemy. [ZESPOL.md](skills/kierownik/ZESPOL.md)
 mapuje klasy na modele dostępne na Twoim koncie. TOML ról początkowo
 dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
-Recenzent preferuje klasę wyżej niż autor; wyjątek v10 dopuszcza tę samą
+Recenzent preferuje klasę wyżej niż autor (ryzykowne zadania: klasa
+NAJMOCNIEJSZY); wyjątek v10 dopuszcza tę samą
 klasę/model w świeżym kontekście z własnymi testami kierownika i zapisem
 odstępstwa. Recenzja innej rodziny jest wybiórcza, a jej brak jest odnotowany.
 

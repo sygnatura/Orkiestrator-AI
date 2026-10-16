@@ -1,19 +1,21 @@
-# ZLECENIA — szablony dla wykonawcy, recenzenta i analityka/architekta
+# ZLECENIA — order templates for the executor, reviewer and analyst/architect
 
-Czyta kierownik (SKILL.md, sekcja 12) przed pierwszym zleceniem w sesji.
+Read by the lead (SKILL.md, section 12) before the first order in a session. Order text is in Polish; keep the
+field names exactly as below.
 
-Zlecenie jest samowystarczalne: agent nie zna rozmowy kierownika. Odwołuje się do plików zamiast
-kopiować ich treść. Podaje POWÓD zadania — agent w świeżym kontekście bez niego nie wie, które
-kompromisy są dopuszczalne. Ścieżki i sha są ustalone, nie wymyślone.
+An order is self-contained: the agent doesn't know the lead's conversation. It refers to files instead of
+copying them. It states the REASON (PO CO) — an agent in a fresh context doesn't know otherwise which trade-offs
+are acceptable. Paths and shas are established, not invented.
 
-Subagentowi `kier-*` podajesz tylko treść zlecenia — rola, zasady i format wyniku są już w jego
-definicji, a AGENTS.md dostaje automatycznie (przez CLAUDE.md projektu). Wiersze z prefiksem `[CLI]`
-dodajesz tylko do zlecenia dla Codex/`agy`; wiersz `[CLI zamiast …]` ZASTĘPUJE wskazany wiersz dla subagenta
-Claude, nie uzupełnia go. `general-purpose` (gdy subagentów `kier-*` nie ma — SKILL.md, sekcja 1, krok 5)
-dostaje wiersze `[CLI]`, ale GAŁĄŹ i KATALOG jak subagent Claude, bo pracuje w worktree Claude Code; dopisz mu
-kroki „Na start” z `~/.claude/agents/kier-wykonawca.md`.
+To a `kier-*` subagent give only the order content — role, rules and output format are in its definition, and it
+gets AGENTS.md automatically (through the project's CLAUDE.md). Lines prefixed `[CLI]` are added only to orders
+for Codex/`agy`, which have no role definition; a `[CLI zamiast …]` line REPLACES the named line of the Claude
+version, it doesn't add to it. `[CLI: AGENTS.md]` in PRZECZYTAJ is needed only by `agy` (Codex loads AGENTS.md by
+itself). `general-purpose` (when there are no `kier-*` subagents — SKILL.md, section 1, step 5) gets the `[CLI]`
+lines except AGENTS.md (it gets CLAUDE.md), but GAŁĄŹ and KATALOG as a Claude subagent, because it works in a
+Claude Code worktree; add the "On start" steps from the package's `agents/kier-wykonawca.md`.
 
-## A. Wykonawca (`kier-wykonawca`, klasa wg SKILL.md, sekcja 7; zapas: CLI)
+## A. Executor (`kier-wykonawca`, class per SKILL.md section 7; backup: CLI)
 
     ZADANIE: T-NNN — <cel jednym zdaniem>
     PO CO: <cel etapu i komu służy; co użytkownik będzie mógł zrobić po zmianie — 1–2 zdania>
@@ -29,34 +31,47 @@ kroki „Na start” z `~/.claude/agents/kier-wykonawca.md`.
     KRYTERIA: <obserwowalne zachowanie + polecenie testu; scenariusz użycia>
     [CLI] NIE: merge, push, zmiany TODO.md / PROJEKT.md / kryteriów, osłabianie testów,
           płatne lub produkcyjne zasoby (patrz AGENTS.md „Środowisko i koszty”).
-    [CLI] NA KONIEC: commit wg konwencji z AGENTS.md i raport wg AGENTS.md (≤ 15 linii).
+    [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
+    [CLI] NA KONIEC: prawdziwe sprawdzenie (testy, lint, scenariusz z kryteriów — do końca), commit wg
+          konwencji z AGENTS.md i raport ≤ 15 linii; każde twierdzenie z wyniku polecenia z tej sesji:
+            T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy
+            ZMIANY: 1–3 zdania; liczba plików
+            TESTY: `<polecenie>` → exit <n>; passed/failed/skipped
+            SCENARIUSZ: co uruchomiono jak użytkownik → wynik
+            NIE SPRAWDZONO: …
+            POZA ZAKRESEM: propozycje (niewdrożone)
           Nie podejmuj innych zadań.
 
-## B. Recenzent (`kier-recenzent` w klasie wyżej niż autor; wybiórczo: inna rodzina przez CLI)
+## B. Reviewer (`kier-recenzent` one class above the author; selectively: other family via CLI)
 
     RECENZJA: T-NNN — <cel>   (albo: CEL ETAPU E<n> na main)
     KATALOG: <ścieżka worktree wykonawcy — z jego raportu lub `git worktree list`; tam jest
              wyewidencjonowana gałąź zadania>   (etap: <repo> na main)
     [CLI zamiast wiersza KATALOG] KATALOG: <repo>/.kierownik/wt/T-NNN-rec — odłączony worktree na commicie
-             gałęzi, przygotowany przez kierownika PRZED zapisaniem zlecenia (ZESPOL.md „Zapas”: utworzony,
-             zależności i konfiguracja testowa na miejscu); pracuj tylko w nim, niczego nie instaluj,
-             nie twórz worktree ani gałęzi; brak czegoś → NIE SPRAWDZONO
+             gałęzi, przygotowany przez kierownika PRZED zapisaniem zlecenia (zależności i konfiguracja
+             testowa na miejscu); pracuj tylko w nim, niczego nie instaluj, nie twórz worktree ani gałęzi;
+             brak czegoś → NIE SPRAWDZONO
     ZMIANA: <sha bazy> ... task/T-NNN-nazwa @ <sha>   (etap: <sha zamknięcia poprzedniego etapu; pierwszy etap:
             sha commitu przejęcia projektu albo pierwszego commitu> ... main @ <sha>)
             diff: `git diff <sha bazy>...<gałąź>` — trzy kropki: tylko zmiany gałęzi
-    PRZECZYTAJ: [CLI: AGENTS.md (sekcja „Weryfikacja cudzej zmiany”),] [docs/tasks/T-NNN.md — tylko Cel,
-                Kontekst, Zakres, Kryteria; sekcje autora (Postęp, Odkrycia i decyzje, Wynik) pomiń]
+    PRZECZYTAJ: [CLI: AGENTS.md,] [docs/tasks/T-NNN.md — tylko Cel, Kontekst, Zakres, Kryteria; sekcje autora
+                (Postęp, Odkrycia i decyzje, Wynik) pomiń]
     KRYTERIA: <dokładnie te z zadania; dla etapu: cel etapu + scenariusz end-to-end>
     JAK URUCHOMIĆ: <polecenia> (wnioski autora celowo pominięte)
-    [CLI] ZRÓB: sprawdź każde kryterium w działaniu (sama lektura kodu to nie dowód → NIE SPRAWDZONO);
-          przejrzyj diff (zakres, testy, zbędne abstrakcje, błędy).
+    [CLI] ZRÓB: sprawdź każde kryterium w działaniu — testy z liczbą passed/failed/skipped (kod wyjścia 0 nie
+          wystarcza; polecenie, które nie wystartowało, niczego nie dowodzi; sama lektura kodu to nie dowód →
+          NIE SPRAWDZONO) i scenariusz jak użytkownik; przejrzyj diff (zakres, osłabione testy, zbędne
+          abstrakcje, błędy, sekrety).
+    [CLI] UWAGI: BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
+          „na przyszłość”, sekret — z lokalizacją plik:linia. Reszta OPCJONALNE (nie wpływa na werdykt).
     [CLI] NIE: nie poprawiaj kodu, nie commituj, nie przełączaj gałęzi; tylko zasoby testowe/lokalne.
+    [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę (katalog zmiany ma zostać czysty).
     [CLI] WYNIK (≤ 20 linii):
       WERDYKT: ZALICZONE | DO POPRAWY (są BLOKUJĄCE) | ZABLOKOWANE (czego brakuje) — T-NNN @ <sha>  (etap: E<n> @ <sha main>)
       K1..Kn: OK / NIE / NIE SPRAWDZONO (powód) — dowód (polecenie → wynik / obserwacja)
       BLOKUJĄCE: … z lokalizacją      OPCJONALNE: …
 
-## C. Analiza / plan / recenzja planu / diagnoza (`kier-analityk` lub `kier-architekt`; bez zmian w kodzie)
+## C. Analysis / plan / plan review / diagnosis (`kier-analityk` or `kier-architekt`; no code changes)
 
     PYTANIE: <jedno, ograniczone: mapa obszaru | plan etapu | recenzja planu | diagnoza | spike>
     PO CO: <jaką decyzję lub następny krok kierownika umożliwi odpowiedź — 1 zdanie>
