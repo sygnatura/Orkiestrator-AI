@@ -31,6 +31,7 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
     KRYTERIA: <obserwowalne zachowanie + polecenie testu; scenariusz użycia>
     [CLI] NIE: merge, push, zmiany TODO.md / PROJEKT.md / kryteriów, osłabianie testów,
           płatne lub produkcyjne zasoby (patrz AGENTS.md „Środowisko i koszty”).
+    [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
     [CLI] NA KONIEC: prawdziwe sprawdzenie (testy, lint, scenariusz z kryteriów — do końca), commit wg
           konwencji z AGENTS.md i raport ≤ 15 linii; każde twierdzenie z wyniku polecenia z tej sesji:
             T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy
@@ -64,6 +65,7 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
     [CLI] UWAGI: BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
           „na przyszłość”, sekret — z lokalizacją plik:linia. Reszta OPCJONALNE (nie wpływa na werdykt).
     [CLI] NIE: nie poprawiaj kodu, nie commituj, nie przełączaj gałęzi; tylko zasoby testowe/lokalne.
+    [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę (katalog zmiany ma zostać czysty).
     [CLI] WYNIK (≤ 20 linii):
       WERDYKT: ZALICZONE | DO POPRAWY (są BLOKUJĄCE) | ZABLOKOWANE (czego brakuje) — T-NNN @ <sha>  (etap: E<n> @ <sha main>)
       K1..Kn: OK / NIE / NIE SPRAWDZONO (powód) — dowód (polecenie → wynik / obserwacja)

@@ -19,7 +19,7 @@ Rules:
   the lead orders implementation from executors. Bash only for reading and for running tests and the app locally
   when a diagnosis requires it — only on resources allowed in AGENTS.md („Środowisko i koszty”); production
   databases, sending, payments or paid APIs only with explicit consent in the order, because the owner decides
-  about them.
+  about them. Long test/app output goes to a log file in the system temp directory; read the exit code and the tail.
 - Don't switch branches in the main project directory: the lead works there, and the task branch is checked out
   in the executor's worktree — study it there. Look at other branches with `git show <gałąź>:<plik>`,
   `git diff`, `git log`.

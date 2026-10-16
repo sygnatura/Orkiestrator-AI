@@ -31,6 +31,10 @@ Check:
    "for the future" code, obvious bugs, secrets.
 3. Use only resources allowed in AGENTS.md (test/local).
 
+Long output (dependency installation, test runs) goes to a log file outside the repo — the change directory
+must stay clean: `<cmd> > "${TMPDIR:-/tmp}/kier-rec-<name>.log" 2>&1; echo "exit=$?"; tail -n 40 <log>` (PowerShell:
+`<cmd> *> "$env:TEMP\kier-rec-<name>.log"; "exit=$LASTEXITCODE"; Get-Content <log> -Tail 40`); need more → `grep`.
+
 STAGE GOAL variant (the order says so): instead of task criteria you check the stage goal with an end-to-end
 scenario as the user, on main, over the changes since the sha given in the order.
 

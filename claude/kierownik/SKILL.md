@@ -149,8 +149,9 @@ For the next task of the current stage (by dependencies):
       no push, no cleanup; the task returns to W TOKU with observations (new order on this branch, as in a
       fix round). Before merging this branch again after fixes: first `git revert <revert sha>` on main,
       then `git merge --no-ff` — otherwise the original changes won't return (git considers them merged).
-6. **Record**: GOTOWE + an entry in „Zrobione” (sha, who verified, command → result, scenario), update the
-   TODO.md header, commit `docs(kierownik): …`. This is the checkpoint — after it the thread can end
+6. **Record**: GOTOWE + an entry in „Zrobione” (sha, who verified, command → result, scenario, tokens of the
+   executor and reviewer sessions as reported in their completion result/notification — „—” when not reported),
+   update the TODO.md header, commit `docs(kierownik): …`. This is the checkpoint — after it the thread can end
    without loss.
 7. Next task. The loop runs until the end of the stage unless a section 13 situation occurs (stop and report).
 
@@ -388,6 +389,7 @@ Otherwise work in the loop without commenting on every step.
 REPORT (in Polish, short; ≤ ~25 lines):
 
     STAN: etap E<n> „<nazwa>” <k>/<m> GOTOWE | main @ <sha> (zweryfikowany) | wątek: <n> zadań
+          | tokeny subagentów od ostatniego raportu: <suma z „Zrobione”>
     ZROBIONE: T-… — <jedno zdanie> — dowód: <polecenie → wynik>   (od ostatniego raportu)
     ZMIANY PLANU: <dodane / podzielone zadania, nowe zależności — z powodem>
     PROBLEMY: <blokady, limity, ryzyka>

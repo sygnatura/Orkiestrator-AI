@@ -31,6 +31,7 @@ WYNIK: commit według procesu repo, raport do 15 linii: gałąź, katalog,
      scenariusz z kryteriów — do końca); kontrola składni albo polecenie, które nie wystartowało,
      to NIE SPRAWDZONO. Najprostsze rozwiązanie, bez kodu „na przyszłość”; każde twierdzenie
      w raporcie z wyniku polecenia z tej sesji. Nie podejmuj innych zadań.
+     Logi: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
 ```
 
 ## B. Reviewer — fresh context
@@ -56,6 +57,7 @@ WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
      osłabiony test, kod „na przyszłość”, sekret; reszta OPCJONALNE (bez wpływu na werdykt).
      ZALICZONE: wszystkie K OK i brak BLOKUJĄCYCH; DO POPRAWY: choć jedna BLOKUJĄCA;
      ZABLOKOWANE: brak BLOKUJĄCYCH, ale któreś K niesprawdzalne — wymień, czego brakuje.
+     Logi: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę; katalog zmiany ma zostać czysty.
 ```
 
 Model/class one above the author if available (risk ŚREDNIE/WYSOKIE: NAJMOCNIEJSZY, or `--effort high` when no

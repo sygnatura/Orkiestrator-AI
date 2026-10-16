@@ -182,7 +182,7 @@ Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od ZESPOL.m
 
 ## Zrobione (10 ostatnich; starsze w docs/DONE.md)
 - [x] T-005 | <opis> | <sha scalenia> | zweryf.: <kto, klasa>, <data> |
-      dowód: `<polecenie>` → <wynik>; scenariusz: <co zaobserwowano>
+      dowód: `<polecenie>` → <wynik>; scenariusz: <co zaobserwowano> | tokeny: wyk. <n>k, rec. <n>k
 - [x] E1 zamknięty | <sha> | dowód E2E: <środowisko, dane, czynności, wynik>
 ```
 

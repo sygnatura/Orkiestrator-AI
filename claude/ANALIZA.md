@@ -117,6 +117,10 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - `/autocompact 200k` zamiast 400k: próg wynika z kosztu tury, nie z rozmiaru okna; przekazanie wątku po
      ~8 zadaniach przychodzi dużo wcześniej.
    - `kier-wykonawca` ma jawną listę narzędzi (bez dziedziczenia wszystkich, w tym MCP).
+   - Subagenci też kierują długie wyjście (instalacja zależności, testy, build) do logu w katalogu
+     tymczasowym systemu i czytają kod wyjścia + końcówkę — pełny log w kontekście kosztuje w każdej
+     kolejnej turze. Poza repozytorium, żeby `git status` recenzenta został czysty.
+   - Pomiar: tokeny sesji wykonawcy i recenzenta zapisywane w „Zrobione”, suma w raporcie etapu.
    Czego nie zmierzono: rzeczywistej liczby tokenów w sesji i wpływu effortu `medium` na jakość recenzji.
    Pilot powinien to sprawdzić; przy gorszych recenzjach wróć do `high` (plik agenta + ZESPOL.md).
 
@@ -149,8 +153,10 @@ Ograniczenia, o których trzeba wiedzieć:
   porządkuje zmiany w repozytorium, ale nie ogranicza dostępu do maszyny. Producent zaleca kontener
   lub sandbox — właściciel może wyłączyć `agy` jednym wpisem w ZESPOL.md. Bez flagi `agy -p` po cichu
   pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek czytania stderr.
-- Zestawu nie przetestowano jeszcze na prawdziwym projekcie. Zalecany pilot: jeden istniejący
-  projekt, jeden etap; poprawki SKILL.md na podstawie tego, gdzie kierownik się pomylił.
+- v10 działała u właściciela na prawdziwym projekcie poprawnie, ale kosztownie — to był powód v11.
+  v11 nie przeszła jeszcze pilota. Zalecany: jeden etap na projekcie prowadzonym wcześniej na v10;
+  porównać tokeny na zadanie („Zrobione”) i to, czy weryfikacja celu etapu znajduje błędy przepuszczone
+  przez recenzenta zadania (sygnał, że effort `medium` nie wystarcza).
 
 
 ## 5. Świadomie pominięte
