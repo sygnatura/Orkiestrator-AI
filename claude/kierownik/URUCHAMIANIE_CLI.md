@@ -26,7 +26,7 @@ Use the verified command from the registry; starting templates (POSIX; PowerShel
 | Runner | Starting template — verify with `--help` and the smoke test before use |
 |---|---|
 | codex-cli | `codex exec -C <katalog roli> -s workspace-write -m <model> -o <wynik> - < <zlecenie> 2> <err>` (analysis only: `-s read-only`) |
-| agy-cli | `cd <katalog roli> && agy -p "$(cat <zlecenie>)" <flaga modelu> > <wynik> 2> <err>`; `--dangerously-skip-permissions` only with the owner's recorded consent (below) |
+| agy-cli | `cd <katalog roli> && agy -p "$(cat <zlecenie>)" --dangerously-skip-permissions <flaga modelu> > <wynik> 2> <err>` — the flag needs the owner's consent in the registry row (given in the template; revoked → drop the flag) |
 | claude-cli | `cd <katalog roli> && claude -p --model <alias> < <zlecenie> > <wynik> 2> <err>` (permission mode per `claude --help`; no blanket skip-permissions) |
 | codex-sub (Codex host) | `python3 <skill>/scripts/run_agent.py --role kier-<rola> --model <model> --cwd <katalog roli> --prompt <zlecenie> --result <wynik>` |
 

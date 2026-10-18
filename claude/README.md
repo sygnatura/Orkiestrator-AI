@@ -117,8 +117,9 @@ zdaniem, a kierownik aktualizuje rejestr: `zespół: wyszedł nowy model <nazwa>
 
 ## Bezpieczeństwo
 
-CLI innych dostawców działają w trybie bez pytań (`agy --dangerously-skip-permissions`; Codex w sandboxie
-`-s workspace-write`). Worktree zadania (`.kierownik/wt/T-NNN`) porządkuje zmiany w repozytorium, ale
+CLI innych dostawców działają w trybie bez pytań: Codex w sandboxie `-s workspace-write`, a `agy`
+z `--dangerously-skip-permissions`, czyli bez sandboxa — na to zgodziłeś się 2026-10-18 i zgoda jest
+zapisana we wzorze rejestru (`zespół: agy bez trybu bez sandboxa` ją cofa). Worktree zadania (`.kierownik/wt/T-NNN`) porządkuje zmiany w repozytorium, ale
 nie ogranicza dostępu `agy` do maszyny — a kierownik uruchamia `agy` już przy pierwszym `/kierownik`
 (test dymny). Jeśli masz na tej maszynie cenne dane poza repozytorium, uruchamiaj Claude Code
 w kontenerze albo wyłącz `agy`: napisz `zespół: nie używaj agy` albo w `~/.kierownik/ZESPOL.md` wpisz

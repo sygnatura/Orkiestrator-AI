@@ -9,7 +9,7 @@ in (Claude Code or Codex); "runner" = a row of the registry.
 
 1. Read first, write second. Look for a filled v10/v11 `ZESPOL.md` (no „Registry v12” line) in every installed skill
    directory — `~/.claude/skills/kierownik/`, `~/.agents/skills/kierownik/`, a project install
-   `<repo>/.agents/skills/kierownik/` — and merge them in memory into the ZESPOL_WZOR.md layout: Claude aliases with
+   `<repo>/.agents/skills/kierownik/` — and merge them in memory into the ZESPOL_WZOR.md layout, keeping the template's recorded owner consents: Claude aliases with
    „Wskazuje dziś na” and notes (haiku without effort, `best` vs `fable`); the Codex model mapping and its
    availability; limits and `wyłączony przez właściciela` states (onto the subscription or the model); the owner's
    command deviations (into „Mechanizm / polecenie”); „Historia zmian”. Don't carry over v11 role rows that differ from
@@ -40,7 +40,9 @@ in (Claude Code or Codex); "runner" = a row of the registry.
    time has passed the item may be tried once; a limit again → double the previous wait.
 2. **Owner's messages**: `zespół: rezygnuję z X` / `nie używaj X` → `wyłączony przez właściciela`;
    `zespół: X wymaga credits` → the model `wymaga credits`; `zespół: oszczędzaj X` → raise X's Priorytet number (and
-   `zespół: używaj X` → lower it); `zespół: mam X` → new subscription, models and runner rows, then A.3–A.5 for it.
+   `zespół: używaj X` → lower it); `zespół: mam X` → new subscription, models and runner rows, then A.3–A.5 for it;
+   consent to a CLI's no-sandbox mode given or revoked (`zespół: agy bez trybu bez sandboxa`) → that runner row
+   and „Historia zmian”.
 3. **New version in an existing line** (an alias already follows it): fix only notes that name versions. Effort levels
    don't mean the same across generations: if the vendor changed the recommended effort for the line, fix the effort
    of the roles of that class (agent files / role TOML and the host table).

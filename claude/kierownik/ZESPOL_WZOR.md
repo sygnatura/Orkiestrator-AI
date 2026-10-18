@@ -64,7 +64,7 @@ orchestrate). A runner is usable when its subscription and the chosen model are 
 | codex-cli | openai | CLI | Claude Code | <z URUCHAMIANIE_CLI.md po `--help`> | [?] |
 | codex-sub | openai | role `kier-*` / run_agent.py | Codex | role TOML, `run_agent.py --model/--effort` | [?] |
 | claude-cli | claude | CLI | Codex | <…> | [?] |
-| agy-cli | google | CLI | oba | <…> — no sandbox; no-prompt mode only with „zgoda właściciela na tryb bez sandboxa: <data>” here | [?] |
+| agy-cli | google | CLI | oba | <…> z `--dangerously-skip-permissions` — zgoda właściciela na tryb bez sandboxa: 2026-10-18 (cofnięcie: `zespół: agy bez trybu bez sandboxa`) | [?] |
 
 
 ## Host Claude Code — role i effort
@@ -98,4 +98,6 @@ Roles in `roles/kier-*.toml` inherit the Codex session model until `model` is se
 
 
 ## Historia zmian
+- 2026-10-18 — właściciel zgodził się na uruchamianie `agy` z `--dangerously-skip-permissions` (tryb bez pytań
+  i bez sandboxa, dostęp do całej maszyny); obowiązuje każdą maszynę, na której rejestr powstaje z tego wzoru.
 - <data> — <co zmieniono i dlaczego>
