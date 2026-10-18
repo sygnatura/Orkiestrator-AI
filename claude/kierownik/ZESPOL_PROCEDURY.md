@@ -7,15 +7,21 @@ in (Claude Code or Codex); "runner" = a row of the registry.
 
 ## A. Registry setup (once per machine; afterwards only updates)
 
+LOCAL DECISIONS WIN: whatever the owner decided on this machine — a `wyłączony przez właściciela` state, a revoked or
+never-given consent (e.g. to a no-sandbox mode), a priority — always overrides the template. A consent that exists
+only in the template is never copied in silently into an existing registry: ask the owner once
+(„Wzór zawiera Twoją zgodę z <data> na <co>. Zastosować ją na tej maszynie?”) and record the answer either way.
+
 0. A registry that says „Registry v12” without „schemat 2” (an early v12 draft) is updated in place before use: every
    `niedostępny od <czas>` becomes `niedostępny do <czas + 5 h> (szacunek)`; „Modele” gets the „Rodzina” column (the
-   family of each model, not of its subscription); the subscription column „Rodzina” becomes „Dostawca”; owner
-   consents from the template that are missing are added only if the owner gave them (check „Historia zmian” of the
-   template); then set the header line to „Registry v12, schemat 2” and log it. Steps 1–5 are not needed then.
+   family of each model, not of its subscription); the subscription column „Rodzina” becomes „Dostawca”; template
+   consents per LOCAL DECISIONS WIN; then set the header line to „Registry v12, schemat 2” and log it. If its
+   „Stan wypełnienia” is WYPEŁNIONY, steps 1–5 are not needed; if NIEWYPEŁNIONY, continue with steps 3–5.
 
 1. Read first, write second. Look for a filled v10/v11 `ZESPOL.md` (no „Registry v12” line) in every installed skill
    directory — `~/.claude/skills/kierownik/`, `~/.agents/skills/kierownik/`, a project install
-   `<repo>/.agents/skills/kierownik/` — and merge them in memory into the ZESPOL_WZOR.md layout, keeping the template's recorded owner consents: Claude aliases with
+   `<repo>/.agents/skills/kierownik/` — and merge them in memory into the ZESPOL_WZOR.md layout (consents per LOCAL DECISIONS WIN — an old
+   `wyłączony przez właściciela` for agy means no no-sandbox consent here): Claude aliases with
    „Wskazuje dziś na” and notes (haiku without effort, `best` vs `fable`); the Codex model mapping and its
    availability; limits and `wyłączony przez właściciela` states (onto the subscription or the model); the owner's
    command deviations (into „Mechanizm / polecenie”); „Historia zmian”. Don't carry over v11 role rows that differ from

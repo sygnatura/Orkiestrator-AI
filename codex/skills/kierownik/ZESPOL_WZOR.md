@@ -99,5 +99,6 @@ Roles in `roles/kier-*.toml` inherit the Codex session model until `model` is se
 
 ## Historia zmian
 - 2026-10-18 — właściciel zgodził się na uruchamianie `agy` z `--dangerously-skip-permissions` (tryb bez pytań
-  i bez sandboxa, dostęp do całej maszyny); obowiązuje każdą maszynę, na której rejestr powstaje z tego wzoru.
+  i bez sandboxa, dostęp do całej maszyny); obowiązuje rejestr tworzony od zera z tego wzoru. Istniejący rejestr
+  przejmuje ją tylko po potwierdzeniu właściciela; lokalne cofnięcie zgody zawsze ma pierwszeństwo.
 - <data> — <co zmieniono i dlaczego>
