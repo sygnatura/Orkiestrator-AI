@@ -1,6 +1,6 @@
 # ZESPÓŁ — runner registry of this machine (shared by every lead host)
 
-Registry v12. Template. The live file is `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`),
+Registry v12, schemat 2. Template. The live file is `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`),
 one per machine, read and written by the lead in Claude Code and in Codex alike, so a limit or a new subscription
 recorded by one host is known to the other. Procedures: ZESPOL_PROCEDURY.md; running CLIs: URUCHAMIANIE_CLI.md. The
 owner may edit it by hand; entries in Polish. The only file with concrete model names. State only — no procedures.

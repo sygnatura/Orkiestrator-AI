@@ -27,7 +27,7 @@ variable. Paths below are relative to this file; read each file only when its tr
   models → classes, priorities, limit states, verified CLI commands; at session start. Template:
   [ZESPOL_WZOR.md](ZESPOL_WZOR.md).
 - [ZESPOL_PROCEDURY.md](ZESPOL_PROCEDURY.md): registry setup and changes (limit, model, provider); when no
-  registry is found or it is unfilled, on `zespół:` or a limit message.
+  registry is found, it is unfilled or of an older schema, on `zespół:` or a limit message.
 - [URUCHAMIANIE_CLI.md](URUCHAMIANIE_CLI.md): directories, commands and checks for CLI runners; before the first
   CLI run in a session.
 - [ZLECENIA.md](ZLECENIA.md): order templates A/B/C; before the first order in a session.
@@ -43,7 +43,7 @@ the need for consent to production operations.
 ## 1. SESSION START
 
 Read the registry `~/.kierownik/ZESPOL.md`, or the location recorded in the TODO header („Ustalenia”) when the home
-directory couldn't be written (none found or unfilled → ZESPOL_PROCEDURY part A). Establish OS/shell, repo, current branch, full HEAD, other people's uncommitted changes, recent
+directory couldn't be written (none found, unfilled, or without „Registry v12, schemat 2” → ZESPOL_PROCEDURY part A). Establish OS/shell, repo, current branch, full HEAD, other people's uncommitted changes, recent
 commits, the remote main branch, `task/*` branches and `git worktree list --porcelain`. Show remotes without
 credentials. Below, `main` means the real integration branch. No remote: skip push and say so. With a remote:
 `git fetch` with the existing authentication. Update a clean integration branch only by fast-forward; on
@@ -58,9 +58,9 @@ original Claude files. Add missing local excludes `.kierownik/` and `.claude/wor
 
 ## 2. CODEX HOST AND REGISTRY SETUP
 
-Registry: ZESPOL_PROCEDURY part A (it migrates a v10/v11 ZESPOL.md left in a skill directory). Writing
-`~/.kierownik/` is outside the workspace: ask for approval once; refused → part A.1 (registry next to this skill,
-location recorded in the TODO header). Record only models/effort/limits actually available, never invented aliases; a missing mapping doesn't block
+Registry: ZESPOL_PROCEDURY part A (it migrates a v10/v11 ZESPOL.md left in a skill directory and an early v12
+registry). Writing `~/.kierownik/` is outside the workspace: ask for approval once; refused → part A.2 (registry in
+`<repo>/.kierownik/ZESPOL.md`, location recorded in the TODO header). Record only models/effort/limits actually available, never invented aliases; a missing mapping doesn't block
 work with the available model.
 
 Check the agent tools actually available and their schema: role, fresh context, model, effort, working directory.

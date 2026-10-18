@@ -8,8 +8,11 @@ main itself (`<repo>` = absolute project path):
 - task reviewer: `T-NNN-rec` — detached worktree on the branch's commit
   (`git worktree add --detach .kierownik/wt/T-NNN-rec task/T-NNN-nazwa`; a branch can't be checked out twice);
 - stage verification: `E<n>-rec` — detached worktree on the verified main commit;
-- analyst, architect, plan review: `<id>-ro` — detached worktree on main HEAD; they answer in their result file, and
-  the lead writes any docs/tasks or ADR content into the repo itself.
+- analyst, architect, plan review: `<id>-ro` — detached worktree on the commit the order names: main HEAD by default;
+  for a diagnosis of a task, the task branch's commit (the failure may exist only there). Whatever they must read —
+  a plan draft, logs, observations — is committed first or passed as a file named in the order (e.g. under
+  `<repo>/.kierownik/`), because a fresh worktree sees only commits. They answer in their result file, and the lead
+  writes any docs/tasks or ADR content into the repo itself.
 Reviewer and stage directories are fresh checkouts — install the dependencies („Instalacja” in AGENTS.md) and the
 test configuration (the ŚRODOWISKO line of order A) before the run. Run reviewers with write access to their own
 directory (Codex `-s workspace-write`), because tests write build output and caches; independence is protected by the
@@ -41,8 +44,9 @@ runner is used in its prompting/sandboxed mode, or not at all (`agy -p` without 
 commands — useless for tasks that need them). Everywhere: only in the role directory, no secrets in the order. After every run check the
 worktree's `git status` and `git log` and the `.err` file — exit code 0 proves nothing. Codex CLI loads AGENTS.md by
 itself; keep `[CLI: AGENTS.md]` for runners whose smoke test didn't show it. After a CLI review or a read-only role: `git status --short` in its directory empty and `git rev-parse HEAD` equal
-to the commit the directory was created on — otherwise reject the result; finally `git worktree remove <that
-directory>` (`--force` when ignored files remained).
+to the commit the directory was created on — otherwise reject the result. Cleanup removes only worktrees you created
+for that order under `<repo>/.kierownik/wt/`: `git worktree remove <that directory>` (`--force` when ignored files
+remained). Never remove the shared/cloud checkout, the main directory, or any worktree you didn't create.
 Executor commits: a CLI sandbox may protect Git metadata (a worktree's gitdir lives in the main `.git`), so the commit
 can fail. The order says: commit if Git allows; if it refuses, leave the changes uncommitted and say so in the report.
 The lead then checks `git -C <katalog roli> status --short` against the report and commits them itself

@@ -1,11 +1,17 @@
 # ZESPOL_PROCEDURY — runner registry procedures (shared by the Claude Code and Codex hosts)
 
-Read by the lead only when the trigger occurs: A — no registry found (SKILL.md, section 1) or „Stan wypełnienia”
-NIEWYPEŁNIONY; B — the owner writes `zespół: …`, a limit message arrives, or a new model/provider appears. Running a
+Read by the lead only when the trigger occurs: A — no registry found (SKILL.md, section 1), „Stan wypełnienia”
+NIEWYPEŁNIONY, or a registry without the line „Registry v12, schemat 2”; B — the owner writes `zespół: …`, a limit message arrives, or a new model/provider appears. Running a
 CLI runner: URUCHAMIANIE_CLI.md. State goes into the registry, never into this file. "Host" = the tool the lead runs
 in (Claude Code or Codex); "runner" = a row of the registry.
 
 ## A. Registry setup (once per machine; afterwards only updates)
+
+0. A registry that says „Registry v12” without „schemat 2” (an early v12 draft) is updated in place before use: every
+   `niedostępny od <czas>` becomes `niedostępny do <czas + 5 h> (szacunek)`; „Modele” gets the „Rodzina” column (the
+   family of each model, not of its subscription); the subscription column „Rodzina” becomes „Dostawca”; owner
+   consents from the template that are missing are added only if the owner gave them (check „Historia zmian” of the
+   template); then set the header line to „Registry v12, schemat 2” and log it. Steps 1–5 are not needed then.
 
 1. Read first, write second. Look for a filled v10/v11 `ZESPOL.md` (no „Registry v12” line) in every installed skill
    directory — `~/.claude/skills/kierownik/`, `~/.agents/skills/kierownik/`, a project install

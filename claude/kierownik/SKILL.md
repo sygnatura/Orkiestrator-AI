@@ -37,7 +37,7 @@ with the README install it is `~/.claude/skills/kierownik/`). Read each one ONLY
   models → classes, priorities, limit states, runners with verified commands, host roles and effort. At session
   start; record changes there. Template: `ZESPOL_WZOR.md`.
 - `ZESPOL_PROCEDURY.md` — registry setup and changes (limit, new model, new or dropped provider). When no registry
-  is found or it is not filled in, on `zespół: …` or a limit message.
+  is found, it is not filled in or of an older schema, on `zespół: …` or a limit message.
 - `URUCHAMIANIE_CLI.md` — directories, commands and checks for CLI runners. Before the first CLI run in a session.
 - `START_PROJEKTU.md` — taking over an existing project, starting a new one. When the project lacks
   `docs/PROJEKT.md` + `docs/TODO.md`.
@@ -58,7 +58,7 @@ only the registry says which model of which provider stands behind each class to
 
 1. Read the registry: `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`), or the location
    recorded in the TODO.md header („Ustalenia”) when the home directory couldn't be written. None found, or not
-   filled in → `ZESPOL_PROCEDURY.md`, part A (it migrates a v10/v11 ZESPOL.md). A passed `niedostępny do` time
+   filled in, or without „Registry v12, schemat 2” → `ZESPOL_PROCEDURY.md`, part A (it migrates v10/v11 and early v12). A passed `niedostępny do` time
    means the item may be tried again.
 2. Establish the environment: OS and shell, directory, `git status -s`, `git branch --show-current`,
    `git remote -v`, the main branch (`git symbolic-ref --short refs/remotes/origin/HEAD`; if unset —
