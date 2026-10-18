@@ -154,7 +154,7 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      drugi host odzyskuje pracę z ostatniego punktu kontrolnego; WZNOWIENIE nie usuwa worktree zadania,
      które może jeszcze działać w innej sesji.
    - Po pilocie: kierownik pominął Codex przy zadaniu o ryzyku ŚREDNIM (recenzja Opus pracy Sonneta). Zmiany:
-     linia „trasa” w `TODO.md` przed każdym zleceniem (wymusza przejście przez regułę i jest widoczna dla
+     wpis „przydział” w `TODO.md` przed każdym zleceniem (wymusza przejście przez regułę i jest widoczna dla
      właściciela) oraz inna rodzina jako pierwszy recenzent KAŻDEGO zadania — przy subskrypcji Codex, która
      odnawia się szybko, i rzadkim limicie Claude to zabiera sesję Opus z każdej recenzji. Koszt: kierownik
      częściej przygotowuje katalog recenzenta CLI i uruchamia własne testy.

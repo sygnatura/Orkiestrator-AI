@@ -58,7 +58,7 @@ Jeśli w `~/.claude/agents/kier-*.md` zmieniałeś `model:`, po skopiowaniu agen
    najnowszy model tej linii). `/model` nie zmienia effortu — zostaje domyślny dla modelu (Opus: medium)
    i to wystarcza na co dzień, bo kierownik działa przez cały wątek, a high podnosi koszt każdej tury.
    `/effort high` (potem z powrotem `/effort medium`) włącz na przejęcie projektu, plan i akceptację etapu,
-   „plan pod znakiem zapytania”, trudną diagnozę albo gdy w liniach „trasa” widzisz powtarzające się błędy. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
+   „plan pod znakiem zapytania”, trudną diagnozę albo gdy we wpisach „przydział” widzisz powtarzające się błędy. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
    pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi rejestr `~/.kierownik/ZESPOL.md`).
    Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8).
 2. Wpisz `/kierownik`.
@@ -101,7 +101,7 @@ Niezależność weryfikacji: recenzent startuje ze świeżym kontekstem i widzi 
 i polecenia — nie rozumowanie autora — i jest albo z innej rodziny, albo o klasę wyżej. Każde zadanie
 recenzuje najpierw inna rodzina niż autor (np. pracę Sonneta — Codex), według priorytetu i limitu;
 gdy żadna nie jest dostępna, recenzuje Opus — o klasę wyżej albo w trybie „recenzja tą samą klasą”
-z własnymi testami kierownika. Przy każdym zleceniu kierownik wpisuje w `TODO.md` jedną linię „trasa”:
+z własnymi testami kierownika. Przy każdym zleceniu kierownik wpisuje w `TODO.md` jeden wpis „przydział”:
 kto był autorem, jakie ryzyko, czego reguła wymaga i kogo wybrał — od razu widać, czy trzyma się
 zasad. Inna rodzina jest dodawana zawsze przy zmianach dotyczących bezpieczeństwa,
 danych, pieniędzy lub kontraktów zewnętrznych, przy sprzecznych sygnałach, po dwóch nieudanych rundach

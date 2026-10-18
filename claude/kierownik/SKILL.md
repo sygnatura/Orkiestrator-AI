@@ -246,9 +246,9 @@ some runner can still do the work.
 | Plan review | MOCNY | other family than the plan author first |
 | Stage goal verification | NAJMOCNIEJSZY | any; + other family for an MVP-key stage or one touching security / data / money |
 
-CHOOSING A RUNNER for an order — before launching it, write one routing line into the task's W TOKU line in
+CHOOSING A RUNNER for an order — before launching it, write one assignment line („przydział”) into the task's W TOKU line in
 TODO.md, so the choice is made by the rule and visible to the owner:
-`trasa <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
+`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class. Usable =
    `dostępny`, or a `niedostępny do` time that has passed (tried once — ZESPOL_PROCEDURY.md, B.1). The family that
    counts is the MODEL's family. `NIEZNANY` → run its smoke test first
@@ -318,7 +318,7 @@ The executor's report is a declaration. Evidence is what has been checked indepe
    criterion, bug, out of scope, weakened test, "for the future" code, secret) → DO POPRAWY. OPCJONALNE
    remarks → „Pomysły”, not to be fixed: a reviewer asked to look for problems always finds some, and chasing
    every remark leads to over-engineering. A remark marked BLOKUJĄCE that fits none of those six categories (style,
-   preference, a "better" design, a hypothetical risk) is moved to OPCJONALNE by you, noted in the „trasa” line
+   preference, a "better" design, a hypothetical risk) is moved to OPCJONALNE by you, noted in the „przydział” line
    („przeklasyfikowano: <uwaga>”); it doesn't start a fix round. Never downgrade a remark about security,
    authentication, data, money or an external contract, and when unsure keep it BLOKUJĄCE. A criterion NIE SPRAWDZONO without BLOKUJĄCE remarks → verdict
    ZABLOKOWANE (section 5); alongside BLOKUJĄCE remarks → DO POPRAWY, but remove the obstacle (environment,

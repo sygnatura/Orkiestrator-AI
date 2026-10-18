@@ -178,8 +178,8 @@ routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN IN QUESTIO
 decision, deciding a conflicting verdict NAJMOCNIEJSZY; plan review MOCNY, another family than the plan author first;
 stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
 
-Choosing a runner — before launching, write one routing line into the task's W TOKU line in TODO:
-`trasa <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
+Choosing a runner — before launching, write one assignment line („przydział”) into the task's W TOKU line in TODO:
+`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class (usable =
    `dostępny` or a passed `niedostępny do` time, tried once; the family that counts is the MODEL's family; `NIEZNANY`
    → smoke test first, ZESPOL_PROCEDURY A.4; never
@@ -230,7 +230,7 @@ Every criterion has a result and evidence from that session. Check that sources 
 review. Ignored local test outputs are allowed; a change to sources invalidates the verdict. BLOKUJĄCE: unmet
 criterion/bug/out of scope/weakened test/"for the future" code/secret → DO POPRAWY. OPCJONALNE → „Pomysły”, not a
 fix round. A remark marked BLOKUJĄCE that fits none of those categories (style, preference, a "better" design, a
-hypothetical risk) you move to OPCJONALNE and note in the „trasa” line („przeklasyfikowano: <uwaga>”). Never
+hypothetical risk) you move to OPCJONALNE and note in the „przydział” line („przeklasyfikowano: <uwaga>”). Never
 downgrade a remark about security/auth/data/money/external contracts; when unsure keep it BLOKUJĄCE. An unchecked criterion without other defects → ZABLOKOWANE; with defects DO POPRAWY plus removing the
 obstacle. Conflict: a second fresh review by the runner not used yet (other family or a stronger class), only then a
 decision.
