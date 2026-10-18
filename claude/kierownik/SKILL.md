@@ -317,7 +317,9 @@ The executor's report is a declaration. Evidence is what has been checked indepe
    usage scenario, the diff for scope, weakened tests, needless abstractions, bugs. BLOKUJĄCE remarks (unmet
    criterion, bug, out of scope, weakened test, "for the future" code, secret) → DO POPRAWY. OPCJONALNE
    remarks → „Pomysły”, not to be fixed: a reviewer asked to look for problems always finds some, and chasing
-   every remark leads to over-engineering. A criterion NIE SPRAWDZONO without BLOKUJĄCE remarks → verdict
+   every remark leads to over-engineering. A remark marked BLOKUJĄCE that fits none of those six categories (style,
+   preference, a "better" design, a hypothetical risk) is moved to OPCJONALNE by you, noted in the „trasa” line
+   („przeklasyfikowano: <uwaga>”); it doesn't start a fix round. A criterion NIE SPRAWDZONO without BLOKUJĄCE remarks → verdict
    ZABLOKOWANE (section 5); alongside BLOKUJĄCE remarks → DO POPRAWY, but remove the obstacle (environment,
    data, dependencies) in the task worktree before the repeated review.
 4. Verdict uncertain or contradicting the report → a second, fresh review by a family not used yet, or in

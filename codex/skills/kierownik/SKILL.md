@@ -229,7 +229,8 @@ Reviewer: fresh context, only criteria/diff/commands; doesn't read the author's 
 Every criterion has a result and evidence from that session. Check that sources and HEAD didn't change during the
 review. Ignored local test outputs are allowed; a change to sources invalidates the verdict. BLOKUJĄCE: unmet
 criterion/bug/out of scope/weakened test/"for the future" code/secret → DO POPRAWY. OPCJONALNE → „Pomysły”, not a
-fix round. An unchecked criterion without other defects → ZABLOKOWANE; with defects DO POPRAWY plus removing the
+fix round. A remark marked BLOKUJĄCE that fits none of those categories (style, preference, a "better" design, a
+hypothetical risk) you move to OPCJONALNE and note in the „trasa” line („przeklasyfikowano: <uwaga>”). An unchecked criterion without other defects → ZABLOKOWANE; with defects DO POPRAWY plus removing the
 obstacle. Conflict: a second fresh review by the runner not used yet (other family or a stronger class), only then a
 decision.
 

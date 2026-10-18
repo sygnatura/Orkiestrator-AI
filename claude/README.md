@@ -55,8 +55,10 @@ Jeśli w `~/.claude/agents/kier-*.md` zmieniałeś `model:`, po skopiowaniu agen
 ## Użycie
 
 1. Otwórz Claude Code w katalogu projektu i ustaw model kierownika: `/model opus` (alias — zawsze
-   najnowszy model tej linii). `/model` nie zmienia effortu — zostaje domyślny dla modelu; jeśli chcesz
-   wyższego, dodaj `/effort high`. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
+   najnowszy model tej linii). `/model` nie zmienia effortu — zostaje domyślny dla modelu (Opus: medium)
+   i to wystarcza na co dzień, bo kierownik działa przez cały wątek, a high podnosi koszt każdej tury.
+   `/effort high` (potem z powrotem `/effort medium`) włącz na przejęcie projektu, plan i akceptację etapu,
+   „plan pod znakiem zapytania”, trudną diagnozę albo gdy w liniach „trasa” widzisz powtarzające się błędy. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
    pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi rejestr `~/.kierownik/ZESPOL.md`).
    Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8).
 2. Wpisz `/kierownik`.
