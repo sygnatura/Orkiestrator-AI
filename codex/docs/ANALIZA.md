@@ -33,7 +33,7 @@ integracji; nie wymaga przywracania rozmowy Claude.
 | Automatyczne CLAUDE/import AGENTS | Jawne reguły AGENTS i reguły katalogu; importy Claude odczytywane ręcznie |
 | /clear i /autocompact | Checkpoint i nowy wątek; bez obietnicy przeniesienia procesów |
 | Równoległe worktree | Lokalnie do 4; cloud shared checkout kolejno, bez worktree bez żądania |
-| Zapas Codex/Antigravity | Codex główny; Claude/Antigravity lub skonfigurowany zamiennik jako zapas |
+| Zapas Codex/Antigravity | Wspólny rejestr runnerów (v12): Codex, Claude CLI, Antigravity i dopisane narzędzia według klasy, rodziny i priorytetu |
 
 Wszystkie pola ról sprawdzono względem publicznego schematu Codex.
 Nie ma gwarancji, że każdy klient cloud udostępnia custom role/model override

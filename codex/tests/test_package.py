@@ -207,7 +207,7 @@ class RunnerTests(ProjectTest):
 class SharedRegistryTests(unittest.TestCase):
     def test_registry_files_match_claude_package(self):
         claude = PACKAGE.parent / 'claude' / 'kierownik'
-        for name in ('ZESPOL_WZOR.md', 'ZESPOL_PROCEDURY.md'):
+        for name in ('ZESPOL_WZOR.md', 'ZESPOL_PROCEDURY.md', 'URUCHAMIANIE_CLI.md'):
             self.assertEqual((SKILL / name).read_bytes(), (claude / name).read_bytes(), name)
 
 

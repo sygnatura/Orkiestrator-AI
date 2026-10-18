@@ -1,48 +1,65 @@
 # ZESPÓŁ — runner registry of this machine (shared by every lead host)
 
-Template. The live file is `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`), one per
-machine, read and written by the lead in Claude Code and in Codex alike, so a limit or a new subscription recorded
-by one host is known to the other. Procedures: ZESPOL_PROCEDURY.md. The owner may edit it by hand; entries in
-Polish. The only file with concrete model names. State only — no procedures.
+Registry v12. Template. The live file is `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`),
+one per machine, read and written by the lead in Claude Code and in Codex alike, so a limit or a new subscription
+recorded by one host is known to the other. Procedures: ZESPOL_PROCEDURY.md; running CLIs: URUCHAMIANIE_CLI.md. The
+owner may edit it by hand; entries in Polish. The only file with concrete model names. State only — no procedures.
 
 Stan wypełnienia: NIEWYPEŁNIONY   (the lead changes it to: WYPEŁNIONY <data>)
+
+Stany (subscriptions and models): `dostępny` | `niedostępny do <data godzina>` | `niedostępny od <data godzina>`
+(reset time unknown — try again after ~5 h or when the owner says so) | `wymaga credits` (unavailable unless the
+owner agrees to pay) | `wyłączony przez właściciela` (set only by the owner or on the owner's explicit `zespół:`; the
+lead neither tests nor uses it) | `NIEZNANY` (not checked yet — check before first use).
 
 
 ## Klasy
 
 SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY — capability tiers comparable across providers. A model's class is
-assigned by the lead from its capability and cost relative to the others and confirmed by the owner (procedure B).
-Routing (SKILL.md, section 7) names only classes and families, never tools — adding, dropping or replacing a
-subscription changes only this file.
+assigned by the lead from its capability and cost relative to the others and confirmed by the owner. Routing
+(SKILL.md, section 7) names only classes and families, never tools — adding, dropping or replacing a subscription
+changes only this file.
+
+
+## Subskrypcje
+
+A limit or a cancelled plan usually hits a whole subscription; a single model can also be limited (table below).
+Priorytet: 1 = spend first; the owner sets it (`zespół: oszczędzaj X` → higher number).
+
+| Subskrypcja | Rodzina | Plan | Priorytet | Stan |
+|---|---|---|---|---|
+| claude | Anthropic | Max | 1 | dostępny |
+| openai | OpenAI | <…> | 2 | NIEZNANY |
+| google | Google | <…> | 2 | NIEZNANY |
+
+
+## Modele
+
+| Model / alias | Subskrypcja | Klasa | Stan | Uwagi |
+|---|---|---|---|---|
+| `fable` | claude | NAJMOCNIEJSZY | dostępny | `/model` also has `best`; subagent docs list only `fable` — use it |
+| `opus` | claude | MOCNY | dostępny | default model of the plan; default effort of the line: medium |
+| `sonnet` | claude | STANDARDOWY | dostępny | |
+| `haiku` | claude | SZYBKI | dostępny | no effort field — `kier-analityk` with `model: haiku` unverified [?] |
+| <model z `codex --help`> | openai | MOCNY | NIEZNANY | |
+| <model z `agy --help`> | google | MOCNY | NIEZNANY | |
+
+Claude aliases follow the newest model of their line; the version they point to is information only.
 
 
 ## Runnery
 
-One row per way of getting work done. `host` = the lead's own subagents (cheapest to orchestrate, but the same
-family as the lead); `CLI` = a non-interactive command run in a role directory. Priorytet: 1 = spend first; the
-owner sets it (e.g. to save a subscription for later in the month).
+One row per way of getting work done. „Host”: the lead host the runner is used from — `Claude Code`, `Codex` or
+`oba`. A lead uses only rows for its own host or `oba`; `subagenci` of its own host are its host runner (cheapest to
+orchestrate). A runner is usable when its subscription and the chosen model are usable.
 
-| ID | Rodzina | Typ | Modele → klasy | Priorytet | Stan | Uwagi |
-|---|---|---|---|---|---|---|
-| claude-sub | Anthropic | host w Claude Code (`kier-*`) | `fable` NAJMOCNIEJSZY, `opus` MOCNY, `sonnet` STANDARDOWY, `haiku` SZYBKI | 1 | dostępny | aliases follow the newest model of each line |
-| claude-cli | Anthropic | CLI (`claude -p`) — runner for a Codex host | as claude-sub | 1 | NIEZNANY | |
-| codex-sub | OpenAI | host w Codex (role `kier-*`, run_agent.py) | <model> MOCNY, <model> STANDARDOWY | 1 | NIEZNANY | |
-| codex-cli | OpenAI | CLI (`codex exec`) — runner for a Claude host | as codex-sub | 2 | NIEZNANY | sandbox `-s` |
-| agy-cli | Google | CLI (`agy -p`) | <model> MOCNY | 2 | NIEZNANY | no sandbox — whole machine |
-
-Stan: `dostępny` | `niedostępny do <data godzina>` | `niedostępny od <data godzina>` (reset time unknown — retry
-after ~5 h or when the owner says so) | `wyłączony przez właściciela` | `NIEZNANY` (not smoke-tested yet). The lead
-writes the first three after a limit message or the owner's information; `wyłączony przez właściciela` only the
-owner — the lead neither tests nor uses such a runner. A new provider = a new row (procedure B).
-
-
-## Polecenia CLI (zweryfikowane testem dymnym)
-
-| Runner | Polecenie (zlecenie z pliku, wynik i stderr do plików) | Model / effort | Test dymny |
-|---|---|---|---|
-| codex-cli | <z ZESPOL_PROCEDURY.md, część C, po sprawdzeniu `--help`> | `-m <model>` | [?] |
-| agy-cli | <…> | <flaga z `--help`> | [?] |
-| claude-cli | <…> | `--model <alias>` | [?] |
+| ID | Subskrypcja | Typ | Host | Mechanizm / polecenie (zweryfikowane) | Test dymny |
+|---|---|---|---|---|---|
+| claude-sub | claude | subagenci `kier-*` | Claude Code | narzędzie Agent, `model: <alias>` | n/d |
+| codex-cli | openai | CLI | Claude Code | <z URUCHAMIANIE_CLI.md po `--help`> | [?] |
+| codex-sub | openai | role `kier-*` / run_agent.py | Codex | role TOML, `run_agent.py --model/--effort` | [?] |
+| claude-cli | claude | CLI | Codex | <…> | [?] |
+| agy-cli | google | CLI | oba | <…> — no sandbox, whole machine | [?] |
 
 
 ## Host Claude Code — role i effort
@@ -58,7 +75,8 @@ The model and effort in force are `model:`/`effort:` in `~/.claude/agents/kier-*
 | Recenzent | `kier-recenzent` | MOCNY (`opus`) | high |
 | Architekt | `kier-architekt` | MOCNY (`opus`); NAJMOCNIEJSZY per call (SKILL.md, section 7) | high |
 
-Bezpiecznik kontekstu kierownika Claude: `/autocompact 200k`. Subagenci `kier-*` zainstalowani: [?]
+Bezpiecznik kontekstu kierownika Claude: `/autocompact 200k` (by cost per turn, not by window size).
+Subagenci `kier-*` zainstalowani: [?]
 
 
 ## Host Codex — role i effort

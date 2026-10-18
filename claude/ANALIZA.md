@@ -131,12 +131,16 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - **Rejestr runnerów** `~/.kierownik/ZESPOL.md`, jeden na maszynę i wspólny dla kierownika w Claude Code
      i w Codex (limit zapisany przez jednego zna drugi). Wiersz = sposób wykonania pracy: rodzina, modele →
      klasy, priorytet właściciela, stan limitu, sprawdzone polecenie CLI. Nowa lub anulowana subskrypcja to
-     zmiana wiersza; procedury (`ZESPOL_PROCEDURY.md`) i wzór (`ZESPOL_WZOR.md`) są identyczne w obu pakietach
-     (pilnuje tego test w `codex/tests`).
-   - **Routing według wymagań roli** (klasa + preferowana rodzina), nie nazw narzędzi; wybór po priorytecie,
-     przy remisie na zmianę. Limit → to samo zlecenie do następnego kandydata; brak kandydata → obniżenie
+     zmiana wiersza; procedury (`ZESPOL_PROCEDURY.md`), uruchamianie CLI (`URUCHAMIANIE_CLI.md`) i wzór (`ZESPOL_WZOR.md`)
+     są identyczne w obu pakietach (pilnuje tego test w `codex/tests`). Stan limitu jest zapisywany przy modelu
+     (gdy komunikat go wskazuje) albo przy subskrypcji, nie przy runnerze — limit Fable nie blokuje Opus
+     i Sonneta, a limit Claude zapisany przez jednego hosta blokuje też `claude-cli` u drugiego.
+   - **Routing według wymagań roli** (klasa + preferowana rodzina), nie nazw narzędzi. Kolejność: wymagana
+     inna rodzina przed priorytetem (niezależność ważniejsza od ceny), potem priorytet subskrypcji, potem
+     host, potem na zmianę. Brak kandydata → najpierw klasa wyżej, potem niżej z zapisem. Limit → to samo zlecenie do następnego kandydata; brak kandydata → obniżenie
      o jeden krok z zapisem; zatrzymanie dopiero, gdy nikt nie może pracować albo limit ma dostawca samego
-     kierownika — wtedy LIMIT HANDOFF do drugiego hosta (stan w Gicie, gotowe polecenie startowe).
+     kierownika — wtedy LIMIT HANDOFF do drugiego hosta (stan w Gicie, gotowe polecenie startowe). Recenzent CLI
+     zawsze oznacza własne testy kierownika (narzędzie może po cichu pominąć polecenia).
    - **Inna rodzina jako domyślny recenzent pracy klasy MOCNY** i zadań ryzykownych; brak → ta sama klasa
      z wyjątkiem v10. Większa niezależność niż „klasa wyżej w tej samej rodzinie” i inny limit niż Claude.
    - **Fable tylko w rzadkich, decydujących krokach**: plan etapu, przejęcie, trudna diagnoza, „plan pod

@@ -26,8 +26,10 @@ variable. Paths below are relative to this file; read each file only when its tr
 - `~/.kierownik/ZESPOL.md`: the runner registry of this machine, shared with the Claude Code lead — providers,
   models → classes, priorities, limit states, verified CLI commands; at session start. Template:
   [ZESPOL_WZOR.md](ZESPOL_WZOR.md).
-- [ZESPOL_PROCEDURY.md](ZESPOL_PROCEDURY.md): registry setup, changes (limit, model, provider), running external
-  CLIs; when the registry is missing, on `zespół:` or a limit message, before the first external-CLI run.
+- [ZESPOL_PROCEDURY.md](ZESPOL_PROCEDURY.md): registry setup and changes (limit, model, provider); when no
+  registry is found or it is unfilled, on `zespół:` or a limit message.
+- [URUCHAMIANIE_CLI.md](URUCHAMIANIE_CLI.md): directories, commands and checks for CLI runners; before the first
+  CLI run in a session.
 - [ZLECENIA.md](ZLECENIA.md): order templates A/B/C; before the first order in a session.
 - [SZABLONY.md](SZABLONY.md): project file templates; when creating or repairing project docs.
 - [PRZEJECIE.md](PRZEJECIE.md): work in progress and handoff Claude ↔ Codex; on takeover and handoff.
@@ -40,7 +42,8 @@ the need for consent to production operations.
 
 ## 1. SESSION START
 
-Read the registry `~/.kierownik/ZESPOL.md` (missing or unfilled → ZESPOL_PROCEDURY part A). Establish OS/shell, repo, current branch, full HEAD, other people's uncommitted changes, recent
+Read the registry `~/.kierownik/ZESPOL.md`, or the location recorded in the TODO header („Ustalenia”) when the home
+directory couldn't be written (none found or unfilled → ZESPOL_PROCEDURY part A). Establish OS/shell, repo, current branch, full HEAD, other people's uncommitted changes, recent
 commits, the remote main branch, `task/*` branches and `git worktree list --porcelain`. Show remotes without
 credentials. Below, `main` means the real integration branch. No remote: skip push and say so. With a remote:
 `git fetch` with the existing authentication. Update a clean integration branch only by fast-forward; on
@@ -55,9 +58,9 @@ original Claude files. Add missing local excludes `.kierownik/` and `.claude/wor
 
 ## 2. CODEX HOST AND REGISTRY SETUP
 
-Registry: ZESPOL_PROCEDURY part A (it migrates a v10/v11 ZESPOL.md left in this skill's directory). Writing
-`~/.kierownik/` is outside the workspace: ask for approval once; refused → keep the registry next to this skill and
-say so. Record only models/effort/limits actually available, never invented aliases; a missing mapping doesn't block
+Registry: ZESPOL_PROCEDURY part A (it migrates a v10/v11 ZESPOL.md left in a skill directory). Writing
+`~/.kierownik/` is outside the workspace: ask for approval once; refused → part A.1 (registry next to this skill,
+location recorded in the TODO header). Record only models/effort/limits actually available, never invented aliases; a missing mapping doesn't block
 work with the available model.
 
 Check the agent tools actually available and their schema: role, fresh context, model, effort, working directory.
@@ -154,40 +157,49 @@ questions go into TODO and you continue. Never work around a sandbox refusal wit
 
 ## 7. ROUTING AND LIMITS
 
-The team is the set of RUNNERS in the registry: this host's roles (`codex-sub` — native roles or run_agent.py) and
-external CLIs of other providers (`claude-cli`, `agy-cli`, or any the owner adds). Route by role REQUIREMENTS —
-class SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY and family — never by tool name, so a new, exhausted or cancelled
-subscription changes only the registry and never stops the project while some runner can do the work.
+The team is the registry: SUBSCRIPTIONS (family, owner's priority, state), their MODELS (class, state) and RUNNERS:
+this host's roles (`codex-sub` — native roles or run_agent.py, the cheapest to orchestrate) and CLIs of any provider
+(`claude-cli`, `agy-cli`, or any the owner adds). Use only runner rows for host Codex or `oba`. Route by role
+REQUIREMENTS — class SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY and family — never by tool name, so a new,
+exhausted or cancelled subscription changes only the registry and never stops the project while some runner can work.
 
 Requirements: analyst and typical executor STANDARDOWY (routine SZYBKI, big/hard analysis MOCNY); hard/risky
-execution or a fix after a failed round MOCNY; review of STANDARDOWY work MOCNY on the host; **review of MOCNY work
-(also yours) or of a task with risk ŚREDNIE/WYSOKIE: other family first**, none available → the host with the
-same-class exception; T-NNN specification and routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN
-IN QUESTION, hard-to-reverse architecture decision NAJMOCNIEJSZY on any family; plan review: other family first, else
-a second fresh architect session; stage goal NAJMOCNIEJSZY, plus other family for an MVP-key stage or one touching
-security/data/money.
+execution or a fix after a failed round MOCNY; review of STANDARDOWY work MOCNY; **review of MOCNY work (also yours)
+or of a task with risk ŚREDNIE/WYSOKIE: ≥ MOCNY of another family than the author first**; T-NNN specification and
+routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture
+decision, deciding a conflicting verdict NAJMOCNIEJSZY; plan review MOCNY, another family than the plan author first;
+stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
 
-Choosing a runner: candidates are rows `dostępny` (or a `niedostępny do` time that has passed) with the required
-class and the preferred family — never `wyłączony przez właściciela` or untested `NIEZNANY`; take the lowest
-„Priorytet”, on a tie the one not used for the previous order of that role; don't use a higher class just because it
-is free. A limit or capacity message → record it (ZESPOL_PROCEDURY B.1) and send the same order to the next candidate;
-a run that ended on a limit is not a result. No candidate → degrade one step and record it: review → same-class
-exception; other family missing → „bez recenzji innej rodziny — <powód>”; MOCNY executor missing → STANDARDOWY only
-for typical work, otherwise ZABLOKOWANE („limit <runner> do <czas>”) and other tasks; NAJMOCNIEJSZY missing → MOCNY
-with „plan bez klasy NAJMOCNIEJSZY”. Nothing can do the remaining work, or the Codex provider itself reports a limit
-→ LIMIT HANDOFF (section 9).
+Choosing a runner:
+1. Candidates: runners whose subscription is usable and which offer a usable model of the required class (usable =
+   `dostępny` or a passed `niedostępny do/od` time; `NIEZNANY` → smoke test first, ZESPOL_PROCEDURY A.4; never
+   `wyłączony przez właściciela`, or `wymaga credits` unless the owner agreed).
+2. Order: where another family is asked for, its candidates first (independence beats price); then the lowest
+   subscription „Priorytet”; on equal priority the host runner, then the one not used for the previous order of that
+   role. Other families stay on the list as fallback.
+3. A limit or capacity message → record it (ZESPOL_PROCEDURY B.1: on the model if named, else on the subscription)
+   and send the same order to the next candidate; a run that ended on a limit is not a result.
+4. No candidate of the required class → one class UP first (never into NAJMOCNIEJSZY for analysis or implementation),
+   then one class DOWN with the record: review → same-class exception; other family missing →
+   „bez recenzji innej rodziny — <powód>”; MOCNY executor → STANDARDOWY only for typical work, otherwise ZABLOKOWANE
+   („limit <subskrypcja/model> do <czas>”) and other tasks; NAJMOCNIEJSZY → MOCNY with „plan bez klasy
+   NAJMOCNIEJSZY” or „weryfikacja etapu bez klasy NAJMOCNIEJSZY”.
+5. LIMIT HANDOFF (section 9) only when nothing can do the remaining work, or the model you run on / the whole openai
+   subscription is out; a limit on another model is handled by points 3–4.
 
-The same model with another effort doesn't become another model; never present inheritance as a higher class. The
+The same model with another effort doesn't become another model; never present inheritance as a higher class.
+INDEPENDENCE: the reviewer is a new session with a fresh context (only criteria, diff, commands; no author reasoning)
+and another family or one class above the author; the same runner row may serve both author and reviewer. The
 same-class exception: fresh context, no author reasoning, your own tests, and the record
-„recenzja tą samą klasą/modelem — <powód>”. Other family is always added for security/auth/data/money/external
-contracts, conflicting signals, two failed rounds, or the goal of an MVP-key stage; unavailable → recorded, no
-blocking for that reason alone. An unchecked criterion still blocks ZALICZONE. Executor and reviewer are always
-different runners; with a single runner left: you run the tests and review the diff, record
-„bez niezależnej recenzji”, never pretend a review happened.
+„recenzja tą samą klasą/modelem — <powód>”. Only when no runner can start a fresh review session at all: you run the
+tests and review the diff, record „bez niezależnej recenzji”, never pretend a review happened. Another family is also
+added for security/auth/data/money/external contracts, conflicting signals, two failed rounds, or the goal of an
+MVP-key stage; unavailable → recorded, no blocking for that reason alone. An unchecked criterion still blocks
+ZALICZONE.
 
-External CLIs: ZESPOL_PROCEDURY part C — role directory only, order from a file with the `[CLI]` lines, no secrets,
-then git status/log and stderr; a reviewer that changed sources loses its verdict. You can't query remaining quotas
-reliably — use the recorded states and the owner's priorities; never invent reset times or plans.
+CLIs: URUCHAMIANIE_CLI before the first CLI run in a session — role directory only, order from a file with the `[CLI]`
+lines, no secrets, then git status/log and stderr; a reviewer that changed sources loses its verdict. You can't query
+remaining quotas reliably — use the recorded states and the owner's priorities; never invent reset times or plans.
 
 ## 8. VERIFICATION
 
@@ -196,8 +208,9 @@ TEST RUNS (all of yours): keep the full log out of your context and the real exi
 PowerShell: `<cmd> *> <log>; "exit=$LASTEXITCODE"; Get-Content <log> -Tail 30`. Exit 0 with zero tests is not PASS.
 
 You: version/branch/base, diff scope, unchanged criteria/TODO/PROJEKT, justified dependencies. Your own tests in the
-change directory before the merge only when the review is not an independent fresh review one class above the
-author (same-class exception, no separate reviewer, or the reviewer's numbers contradict the executor's report);
+change directory before the merge only when the review is not a fresh host role one class above the author: a CLI
+reviewer (its tool may skip commands silently), the same-class exception, no reviewer, or the reviewer's numbers
+contradict the executor's report;
 otherwise the reviewer's run is the pre-merge evidence and your run on the integrated version (section 5, step 5)
 the second.
 

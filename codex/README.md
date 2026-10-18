@@ -95,7 +95,8 @@ odczyta ten sam wspólny stan. `codex resume` dotyczy wyłącznie sesji Codex.
 
 Konkretnych modeli nie pinujemy. Rejestr `~/.kierownik/ZESPOL.md` (wzór:
 [ZESPOL_WZOR.md](skills/kierownik/ZESPOL_WZOR.md), procedury:
-[ZESPOL_PROCEDURY.md](skills/kierownik/ZESPOL_PROCEDURY.md)) mapuje klasy na modele
+[ZESPOL_PROCEDURY.md](skills/kierownik/ZESPOL_PROCEDURY.md), uruchamianie CLI:
+[URUCHAMIANIE_CLI.md](skills/kierownik/URUCHAMIANIE_CLI.md)) mapuje klasy na modele
 każdej Twojej subskrypcji, z priorytetem i stanem limitu. TOML ról początkowo
 dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
 Pracę klasy MOCNY i zadania ryzykowne recenzuje najpierw inna rodzina (Claude CLI,

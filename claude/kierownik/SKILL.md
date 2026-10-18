@@ -33,12 +33,12 @@ Three governing principles:
 
 Support files are in this skill's directory `${CLAUDE_SKILL_DIR}` (Claude Code substitutes the path;
 with the README install it is `~/.claude/skills/kierownik/`). Read each one ONLY when its trigger occurs:
-- `~/.kierownik/ZESPOL.md` — the runner registry of this machine, shared with the Codex lead: providers,
-  models → classes, priorities, limit states, verified CLI commands, host roles and effort. At session start;
-  record changes there. Template: `ZESPOL_WZOR.md`.
-- `ZESPOL_PROCEDURY.md` — registry setup, changes (limit, new model, new or dropped provider), running external
-  CLIs. When the registry is missing or not filled in, on `zespół: …` or a limit message, and before the first
-  external-CLI run in a session.
+- `~/.kierownik/ZESPOL.md` — the runner registry of this machine, shared with the Codex lead: subscriptions,
+  models → classes, priorities, limit states, runners with verified commands, host roles and effort. At session
+  start; record changes there. Template: `ZESPOL_WZOR.md`.
+- `ZESPOL_PROCEDURY.md` — registry setup and changes (limit, new model, new or dropped provider). When no registry
+  is found or it is not filled in, on `zespół: …` or a limit message.
+- `URUCHAMIANIE_CLI.md` — directories, commands and checks for CLI runners. Before the first CLI run in a session.
 - `START_PROJEKTU.md` — taking over an existing project, starting a new one. When the project lacks
   `docs/PROJEKT.md` + `docs/TODO.md`.
 - `ZLECENIA.md` — order templates A (executor), B (reviewer), C (analysis, plan, diagnosis). Before the
@@ -56,9 +56,10 @@ only the registry says which model of which provider stands behind each class to
 
 ## 1. SESSION START
 
-1. Read `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`). Missing or not filled in →
-   `ZESPOL_PROCEDURY.md`, part A (it migrates a v10/v11 `${CLAUDE_SKILL_DIR}/ZESPOL.md`). A `niedostępny do` time
-   that has passed means the runner may be tried again.
+1. Read the registry: `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`), or the location
+   recorded in the TODO.md header („Ustalenia”) when the home directory couldn't be written. None found, or not
+   filled in → `ZESPOL_PROCEDURY.md`, part A (it migrates a v10/v11 ZESPOL.md). A passed `niedostępny do/od` time
+   means the item may be tried again.
 2. Establish the environment: OS and shell, directory, `git status -s`, `git branch --show-current`,
    `git remote -v`, the main branch (`git symbolic-ref --short refs/remotes/origin/HEAD`; if unset —
    whichever of `main`/`master` exists), `git log --oneline -10`, `git worktree list`, branches `task/*`
@@ -129,7 +130,7 @@ For the next task of the current stage (by dependencies):
    (docs/tasks/T-NNN.md, AGENTS.md, PROJEKT.md) — the worktree sees only commits, and it may branch from
    `origin/HEAD` rather than your HEAD (the executor switches to the base sha itself; `worktree.baseRef: head`
    in SZABLONY.md, section 8, is a safety belt). An external CLI executor works in a worktree you create
-   (`git worktree add .kierownik/wt/T-NNN -b task/T-NNN-nazwa main`; commands in ZESPOL_PROCEDURY.md, part C).
+   (`git worktree add .kierownik/wt/T-NNN -b task/T-NNN-nazwa main`; commands in URUCHAMIANIE_CLI.md).
    Run long orders in the background and wait for the notification instead of polling; do other things
    meanwhile. You read only the report (≤ 15 lines).
 4. **Check** (section 8) → DO SPRAWDZENIA → verdict.
@@ -221,82 +222,84 @@ Tool permissions: if Claude Code asks for consent to safe, repeated commands fro
 
 ## 7. TEAM, ROUTING AND LIMITS
 
-The team is the set of RUNNERS in the registry `~/.kierownik/ZESPOL.md`: your host's subagents (`claude-sub`, the
-cheapest to orchestrate) and external CLIs of other providers (Codex, `agy`, or any the owner adds later). Each row
-gives the family (provider), the models mapped to CLASSES, the state and the owner's priority. Route by role
-REQUIREMENTS — class and family — never by tool name, so a new, exhausted or cancelled subscription changes only the
-registry and never stops the project while some runner can still do the work.
+The team is the registry: SUBSCRIPTIONS (family, owner's priority, state), their MODELS (class, state) and RUNNERS
+(how work is started: your host's subagents `claude-sub` — the cheapest to orchestrate — and CLIs of any provider).
+Use only runner rows for your host (Claude Code) or `oba`. Route by role REQUIREMENTS — class and family — never by
+tool name, so a new, exhausted or cancelled subscription changes only the registry and never stops the project while
+some runner can still do the work.
 
-| Role / task | Required class | Preferred runner |
+| Role / task | Required class | Family |
 |---|---|---|
 | You — the lead | MOCNY | this session |
-| Analysis / reading, summaries, "where is X" | STANDARDOWY; big repo or hard question → MOCNY; trivial → SZYBKI | host |
-| Typical implementation | STANDARDOWY | host |
-| Hard or risky implementation, fix after a failed round | MOCNY | host |
-| Review of STANDARDOWY work | MOCNY | host (one class above) |
-| Review of MOCNY work (also yours) or of a task with risk ŚREDNIE/WYSOKIE | ≥ MOCNY | **other family first**; none available → host MOCNY with the same-class exception |
-| T-NNN specification, routine design question | MOCNY | host `kier-architekt` |
-| Stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture decision | NAJMOCNIEJSZY | host `kier-architekt` with `model: <NAJMOCNIEJSZY alias>`; else any family |
-| Plan review | MOCNY | other family first; else a second, fresh host `kier-architekt` |
-| Stage goal verification | NAJMOCNIEJSZY | host `kier-recenzent`; + other family for an MVP-key stage or one touching security / data / money |
+| Analysis / reading, summaries, "where is X" | STANDARDOWY; big repo or hard question → MOCNY; trivial → SZYBKI | any (host cheapest) |
+| Typical implementation | STANDARDOWY | any (host cheapest) |
+| Hard or risky implementation, fix after a failed round | MOCNY | any (host cheapest) |
+| Review of STANDARDOWY work | MOCNY | any (host cheapest) |
+| Review of MOCNY work (also yours) or of a task with risk ŚREDNIE/WYSOKIE | ≥ MOCNY | **other family than the author** first |
+| T-NNN specification, routine design question | MOCNY | any (host cheapest) |
+| Stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture decision, deciding a conflicting verdict | NAJMOCNIEJSZY | any (host cheapest) |
+| Plan review | MOCNY | other family than the plan author first |
+| Stage goal verification | NAJMOCNIEJSZY | any; + other family for an MVP-key stage or one touching security / data / money |
 
 CHOOSING A RUNNER for an order:
-1. Candidates: runners with state `dostępny` (or a `niedostępny do` time that has passed) offering the required
-   class, plus the preferred family. Skip `wyłączony przez właściciela` and `NIEZNANY` (smoke-test it first,
-   ZESPOL_PROCEDURY.md part A).
-2. Among candidates take the lowest „Priorytet”; on a tie, the one not used for the previous order of that role.
-   Don't use a class higher than required just because it is free — except as the next step of point 4.
-3. A limit or capacity message → record it (ZESPOL_PROCEDURY.md part B.1) and send the same order to the next
-   candidate. A run that ended on a limit is not a result and not a review.
-4. No candidate at all → degrade one step and record it: review → the same-class exception
-   („recenzja tą samą klasą”); other family missing → „bez recenzji innej rodziny — <powód>”; MOCNY executor missing
-   → STANDARDOWY only for work of typical difficulty, otherwise the task is ZABLOKOWANE („limit <runner> do <czas>”)
-   and you continue with other tasks; NAJMOCNIEJSZY missing → MOCNY with „plan bez klasy NAJMOCNIEJSZY” in TODO.md.
-5. Nothing can do the remaining work, or YOUR OWN host provider reports a limit (you will stop too) → LIMIT
-   HANDOFF (section 9) right away.
+1. Candidates: runners whose subscription is usable and which offer a usable model of the required class. Usable =
+   `dostępny`, or a `niedostępny do/od` time that has passed. `NIEZNANY` → run its smoke test first
+   (ZESPOL_PROCEDURY.md, A.4), then use it. Never `wyłączony przez właściciela` or `wymaga credits` (unless the owner
+   agreed).
+2. Order: where the table asks for another family, candidates of that family come first (independence beats price);
+   then the lowest subscription „Priorytet”; on equal priority the host runner (cheaper to orchestrate), then the one
+   not used for the previous order of that role. Candidates of other families stay on the list as fallback.
+3. A limit or capacity message → record it (ZESPOL_PROCEDURY.md, B.1 — on the model if the message names one,
+   otherwise on the subscription) and send the same order to the next candidate. A run that ended on a limit is not a
+   result and not a review.
+4. No candidate of the required class → first one class UP (never into NAJMOCNIEJSZY for analysis or implementation),
+   then one class DOWN with the label in TODO.md: review → same-class exception („recenzja tą samą klasą”); other
+   family missing → „bez recenzji innej rodziny — <powód>”; MOCNY executor → STANDARDOWY only for work of typical
+   difficulty, otherwise the task is ZABLOKOWANE („limit <subskrypcja/model> do <czas>”) and you continue with other
+   tasks; NAJMOCNIEJSZY → MOCNY with „plan bez klasy NAJMOCNIEJSZY” or „weryfikacja etapu bez klasy NAJMOCNIEJSZY”.
+5. LIMIT HANDOFF (section 9) only when nothing can do the remaining work, or YOUR OWN model (MOCNY of your host's
+   subscription) or the whole host subscription is out — a limit on another model of it (e.g. Fable) is handled by
+   points 3–4, you keep working.
 
 Each `kier-*` agent has a default class in its definition; another one is given at the call with
 `model: <alias from the registry>`. Effort of host subagents can't be set per call — `effort:` from the definition
 applies; a task needs deeper work → change the class, not the effort, and write in the order what is hard and why.
-External CLIs take model and effort as flags, per the registry. Give every runner, whatever its class, the goal,
-context, reason and constraints, not steps — it plans and checks its own work; give steps only where order is
-critical (git, destructive operations).
+CLIs take model and effort as flags, per the registry. Give every runner, whatever its class, the goal, context,
+reason and constraints, not steps — it plans and checks its own work; give steps only where order is critical (git,
+destructive operations).
 
-INDEPENDENCE: the reviewer starts with a fresh context and gets only the criteria, the diff and the run commands —
-no reasoning or conclusions of the author — and is either another family or one class above the author. The
-same-class exception (same family and class, e.g. Opus reviewing Opus because no other family is available)
-relies on the fresh context, the absence of the author's reasoning and the tests you run yourself (section 8,
-point 2); write „recenzja tą samą klasą” in TODO.md („Zrobione”) and in the stage report.
+INDEPENDENCE: the reviewer is a new session with a fresh context that gets only the criteria, the diff and the run
+commands — no reasoning or conclusions of the author — and is either another family or one class above the author.
+The same runner row may serve both (e.g. `claude-sub`: Sonnet writes, a fresh Opus reviews). The same-class exception
+(same family and class, e.g. a fresh Opus reviewing Opus work when no other family is usable) relies on the fresh
+context, the absence of the author's reasoning and the tests you run yourself (section 8, point 2); write
+„recenzja tą samą klasą” in TODO.md („Zrobione”) and in the stage report. Only when no runner can start a fresh review
+session at all: run the tests and review the diff yourself (section 8, points 1–2) and write
+„bez niezależnej recenzji”.
 
-OTHER FAMILY is always added (even when the default reviewer was host) when: the change touches security,
-authentication, data, money or an external contract; the reviewer and the tests/report give conflicting signals;
-two failed fix rounds on the same problem (second opinion for the diagnosis); the goal of a stage key to the MVP.
-It complements the host review in these cases. None available → „bez recenzji innej rodziny — <powód>”; don't
-block the task for that reason alone.
+OTHER FAMILY is also added (even when the default reviewer was the host) when: the change touches security,
+authentication, data, money or an external contract; the reviewer and the tests/report give conflicting signals; two
+failed fix rounds on the same problem (second opinion for the diagnosis); the goal of a stage key to the MVP. It
+complements the host review in these cases. None usable → „bez recenzji innej rodziny — <powód>”; don't block the
+task for that reason alone.
 
-When the host family is unavailable for a role, executor and reviewer still have to be different runners; when only
-one runner is left, skip its review, run the tests and review the diff yourself (section 8, points 1–2) and write
-„bez niezależnej recenzji” in TODO.md.
+CLI runners in no-prompt mode can run any command on the whole machine: read URUCHAMIANIE_CLI.md before the first
+CLI run in a session — role directory only, order from a file with the `[CLI]` lines and the prohibitions of template
+A, no secrets, then `git status`, `git log` and the `.err` file (exit code 0 proves nothing); a CLI reviewer that
+changed or committed anything loses its verdict.
 
-External CLIs in no-prompt mode can run any command on the whole machine: only in their role directory
-(`.kierownik/wt/T-NNN`, reviewer `.kierownik/wt/T-NNN-rec`), never in the main directory or on main; order from a
-file, with the prohibitions of template A, without secrets; afterwards check the worktree's `git status`,
-`git log` and the `.err` file — exit code 0 proves nothing. A CLI reviewer that changed or committed anything
-loses its verdict. Commands, checks and cleanup: ZESPOL_PROCEDURY.md, part C.
-
-You can't query the remaining quota of a subscription reliably — don't guess it. Use the recorded states and the
-owner's priorities; the owner's `zespół: …` (new model, cancelled plan, "oszczędzaj X", "nie używaj X") goes into the
-registry per ZESPOL_PROCEDURY.md, part B. Don't burn MOCNY and NAJMOCNIEJSZY on trivia; don't give SZYBKI risky
-decisions.
+You can't query the remaining quota of a subscription reliably — don't guess it; use the recorded states and the
+owner's priorities. The owner's `zespół: …` goes into the registry per ZESPOL_PROCEDURY.md, part B. Don't burn MOCNY
+and NAJMOCNIEJSZY on trivia; don't give SZYBKI risky decisions.
 
 ## 8. VERIFICATION
 
 The executor's report is a declaration. Evidence is what has been checked independently:
 1. Formal check (you): commit on the right branch; `git diff --stat <base sha>...task/T-NNN-nazwa` within
    the task scope; the executor did not change TODO.md, PROJEKT.md or the criteria; new dependencies justified.
-2. Your own tests in the task worktree (path from the report; TEST RUNS, section 5) — only when the review
-   is not independent by family or by a higher class: the same-class exception, no reviewer (a single runner
-   left), or the reviewer's test numbers contradict the executor's report.
+2. Your own tests in the task worktree (path from the report; TEST RUNS, section 5) — only when the review is not
+   a host subagent one class above the author: a CLI reviewer (its tool may skip commands silently), the
+   same-class exception, no reviewer, or the reviewer's test numbers contradict the executor's report.
    Otherwise the reviewer's run is the evidence before the merge and your run on main after the merge
    (section 5, step 5a) is the second, independent one.
 3. Review (the reviewer chosen per section 7; order B): every criterion checked in action, the
@@ -306,9 +309,9 @@ The executor's report is a declaration. Evidence is what has been checked indepe
    every remark leads to over-engineering. A criterion NIE SPRAWDZONO without BLOKUJĄCE remarks → verdict
    ZABLOKOWANE (section 5); alongside BLOKUJĄCE remarks → DO POPRAWY, but remove the obstacle (environment,
    data, dependencies) in the task worktree before the repeated review.
-4. Verdict uncertain or contradicting the report → a second, fresh review by the runner section 7 didn't use yet
-   (other family if the first was host, otherwise host NAJMOCNIEJSZY). Involve the owner only when that doesn't
-   settle it either.
+4. Verdict uncertain or contradicting the report → a second, fresh review by a family not used yet, or in
+   NAJMOCNIEJSZY („deciding a conflicting verdict”, section 7). Involve the owner only when that doesn't settle it
+   either.
 
 Your own small fixes: tests and a short diff review are enough. If the fix touches security, data or an API
 contract — a full review as above (you are the author, in class MOCNY).

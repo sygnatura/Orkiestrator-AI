@@ -39,9 +39,9 @@ subagentów są widoczne w każdej sesji — to kilka linii.
 Kopiuj instrukcje i agentów. Stan maszyny jest w `~/.kierownik/ZESPOL.md`, poza zestawem.
 
     # Linux / macOS
-    cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ZESPOL_WZOR.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
+    cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ZESPOL_WZOR.md URUCHAMIANIE_CLI.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
     # Windows (PowerShell)
-    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md, .\kierownik\START_PROJEKTU.md, .\kierownik\ZESPOL_PROCEDURY.md, .\kierownik\ZESPOL_WZOR.md $HOME\.claude\skills\kierownik\
+    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md, .\kierownik\START_PROJEKTU.md, .\kierownik\ZESPOL_PROCEDURY.md, .\kierownik\ZESPOL_WZOR.md, .\kierownik\URUCHAMIANIE_CLI.md $HOME\.claude\skills\kierownik\
     Copy-Item .\agents\*.md $HOME\.claude\agents\
 
 Aktualizacja z v10/v11: stary `~/.claude/skills/kierownik/ZESPOL.md` zostaje na miejscu (polecenia wyżej
@@ -90,7 +90,7 @@ dostawcami. Który model którego dostawcy stoi za którą klasą, priorytety su
 sprawdzone polecenia CLI — to jedno miejsce: rejestr `~/.kierownik/ZESPOL.md`. Domyślnie: kierownik,
 recenzent i architekt w klasie MOCNY, analityk i wykonawca w STANDARDOWY (trudne zadania → MOCNY).
 Klasę NAJMOCNIEJSZY (dziś Fable) kierownik zostawia na rzadkie, decydujące kroki: plan etapu, przejęcie
-projektu, trudną diagnozę i weryfikację celu etapu.
+projektu, trudną diagnozę, rozstrzygnięcie sprzecznego werdyktu i weryfikację celu etapu.
 
 Niezależność weryfikacji: recenzent startuje ze świeżym kontekstem i widzi tylko kryteria, diff
 i polecenia — nie rozumowanie autora — i jest albo z innej rodziny, albo o klasę wyżej. Pracę klasy
@@ -100,9 +100,10 @@ testami kierownika. Inna rodzina jest dodawana zawsze przy zmianach dotyczących
 danych, pieniędzy lub kontraktów zewnętrznych, przy sprzecznych sygnałach, po dwóch nieudanych rundach
 poprawek i przy weryfikacji celu etapu kluczowego dla MVP.
 
-**Gdy kończy się limit.** Kierownik zapisuje stan runnera w rejestrze i wysyła to samo zlecenie
-następnemu, który spełnia wymagania roli. Jeśli żadnego nie ma, obniża wymaganie o jeden krok
-i zapisuje to w `TODO.md`. Projekt zatrzymuje się dopiero, gdy nikt nie może wykonać pozostałej pracy
+**Gdy kończy się limit.** Kierownik zapisuje limit w rejestrze — przy modelu, jeśli komunikat go
+wskazuje (np. tylko Fable), inaczej przy całej subskrypcji — i wysyła to samo zlecenie
+następnemu, który spełnia wymagania roli. Jeśli żadnego nie ma, sięga o klasę wyżej, a dopiero
+potem obniża wymaganie o jeden krok i zapisuje to w `TODO.md`. Projekt zatrzymuje się dopiero, gdy nikt nie może wykonać pozostałej pracy
 albo limit ma dostawca samego kierownika — wtedy dostajesz stan zapisany w Gicie i gotowe polecenie
 do kontynuacji w drugim narzędziu (Codex: `$kierownik Wznów…`).
 
@@ -185,7 +186,8 @@ jego odnowieniu. Po powrocie wystarczy `/kierownik`.
 |---|---|
 | `kierownik/SKILL.md` | Metoda pracy kierownika (wczytywana w każdej sesji) |
 | `kierownik/ZESPOL_WZOR.md` | Wzór rejestru runnerów; żywy rejestr to `~/.kierownik/ZESPOL.md` (jeden na maszynę) |
-| `kierownik/ZESPOL_PROCEDURY.md` | Zakładanie rejestru, zmiany (limit, model, dostawca), uruchamianie CLI (czytane tylko w razie potrzeby) |
+| `kierownik/ZESPOL_PROCEDURY.md` | Zakładanie rejestru i zmiany: limit, model, dostawca (czytane tylko w razie potrzeby) |
+| `kierownik/URUCHAMIANIE_CLI.md` | Katalogi, polecenia i kontrole runnerów CLI (czytane przed pierwszym użyciem CLI w sesji) |
 | `kierownik/START_PROJEKTU.md` | Przejęcie istniejącego projektu i nowy projekt (czytane raz na projekt) |
 | `kierownik/ZLECENIA.md` | Szablony zleceń dla wykonawcy, recenzenta i analityka/architekta |
 | `kierownik/SZABLONY.md` | Wzory plików projektu + zasady AGENTS.md/CLAUDE.md wg OpenAI i Anthropic (po polsku) |
