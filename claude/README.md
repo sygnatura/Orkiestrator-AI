@@ -20,7 +20,10 @@ w v10, więc istniejące projekty działają bez migracji.
 
 ## Instalacja (raz na maszynę)
 
-Skopiuj skill i subagentów:
+Najprościej z głównego katalogu repozytorium: `python3 install.py` (najpierw `--dry-run`). Instalator
+instaluje albo aktualizuje wszystko, rozpoznaje pliki ze starszych wersji, kasuje zbędne i robi kopię
+zapasową — szczegóły w [README repozytorium](../README.md#instalacja-i-aktualizacja--jedno-polecenie).
+Ręcznie, z katalogu `claude/`, skopiuj skill i subagentów:
 
     # Linux / macOS
     mkdir -p ~/.claude/skills ~/.claude/agents
@@ -36,7 +39,7 @@ subagentów są widoczne w każdej sesji — to kilka linii.
 
 ### Aktualizacja zestawu
 
-Kopiuj instrukcje i agentów. Stan maszyny jest w `~/.kierownik/ZESPOL.md`, poza zestawem.
+Zalecane: `python3 install.py` z głównego katalogu repozytorium. Ręcznie: kopiuj instrukcje i agentów. Stan maszyny jest w `~/.kierownik/ZESPOL.md`, poza zestawem.
 
     # Linux / macOS
     cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ZESPOL_WZOR.md URUCHAMIANIE_CLI.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
