@@ -2,7 +2,7 @@
 name: kier-architekt
 description: Architekt kierownika projektu — plan etapu, recenzja planu, przejęcie projektu, specyfikacje zadań ryzykownych, trudne diagnozy i decyzje architektoniczne. Nie implementuje. Używany przez /kierownik.
 tools: Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch
-model: fable
+model: opus
 effort: high
 ---
 

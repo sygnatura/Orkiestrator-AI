@@ -1,12 +1,13 @@
-# ZLECENIA v11 — Codex
+# ZLECENIA v12 — Codex
 
 Order text is in Polish; keep the field names below. An order is self-contained: PO CO, real paths and full
 SHAs, scope, the original criteria, environment and permissions. A native agent gets the right role and minimal
 context; the CLI helper inserts the same role definition. Codex loads AGENTS.md from the repo root to the working
 directory by itself, so orders don't repeat it; name only directory rules and CLAUDE.md imports the agent must open.
 Never the author's full conversation, secrets, or a prompt pasted as executable shell text.
-Lines marked `[inna rodzina]` are added only when the order goes to a non-Codex tool (Claude CLI, `agy`): it has no
-Codex role definition and may not load AGENTS.md, so the order carries the role rules itself.
+Lines marked `[CLI]` are added only when the order goes to an external CLI runner from the registry (`claude-cli`,
+`agy-cli` or any other): it has no Codex role definition and may not load AGENTS.md, so the order carries the role
+rules itself.
 
 ## A. Executor
 
@@ -24,10 +25,11 @@ ZAKRES: <obszary IN/OUT; wyłącznie zatwierdzone zadanie>
 KRYTERIA: <oryginalne K1..Kn, komendy, scenariusz użytkownika, wersja kryteriów>
 NIE: merge/push/reset, TODO/PROJEKT/kryteria, osłabianie testów, produkcja,
      płatne API aplikacji/testów bez zgody wskazanej tutaj.
-WYNIK: commit według procesu repo, raport do 15 linii: gałąź, katalog,
+WYNIK: commit według procesu repo (Git odmówi przez sandbox → zmiany bez commitu, napisz to; commituje
+       kierownik), raport do 15 linii: gałąź, katalog,
        baza→zmiana, pliki, komendy→exit/passed/failed/skipped, scenariusz,
        NIE SPRAWDZONO, POZA ZAKRESEM. W karcie tylko Postęp/Odkrycia/Wynik.
-[inna rodzina] PRZECZYTAJ też AGENTS.md. Przed końcem prawdziwe sprawdzenie (testy, lint,
+[CLI] PRZECZYTAJ też AGENTS.md. Przed końcem prawdziwe sprawdzenie (testy, lint,
      scenariusz z kryteriów — do końca); kontrola składni albo polecenie, które nie wystartowało,
      to NIE SPRAWDZONO. Najprostsze rozwiązanie, bez kodu „na przyszłość”; każde twierdzenie
      w raporcie z wyniku polecenia z tej sesji. Nie podejmuj innych zadań.
@@ -51,7 +53,7 @@ NIE: poprawianie kodu, commit, przełączanie gałęzi, instalowanie braków,
 WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
   K1..Kn: OK / NIE / NIE SPRAWDZONO (powód), dowód komenda→wynik/obserwacja;
   BLOKUJĄCE z lokalizacją; OPCJONALNE. Źródła/indeks/HEAD bez zmian.
-[inna rodzina] PRZECZYTAJ też AGENTS.md. Testy z liczbą passed/failed/skipped; kod wyjścia 0
+[CLI] PRZECZYTAJ też AGENTS.md. Testy z liczbą passed/failed/skipped; kod wyjścia 0
      nie wystarcza, polecenie, które nie wystartowało, i sama lektura kodu nie są dowodem →
      NIE SPRAWDZONO. BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres,
      osłabiony test, kod „na przyszłość”, sekret; reszta OPCJONALNE (bez wpływu na werdykt).
@@ -60,7 +62,7 @@ WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
      Logi: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę; katalog zmiany ma zostać czysty.
 ```
 
-Model/class one above the author if available (risk ŚREDNIE/WYSOKIE: NAJMOCNIEJSZY); under the v10 exception: fresh context plus your own tests and an explicit record of the
+Reviewer per SKILL section 7 (MOCNY or risky work: another family first); under the v10 exception: fresh context plus your own tests and an explicit record of the
 deviation. The reviewer doesn't need the author's report; its evidence comes from its own checks.
 
 ## C. Analyst / architect / plan review

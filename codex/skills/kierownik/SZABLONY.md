@@ -1,4 +1,4 @@
-# SZABLONY v11 — wspólny stan projektu i reguły Codex
+# SZABLONY v12 — wspólny stan projektu i reguły Codex
 
 Czytaj przy tworzeniu/naprawie plików, nie w każdym wznowieniu.
 Wzory PROJEKT/TODO/karty pochodzą z Claude v10. Nie nadpisuj działających
@@ -159,9 +159,10 @@ Cel: <1 zdanie z PROJEKT.md>
 Etap: E2 — <nazwa>: <obserwowalny cel etapu> (3/5 GOTOWE)
 main @ <sha> | ostatni zweryfikowany: <sha> (<data>, <co potwierdzono>)
 W toku: T-007 | W TOKU | kier-wykonawca (<klasa>) | task/T-007-import
+        przydział rec.: autor sonnet/Anthropic, ryzyko NISKIE → MOCNY, inna rodzina → codex-cli <model>
 Blokady: brak
 Następny krok: <konkretnie: zadanie, wykonawca, czynność>
-Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
+Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od rejestru ~/.kierownik/ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
 
 ## E2 — <nazwa>: <obserwowalny cel etapu>
 - [ ] T-006 | DO SPRAWDZENIA | wyk. <klasa> → rec. <klasa> | <opis>
@@ -254,12 +255,13 @@ Nie dodawaj flag multi-agent z pamięci: sprawdź wersję i `codex features list
 Nie zmieniaj ustawień zarządzanych przez platformę.
 
 Effort i model to opcjonalne pola TOML ról, a nie model Claude z frontmatter.
-Ustaw je zgodnie z ZESPOL i dostępnymi modelami. Nie powielaj identyfikatorów
+Ustaw je zgodnie z rejestrem `~/.kierownik/ZESPOL.md` i dostępnymi modelami. Nie powielaj identyfikatorów
 modeli w README/zleceniach jako stałej polityki; historyczny zapis faktycznie
 użytego modelu w dowodach jest potrzebny.
 
 Katalog procesu CLI określa `-C`, a nie samo `cd` w treści zlecenia.
-Sandbox analityka read-only, wykonawcy workspace-write. Recenzent potrzebuje
+Sandbox analityka read-only, wykonawcy workspace-write — stosowany przez run_agent.py (`-s`); natywna rola może
+dziedziczyć sandbox kierownika, więc jej efektywny sandbox sprawdza test dymny. Recenzent potrzebuje
 lokalnych zapisów runnerów testowych, więc workspace-write plus zakaz
 zmian źródeł i kontrola HEAD/status/diff po przebiegu. Worktree samo nie
 blokuje sieci ani dostępu do reszty maszyny. Braki dostępu rozwiąż wspieranym

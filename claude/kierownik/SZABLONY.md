@@ -191,9 +191,10 @@ Cel: <1 zdanie z PROJEKT.md>
 Etap: E2 — <nazwa>: <obserwowalny cel etapu> (3/5 GOTOWE)
 main @ <sha> | ostatni zweryfikowany: <sha> (<data>, <co potwierdzono>)
 W toku: T-007 | W TOKU | kier-wykonawca (<klasa>) | task/T-007-import
+        przydział rec.: autor sonnet/Anthropic, ryzyko NISKIE → MOCNY, inna rodzina → codex-cli <model>
 Blokady: brak
 Następny krok: <konkretnie: zadanie, wykonawca, czynność>
-Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
+Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od rejestru ~/.kierownik/ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
 
 ## E2 — <nazwa>: <obserwowalny cel etapu>
 - [ ] T-006 | DO SPRAWDZENIA | wyk. <klasa> → rec. <klasa> | <opis>

@@ -1,15 +1,16 @@
-# Resuming the v11 lead — Claude ↔ Codex
+# Resuming the v12 lead — Claude ↔ Codex
 
 ## Shared sources
 
 PROJEKT (how it works), TODO (goal/plan/state/evidence/next step), DONE, AGENTS, the existing CLAUDE, task files
 `docs/tasks/T-NNN.md`, ADR and the real Git. Keep IDs/statuses and approvals. Don't create separate PROJEKT/TODO for
 Codex, PLAN.md, PROJECT_WORKFLOW.md or REPORT/REVIEW as a condition of resuming. Keep existing equivalents/SDD with a
-mapping, without a mechanical migration. v10 and v11 use the same statuses and files — no migration between them.
+mapping, without a mechanical migration. v10, v11 and v12 use the same statuses and files — no migration between them.
 
-Team models/limits are the state of a given skill installation, not of the project. Don't overwrite
-`~/.claude/skills/kierownik/ZESPOL.md`, the Claude agents or its settings during a takeover. You may read the explicit
-metadata you need, but keep the Codex mapping in your own ZESPOL. Don't import sessions or secrets.
+Team models/limits are machine state, not project state: the shared registry `~/.kierownik/ZESPOL.md`, read and
+written by both leads. A Claude limit recorded there before a LIMIT HANDOFF tells you not to route work to
+`claude-cli` until it resets. Don't overwrite the Claude agents, its settings, or an old
+`~/.claude/skills/kierownik/ZESPOL.md` during a takeover. Don't import sessions or secrets.
 
 ## Recovering the work
 

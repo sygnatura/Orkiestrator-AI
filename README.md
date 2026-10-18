@@ -4,40 +4,59 @@
 
 | Folder | Co zawiera | Instrukcja |
 |---|---|---|
-| **`codex/`** | Kierownik v11 przystosowany do Codex; wywołanie `$kierownik` | [Instalacja i użycie](codex/README.md) |
-| **`claude/`** | Kierownik v11 dla Claude Code; wywołanie `/kierownik` | [Instalacja i użycie](claude/README.md) |
+| **`codex/`** | Kierownik v12 przystosowany do Codex; wywołanie `$kierownik` | [Instalacja i użycie](codex/README.md) |
+| **`claude/`** | Kierownik v12 dla Claude Code; wywołanie `/kierownik` | [Instalacja i użycie](claude/README.md) |
 | `archiwum/` | Starsze prompty v6, SDD i v7, zachowane do porównania | [Spis archiwum](archiwum/README.md) |
 
-Obie wersje to v11: v10 z gałęzi **`claude/eloquent-meitner-98b5px`**,
+Obie wersje to v12 — zespół wielu dostawców ze wspólnym rejestrem `~/.kierownik/ZESPOL.md`
+([claude/ANALIZA.md](claude/ANALIZA.md), decyzja 13) — zbudowana na v11: v10 z gałęzi **`claude/eloquent-meitner-98b5px`**,
 commit [c45c525](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2),
 po optymalizacji zużycia tokenów (instrukcje dla modeli po angielsku, komunikacja
 i pliki projektu po polsku; uzasadnienie w [claude/ANALIZA.md](claude/ANALIZA.md),
 decyzja 12). Oryginał v10 jest w historii Gita i na źródłowej gałęzi.
 Starsze pliki z głównego katalogu zostały przeniesione do archiwum.
 
-## Chcę używać Codex
+## Instalacja i aktualizacja — jedno polecenie
 
-Z głównego katalogu tego repozytorium, na maszynie z Codex i Pythonem 3.11+:
+Z głównego katalogu tego repozytorium (Python 3.11+, Linux, macOS i Windows):
 
 ```bash
-python3 codex/install.py --user --register-agents
+python3 install.py --dry-run   # najpierw zobacz plan, nic się nie zmienia
+python3 install.py             # instalacja albo aktualizacja
 ```
 
-Jeżeli wcześniej instalowałeś ten pakiet, dodaj `--upgrade`.
-Następnie otwórz nową sesję Codex **w katalogu prowadzonego projektu** i wpisz:
+W PowerShell użyj `py install.py`. Instalator sam wykrywa Claude Code i Codex (`--claude` / `--codex`
+wybiera jedno) i za każdym razem robi to samo, niezależnie od tego, którą wersję masz teraz:
+
+- **Claude Code:** kopiuje skill do `~/.claude/skills/kierownik/` i agentów `kier-*` do `~/.claude/agents/`.
+  Pliki z dowolnej wcześniejszej wersji (v8–v12, rozpoznawane po sumach kontrolnych
+  w `install-history.json`) podmienia. Pliki, które zmieniłeś ręcznie, pokazuje i podmienia dopiero po
+  Twojej zgodzie (albo z `--yes`). Pliki usunięte z pakietu kasuje. Wszystko, co nadpisuje lub kasuje,
+  najpierw kopiuje do `~/.kierownik/backups/<data>/`.
+- **Codex:** uruchamia `codex/install.py --user --register-agents --upgrade` (poprzednia instalacja
+  ląduje w `~/.agents/backups/`).
+- **Starsze wersje:** usuwa z kopią zapasową skill `architekt` z pierwszego portu Codex — w katalogu
+  domowym i w projektach podanych przez `--project <ścieżka>` (tam też aktualizuje projektową instalację
+  Codex, jeśli istnieje).
+- **Nigdy nie rusza** Twojego stanu: starego `ZESPOL.md` w katalogu skilla, rejestru
+  `~/.kierownik/ZESPOL.md` ani Twoich własnych agentów.
+
+Przy pierwszym starcie po aktualizacji kierownik sam przeniesie stary `ZESPOL.md` do rejestru.
+
+## Chcę używać Codex
+
+Po `python3 install.py` otwórz nową sesję Codex **w katalogu prowadzonego projektu** i wpisz:
 
 ```text
 $kierownik
 ```
 
-Installer kopiuje cały potrzebny zestaw. Nie musisz osobno instalować plików
-z `skills/`, `roles/` ani `scripts/`. Szczegóły, PowerShell i instalacja tylko
-dla jednego projektu są w [instrukcji Codex](codex/README.md).
+Szczegóły i instalacja tylko dla jednego projektu są w [instrukcji Codex](codex/README.md).
 
 ## Chcę używać Claude Code
 
-Przejdź do `claude/` i wykonaj polecenia z [instrukcji](claude/README.md#instalacja-raz-na-maszynę).
-W prowadzonej sesji Claude Code użyj `/kierownik`.
+Po `python3 install.py` w prowadzonej sesji Claude Code użyj `/kierownik`
+([instrukcja](claude/README.md)). Ręczne kopiowanie plików bez instalatora też jest tam opisane.
 Wzmianka o `archiwum/` w tej instrukcji odnosi się teraz do
 [wspólnego archiwum w głównym katalogu](archiwum/README.md).
 
@@ -46,7 +65,7 @@ Wzmianka o `archiwum/` w tej instrukcji odnosi się teraz do
 Otwórz ten sam projekt z aktualnym stanem Gita i wpisz:
 
 ```text
-$kierownik Przejmij projekt po kierowniku Claude v11 i kontynuuj
+$kierownik Przejmij projekt po kierowniku Claude i kontynuuj
 z istniejących docs/PROJEKT.md, docs/TODO.md oraz Gita.
 ```
 
@@ -60,10 +79,11 @@ zadania w toku i artefakty, które trzeba przenieść między maszynami.
 
 ```text
 README.md           punkt startowy
-claude/             zestaw Claude v11
+install.py          instalator i aktualizator obu wersji (+ install-history.json, tests/)
+claude/             zestaw Claude v12
   kierownik/        skill, zlecenia, szablony i stan zespołu
   agents/           cztery role Claude
-codex/              zestaw Codex v11
+codex/              zestaw Codex v12
   install.py        instalator
   skills/kierownik/ skill i wszystkie jego zasoby
   docs/             analiza portu, wyniki walidacji i źródła

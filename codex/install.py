@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install/update the Codex v10 skill; preserve machine state and existing configuration."""
+"""Install/update the Codex kierownik skill; preserve machine state and existing configuration."""
 
 import argparse
 import json
