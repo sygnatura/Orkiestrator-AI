@@ -101,8 +101,7 @@ Konkretnych modeli nie pinujemy. Rejestr `~/.kierownik/ZESPOL.md` (wzór:
 [URUCHAMIANIE_CLI.md](skills/kierownik/URUCHAMIANIE_CLI.md)) mapuje klasy na modele
 każdej Twojej subskrypcji, z priorytetem i stanem limitu. TOML ról początkowo
 dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
-Pracę klasy MOCNY i zadania ryzykowne recenzuje najpierw inna rodzina (Claude CLI,
-`agy`); gdy żadna nie jest dostępna, wyjątek v10 dopuszcza tę samą klasę/model
+Każde zadanie recenzuje najpierw inna rodzina niż autor (Claude CLI, `agy`); gdy żadna nie jest dostępna, wyjątek v10 dopuszcza tę samą klasę/model
 w świeżym kontekście z własnymi testami kierownika i zapisem odstępstwa.
 
 Natywny subagent Codex nie jest automatycznie worktree Claude. Jeśli API

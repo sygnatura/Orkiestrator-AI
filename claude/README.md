@@ -96,10 +96,12 @@ Klasę NAJMOCNIEJSZY (dziś Fable) kierownik zostawia na rzadkie, decydujące kr
 projektu, trudną diagnozę, rozstrzygnięcie sprzecznego werdyktu i weryfikację celu etapu.
 
 Niezależność weryfikacji: recenzent startuje ze świeżym kontekstem i widzi tylko kryteria, diff
-i polecenia — nie rozumowanie autora — i jest albo z innej rodziny, albo o klasę wyżej. Pracę klasy
-MOCNY (i zadania ryzykowne) recenzuje najpierw inna rodzina (Codex lub `agy`, według priorytetu
-i limitu); gdy żadna nie jest dostępna, recenzuje Opus w trybie „recenzja tą samą klasą” z własnymi
-testami kierownika. Inna rodzina jest dodawana zawsze przy zmianach dotyczących bezpieczeństwa,
+i polecenia — nie rozumowanie autora — i jest albo z innej rodziny, albo o klasę wyżej. Każde zadanie
+recenzuje najpierw inna rodzina niż autor (np. pracę Sonneta — Codex), według priorytetu i limitu;
+gdy żadna nie jest dostępna, recenzuje Opus — o klasę wyżej albo w trybie „recenzja tą samą klasą”
+z własnymi testami kierownika. Przy każdym zleceniu kierownik wpisuje w `TODO.md` jedną linię „trasa”:
+kto był autorem, jakie ryzyko, czego reguła wymaga i kogo wybrał — od razu widać, czy trzyma się
+zasad. Inna rodzina jest dodawana zawsze przy zmianach dotyczących bezpieczeństwa,
 danych, pieniędzy lub kontraktów zewnętrznych, przy sprzecznych sygnałach, po dwóch nieudanych rundach
 poprawek i przy weryfikacji celu etapu kluczowego dla MVP.
 

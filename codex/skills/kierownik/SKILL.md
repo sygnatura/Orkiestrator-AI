@@ -171,13 +171,15 @@ REQUIREMENTS — class SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY and family �
 exhausted or cancelled subscription changes only the registry and never stops the project while some runner can work.
 
 Requirements: analyst and typical executor STANDARDOWY (routine SZYBKI, big/hard analysis MOCNY); hard/risky
-execution or a fix after a failed round MOCNY; review of STANDARDOWY work MOCNY; **review of MOCNY work (also yours)
-or of a task with risk ŚREDNIE/WYSOKIE: ≥ MOCNY of another family than the author first**; T-NNN specification and
+execution or a fix after a failed round MOCNY; **review of any task (STANDARDOWY or MOCNY work, also yours, any
+risk): MOCNY, ≥ the author's class, of another family than the author first** (none usable → a host role one class
+above, else the same-class exception); T-NNN specification and
 routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture
 decision, deciding a conflicting verdict NAJMOCNIEJSZY; plan review MOCNY, another family than the plan author first;
 stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
 
-Choosing a runner:
+Choosing a runner — before launching, write one routing line into the task's W TOKU line in TODO:
+`trasa <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class (usable =
    `dostępny` or a passed `niedostępny do` time, tried once; the family that counts is the MODEL's family; `NIEZNANY`
    → smoke test first, ZESPOL_PROCEDURY A.4; never

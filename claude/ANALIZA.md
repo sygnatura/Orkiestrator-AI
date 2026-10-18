@@ -153,6 +153,11 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      a commit robi kierownik; wiersz W TOKU przed każdym zleceniem i LIMIT HANDOFF jako „best effort” —
      drugi host odzyskuje pracę z ostatniego punktu kontrolnego; WZNOWIENIE nie usuwa worktree zadania,
      które może jeszcze działać w innej sesji.
+   - Po pilocie: kierownik pominął Codex przy zadaniu o ryzyku ŚREDNIM (recenzja Opus pracy Sonneta). Zmiany:
+     linia „trasa” w `TODO.md` przed każdym zleceniem (wymusza przejście przez regułę i jest widoczna dla
+     właściciela) oraz inna rodzina jako pierwszy recenzent KAŻDEGO zadania — przy subskrypcji Codex, która
+     odnawia się szybko, i rzadkim limicie Claude to zabiera sesję Opus z każdej recenzji. Koszt: kierownik
+     częściej przygotowuje katalog recenzenta CLI i uruchamia własne testy.
    Ograniczenia: kierownik zawsze działa w jednym hoście i zatrzymuje się razem z jego dostawcą; stanu limitu
    nie da się sprawdzić z góry, tylko zapisać po komunikacie; recenzja przez CLI kosztuje więcej pracy
    kierownika (worktree `-rec`, zależności, plik zlecenia) i jest wolniejsza; `agy` działa bez sandboxa.

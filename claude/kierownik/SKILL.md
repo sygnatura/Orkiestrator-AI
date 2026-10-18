@@ -240,14 +240,15 @@ some runner can still do the work.
 | Analysis / reading, summaries, "where is X" | STANDARDOWY; big repo or hard question → MOCNY; trivial → SZYBKI | any (host cheapest) |
 | Typical implementation | STANDARDOWY | any (host cheapest) |
 | Hard or risky implementation, fix after a failed round | MOCNY | any (host cheapest) |
-| Review of STANDARDOWY work | MOCNY | any (host cheapest) |
-| Review of MOCNY work (also yours) or of a task with risk ŚREDNIE/WYSOKIE | ≥ MOCNY | **other family than the author** first |
+| Review of any task (STANDARDOWY or MOCNY work, also yours, any risk) | MOCNY (≥ the author's class) | **other family than the author** first; none usable → host one class above, else the same-class exception |
 | T-NNN specification, routine design question | MOCNY | any (host cheapest) |
 | Stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture decision, deciding a conflicting verdict | NAJMOCNIEJSZY | any (host cheapest) |
 | Plan review | MOCNY | other family than the plan author first |
 | Stage goal verification | NAJMOCNIEJSZY | any; + other family for an MVP-key stage or one touching security / data / money |
 
-CHOOSING A RUNNER for an order:
+CHOOSING A RUNNER for an order — before launching it, write one routing line into the task's W TOKU line in
+TODO.md, so the choice is made by the rule and visible to the owner:
+`trasa <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class. Usable =
    `dostępny`, or a `niedostępny do` time that has passed (tried once — ZESPOL_PROCEDURY.md, B.1). The family that
    counts is the MODEL's family. `NIEZNANY` → run its smoke test first
