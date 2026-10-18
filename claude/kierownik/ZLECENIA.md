@@ -33,7 +33,8 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
           płatne lub produkcyjne zasoby (patrz AGENTS.md „Środowisko i koszty”).
     [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
     [CLI] NA KONIEC: prawdziwe sprawdzenie (testy, lint, scenariusz z kryteriów — do końca), commit wg
-          konwencji z AGENTS.md i raport ≤ 15 linii; każde twierdzenie z wyniku polecenia z tej sesji:
+          konwencji z AGENTS.md (gdy Git odmówi przez sandbox: zostaw zmiany bez commitu i napisz to
+          w raporcie — commit zrobi kierownik) i raport ≤ 15 linii; każde twierdzenie z wyniku polecenia z tej sesji:
             T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy
             ZMIANY: 1–3 zdania; liczba plików
             TESTY: `<polecenie>` → exit <n>; passed/failed/skipped

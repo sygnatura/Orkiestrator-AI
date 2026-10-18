@@ -7,9 +7,9 @@ owner may edit it by hand; entries in Polish. The only file with concrete model 
 
 Stan wypełnienia: NIEWYPEŁNIONY   (the lead changes it to: WYPEŁNIONY <data>)
 
-Stany (subscriptions and models): `dostępny` | `niedostępny do <data godzina>` | `niedostępny od <data godzina>`
-(reset time unknown — try again after ~5 h or when the owner says so) | `wymaga credits` (unavailable unless the
-owner agrees to pay) | `wyłączony przez właściciela` (set only by the owner or on the owner's explicit `zespół:`; the
+Stany (subscriptions and models): `dostępny` | `niedostępny do <data godzina>` (a reset time without one in the
+message is an estimate: now + 5 h, written „(szacunek)”; a limit again right after it doubles the wait) |
+`wymaga credits` (unavailable unless the owner agrees to pay) | `wyłączony przez właściciela` (set only by the owner or on the owner's explicit `zespół:`; the
 lead neither tests nor uses it) | `NIEZNANY` (not checked yet — check before first use).
 
 
@@ -23,10 +23,10 @@ changes only this file.
 
 ## Subskrypcje
 
-A limit or a cancelled plan usually hits a whole subscription; a single model can also be limited (table below).
-Priorytet: 1 = spend first; the owner sets it (`zespół: oszczędzaj X` → higher number).
+Billing and limits: a limit or a cancelled plan usually hits a whole subscription; a single model can also be
+limited (table below). Priorytet: 1 = spend first; the owner sets it (`zespół: oszczędzaj X` → higher number).
 
-| Subskrypcja | Rodzina | Plan | Priorytet | Stan |
+| Subskrypcja | Dostawca | Plan | Priorytet | Stan |
 |---|---|---|---|---|
 | claude | Anthropic | Max | 1 | dostępny |
 | openai | OpenAI | <…> | 2 | NIEZNANY |
@@ -35,16 +35,21 @@ Priorytet: 1 = spend first; the owner sets it (`zespół: oszczędzaj X` → hig
 
 ## Modele
 
-| Model / alias | Subskrypcja | Klasa | Stan | Uwagi |
-|---|---|---|---|---|
-| `fable` | claude | NAJMOCNIEJSZY | dostępny | `/model` also has `best`; subagent docs list only `fable` — use it |
-| `opus` | claude | MOCNY | dostępny | default model of the plan; default effort of the line: medium |
-| `sonnet` | claude | STANDARDOWY | dostępny | |
-| `haiku` | claude | SZYBKI | dostępny | no effort field — `kier-analityk` with `model: haiku` unverified [?] |
-| <model z `codex --help`> | openai | MOCNY | NIEZNANY | |
-| <model z `agy --help`> | google | MOCNY | NIEZNANY | |
+„Rodzina” belongs to the MODEL (who trained it), not to the tool or subscription — one CLI may offer models of
+several families; independence of a review is judged by the model's family.
 
-Claude aliases follow the newest model of their line; the version they point to is information only.
+| Model / alias | Rodzina | Subskrypcja | Klasa | Stan | Uwagi |
+|---|---|---|---|---|---|
+| `fable` | Anthropic | claude | NAJMOCNIEJSZY | dostępny | `/model` also has `best`; subagent docs list only `fable` — use it |
+| `opus` | Anthropic | claude | MOCNY | dostępny | default model of the plan; default effort of the line: medium |
+| `sonnet` | Anthropic | claude | STANDARDOWY | dostępny | |
+| `haiku` | Anthropic | claude | SZYBKI | dostępny | no effort field — `kier-analityk` with `model: haiku` unverified [?] |
+| <model z `codex --help`> | OpenAI | openai | MOCNY | NIEZNANY | |
+| <model z `agy --help`> | <rodzina modelu> | google | MOCNY | NIEZNANY | |
+
+Claude aliases follow the newest model of their line; the version they point to is information only. Every order
+names its model explicitly (SKILL.md, section 7), so changing a class mapping here is enough — agent and role-file
+defaults are only fallbacks.
 
 
 ## Runnery
@@ -59,7 +64,7 @@ orchestrate). A runner is usable when its subscription and the chosen model are 
 | codex-cli | openai | CLI | Claude Code | <z URUCHAMIANIE_CLI.md po `--help`> | [?] |
 | codex-sub | openai | role `kier-*` / run_agent.py | Codex | role TOML, `run_agent.py --model/--effort` | [?] |
 | claude-cli | claude | CLI | Codex | <…> | [?] |
-| agy-cli | google | CLI | oba | <…> — no sandbox, whole machine | [?] |
+| agy-cli | google | CLI | oba | <…> — no sandbox; no-prompt mode only with „zgoda właściciela na tryb bez sandboxa: <data>” here | [?] |
 
 
 ## Host Claude Code — role i effort

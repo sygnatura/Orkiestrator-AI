@@ -58,7 +58,7 @@ only the registry says which model of which provider stands behind each class to
 
 1. Read the registry: `~/.kierownik/ZESPOL.md` (Windows: `%USERPROFILE%\.kierownik\ZESPOL.md`), or the location
    recorded in the TODO.md header („Ustalenia”) when the home directory couldn't be written. None found, or not
-   filled in → `ZESPOL_PROCEDURY.md`, part A (it migrates a v10/v11 ZESPOL.md). A passed `niedostępny do/od` time
+   filled in → `ZESPOL_PROCEDURY.md`, part A (it migrates a v10/v11 ZESPOL.md). A passed `niedostępny do` time
    means the item may be tried again.
 2. Establish the environment: OS and shell, directory, `git status -s`, `git branch --show-current`,
    `git remote -v`, the main branch (`git symbolic-ref --short refs/remotes/origin/HEAD`; if unset —
@@ -100,10 +100,14 @@ Compare TODO.md with Git: W TOKU tasks (do their branches/worktrees exist, are t
 without commits, commits outside tasks, unmerged branches (`worktree-*` branches are helper branches of
 subagent worktrees, not tasks — delete those whose worktree no longer exists). Explain discrepancies
 yourself (git log, a short subagent), fix TODO.md and continue. Ask the owner only when a discrepancy
-concerns their decision. A W TOKU task you want to continue with an order: assess the branch commits
-(`git log main..task/T-NNN-nazwa --oneline`); the work looks finished → section 8; not → remove the old
-worktree and its `worktree-<nazwa>` branch as before a fix round (section 5) and send order A in the
-"branch exists" variant.
+concerns their decision. A W TOKU task may still be running in another session or host (TODO.md names its runner,
+model and directory): before touching its worktree, establish its fate — check the directory's `git status` and
+recent commits, and whether that runner can still be working (a Codex lead, a CLI run, another machine). Unknown or
+possibly running → don't remove anything and don't send a duplicate order; work on other tasks and note it in
+„Blokady”. Uncommitted changes in a worktree are someone's work: never delete them; secure them (commit on the task
+branch with a note) before continuing. Finished or confirmed dead: assess the branch commits
+(`git log main..task/T-NNN-nazwa --oneline`); the work looks finished → section 8; not → remove the old worktree and
+its `worktree-<nazwa>` branch as before a fix round (section 5) and send order A in the "branch exists" variant.
 
 Then go straight into the loop (section 5) from „Następny krok”.
 
@@ -131,6 +135,8 @@ For the next task of the current stage (by dependencies):
    `origin/HEAD` rather than your HEAD (the executor switches to the base sha itself; `worktree.baseRef: head`
    in SZABLONY.md, section 8, is a safety belt). An external CLI executor works in a worktree you create
    (`git worktree add .kierownik/wt/T-NNN -b task/T-NNN-nazwa main`; commands in URUCHAMIANIE_CLI.md).
+   Before launching any order, write the task's W TOKU line in TODO.md with runner, model and directory (committed
+   with the next checkpoint, at once before a long CLI run) — so the other host can recover it if you stop.
    Run long orders in the background and wait for the notification instead of polling; do other things
    meanwhile. You read only the report (≤ 15 lines).
 4. **Check** (section 8) → DO SPRAWDZENIA → verdict.
@@ -243,7 +249,8 @@ some runner can still do the work.
 
 CHOOSING A RUNNER for an order:
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class. Usable =
-   `dostępny`, or a `niedostępny do/od` time that has passed. `NIEZNANY` → run its smoke test first
+   `dostępny`, or a `niedostępny do` time that has passed (tried once — ZESPOL_PROCEDURY.md, B.1). The family that
+   counts is the MODEL's family. `NIEZNANY` → run its smoke test first
    (ZESPOL_PROCEDURY.md, A.4), then use it. Never `wyłączony przez właściciela` or `wymaga credits` (unless the owner
    agreed).
 2. Order: where the table asks for another family, candidates of that family come first (independence beats price);
@@ -257,9 +264,12 @@ CHOOSING A RUNNER for an order:
    family missing → „bez recenzji innej rodziny — <powód>”; MOCNY executor → STANDARDOWY only for work of typical
    difficulty, otherwise the task is ZABLOKOWANE („limit <subskrypcja/model> do <czas>”) and you continue with other
    tasks; NAJMOCNIEJSZY → MOCNY with „plan bez klasy NAJMOCNIEJSZY” or „weryfikacja etapu bez klasy NAJMOCNIEJSZY”.
-5. LIMIT HANDOFF (section 9) only when nothing can do the remaining work, or YOUR OWN model (MOCNY of your host's
-   subscription) or the whole host subscription is out — a limit on another model of it (e.g. Fable) is handled by
-   points 3–4, you keep working.
+5. LIMIT HANDOFF (section 9) only when nothing can do the remaining work, or the model you run on or your host's
+   whole subscription is out — a limit on another model of it (e.g. Fable) is handled by points 3–4, you keep working.
+
+Every order names its model explicitly — the Agent tool's `model:` parameter, a CLI's model flag — taken from the
+registry for the chosen class; agent and role-file defaults are only fallbacks. So a new model or a changed class
+mapping is a registry change only.
 
 Each `kier-*` agent has a default class in its definition; another one is given at the call with
 `model: <alias from the registry>`. Effort of host subagents can't be set per call — `effort:` from the definition
@@ -277,10 +287,10 @@ context, the absence of the author's reasoning and the tests you run yourself (s
 session at all: run the tests and review the diff yourself (section 8, points 1–2) and write
 „bez niezależnej recenzji”.
 
-OTHER FAMILY is also added (even when the default reviewer was the host) when: the change touches security,
-authentication, data, money or an external contract; the reviewer and the tests/report give conflicting signals; two
-failed fix rounds on the same problem (second opinion for the diagnosis); the goal of a stage key to the MVP. It
-complements the host review in these cases. None usable → „bez recenzji innej rodziny — <powód>”; don't block the
+OTHER FAMILY is required (an other-family review already done for this change counts; otherwise add one next to the
+host review) when: the change touches security, authentication, data, money or an external contract; the reviewer and
+the tests/report give conflicting signals; two failed fix rounds on the same problem (second opinion for the
+diagnosis); the goal of a stage key to the MVP. None usable → „bez recenzji innej rodziny — <powód>”; don't block the
 task for that reason alone.
 
 CLI runners in no-prompt mode can run any command on the whole machine: read URUCHAMIANIE_CLI.md before the first
@@ -339,11 +349,13 @@ buffer, not a workspace. Therefore:
 6. Safety net: propose `/autocompact` with the threshold from the registry to the owner once — far below the full
    window, because a handoff should come much earlier; it only stops a forgotten thread from growing.
    Treat auto-compaction as a handoff signal.
-7. LIMIT HANDOFF — your own provider reports a limit (it will stop you too), or no runner can do the remaining
-   work: record the state in the registry, update the TODO.md header („W toku”, „Blokady”, „Następny krok”),
-   commit and push, then one message to the owner: „Limit <dostawca> do <czas>. Stan zapisany (<sha>).” plus the
-   ways on: continue in the other host (Codex: `$kierownik Wznów z PROJEKT.md i TODO.md; zachowaj aktywne zlecenia
-   i kontynuuj zapisany następny krok.`), or wait for the reset and `/kierownik`. Don't start new orders after it.
+7. LIMIT HANDOFF — the model you run on or your host's whole subscription reports a limit (a warning that it is
+   close counts too), or no runner can do the remaining work. Best effort, because a hard limit may stop you mid-way:
+   record the state in the registry, update the TODO.md header („W toku”, „Blokady”, „Następny krok”), commit and push,
+   then one message to the owner: „Limit <dostawca> do <czas>. Stan zapisany (<sha>).” plus the ways on: continue in
+   the other host (Codex: `$kierownik Wznów z PROJEKT.md i TODO.md; zachowaj aktywne zlecenia i kontynuuj zapisany
+   następny krok.`), or wait for the reset and `/kierownik`. Don't start new orders after it. If you were cut off
+   before finishing, the other host recovers from the last checkpoint and the W TOKU lines (section 4, PRZEJECIE).
 
 ## 10. DIRECTION: PLAN, IDEAS, DRIFT, OVER-ENGINEERING
 

@@ -259,7 +259,8 @@ modeli w README/zleceniach jako stałej polityki; historyczny zapis faktycznie
 użytego modelu w dowodach jest potrzebny.
 
 Katalog procesu CLI określa `-C`, a nie samo `cd` w treści zlecenia.
-Sandbox analityka read-only, wykonawcy workspace-write. Recenzent potrzebuje
+Sandbox analityka read-only, wykonawcy workspace-write — stosowany przez run_agent.py (`-s`); natywna rola może
+dziedziczyć sandbox kierownika, więc jej efektywny sandbox sprawdza test dymny. Recenzent potrzebuje
 lokalnych zapisów runnerów testowych, więc workspace-write plus zakaz
 zmian źródeł i kontrola HEAD/status/diff po przebiegu. Worktree samo nie
 blokuje sieci ani dostępu do reszty maszyny. Braki dostępu rozwiąż wspieranym

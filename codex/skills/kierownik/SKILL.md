@@ -67,11 +67,15 @@ Check the agent tools actually available and their schema: role, fresh context, 
 Use the registered `kier-*` roles; without them pass the full role definition to an available agent or use
 run_agent.py. Don't invent `cwd` or `isolation: worktree` parameters. A native subagent that can't get its own
 directory is fine for reading; the executor then uses a separate CLI session in the task directory. Creating a Codex
-subagent by itself gives neither a worktree nor a fresh context. Role model/effort live in the role TOML (native roles
-may need a new session after a change); `run_agent.py --model/--effort` override per order and can raise the
-reviewer's effort for a risky task. Use effort levels the concrete model supports. Don't copy Claude's token
+subagent by itself gives neither a worktree nor a fresh context. `sandbox_mode` in a role TOML is applied by
+run_agent.py (`-s`); a native role may instead inherit your own sandbox and permissions — verify the effective sandbox
+of native roles in the smoke test, and run roles whose sandbox matters (read-only analyst, reviewer) through
+run_agent.py when it isn't applied. Pass the model chosen from the registry with every order (`run_agent.py --model`,
+or the native tool's model field): a fresh `codex exec` otherwise uses its configured default, not your model.
+`--effort` overrides the role's effort per order and can raise the reviewer's effort for a risky task. Use effort levels the concrete model supports. Don't copy Claude's token
 threshold — checkpoints and a new thread are the context safety net here. Don't dump environment or config with
-secrets. Never bypass approvals or the sandbox with an unrestricted-access flag.
+secrets. Never bypass approvals or the sandbox with an unrestricted-access flag — for an external CLI only with the
+owner's consent recorded in the registry (URUCHAMIANIE_CLI).
 
 ## 3. TAKEOVER / NEW PROJECT
 
@@ -112,8 +116,11 @@ verdict; the task returns to W TOKU. Don't impose statuses or artefacts of the o
    delegate the rest, including heavy reading.
 3. **Execution:** full base SHA, the files to read committed. Locally create the task branch/worktree explicitly
    from that base. A fresh checkout needs dependencies and test configuration; prepare them with the repo's own
-   commands, with TLS/package verification on. The order has PO CO, directory, base, scope and criteria. Record the
-   order and the real process/session ID in TODO; writing the prompt doesn't prove W TOKU.
+   commands, with TLS/package verification on. The order has PO CO, directory, base, scope and criteria. Before
+   launching, write the W TOKU line in TODO with runner, model, directory and then the real process/session ID
+   (committed with the next checkpoint, at once before a long run); writing the prompt doesn't prove W TOKU. A CLI
+   executor whose sandbox refused the commit leaves the changes uncommitted — commit them yourself after checking
+   them against the report (URUCHAMIANIE_CLI).
 4. **Check:** formal check, your own tests when section 8 requires them, a fresh reviewer, verdict.
 5. **Integration:** only after ZALICZONE. Locally: clean main, `git merge --no-ff <task>`, tests of that version.
    Green → evidence and a normal push to the real main branch, never force. Clean up only your own known worktrees
@@ -135,7 +142,7 @@ repeat the review; a condition needing the owner is recorded, and you work on ot
 
 Parallel work locally: up to four executors, separate checkouts and data, no shared files; merge one at a time
 with tests after each. A shared checkout allows only one writing agent at a time. **Cloud:** use the existing
-isolated checkout, no extra worktree unless the owner asks for it. Work sequentially, respect the platform's
+isolated checkout, no extra worktree unless the owner asks for it (roles one at a time, URUCHAMIANIE_CLI). Work sequentially, respect the platform's
 branch/PR workflow; never pretend there is a local main or that a publication happened.
 
 End of stage: E2E evidence of the stage goal on the integrated version, other family selectively, update PROJEKT
@@ -172,7 +179,8 @@ stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touchi
 
 Choosing a runner:
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class (usable =
-   `dostępny` or a passed `niedostępny do/od` time; `NIEZNANY` → smoke test first, ZESPOL_PROCEDURY A.4; never
+   `dostępny` or a passed `niedostępny do` time, tried once; the family that counts is the MODEL's family; `NIEZNANY`
+   → smoke test first, ZESPOL_PROCEDURY A.4; never
    `wyłączony przez właściciela`, or `wymaga credits` unless the owner agreed).
 2. Order: where another family is asked for, its candidates first (independence beats price); then the lowest
    subscription „Priorytet”; on equal priority the host runner, then the one not used for the previous order of that
@@ -194,7 +202,8 @@ same-class exception: fresh context, no author reasoning, your own tests, and th
 „recenzja tą samą klasą/modelem — <powód>”. Only when no runner can start a fresh review session at all: you run the
 tests and review the diff, record „bez niezależnej recenzji”, never pretend a review happened. Another family is also
 added for security/auth/data/money/external contracts, conflicting signals, two failed rounds, or the goal of an
-MVP-key stage; unavailable → recorded, no blocking for that reason alone. An unchecked criterion still blocks
+MVP-key stage (an other-family review already done for this change counts); unavailable → recorded, no blocking for
+that reason alone. An unchecked criterion still blocks
 ZALICZONE.
 
 CLIs: URUCHAMIANIE_CLI before the first CLI run in a session — role directory only, order from a file with the `[CLI]`
@@ -233,10 +242,13 @@ old „Zrobione” to DONE. Read long files in parts. Checkpoint after each task
 tasks, a long diagnosis, the owner's request or compaction. Compaction doesn't erase the goal: save the state and
 continue to a safe point. Snapshot per PRZEJECIE, commit and allowed push. Confirm the SHA and files. Recommend a
 new Codex thread + `$kierownik`, not Claude's `/clear`/`/autocompact`. `codex resume` doesn't import Claude sessions.
-LIMIT HANDOFF — the Codex provider reports a limit, or no runner can do the remaining work: record the state in the
-registry, update the TODO header („W toku”, „Blokady”, „Następny krok”), commit and push where allowed, then one
-message: „Limit <dostawca> do <czas>. Stan zapisany (<sha>).” plus the ways on — continue in Claude Code
-(`/kierownik` in the same project) or wait for the reset. Start no new orders after it.
+LIMIT HANDOFF — the model you run on or the whole openai subscription reports a limit (a warning that it is close
+counts too), or no runner can do the remaining work. Best effort, because a hard limit may stop you mid-way: record the
+state in the registry, update the TODO header („W toku”, „Blokady”, „Następny krok”), commit and push where allowed,
+then one message: „Limit <dostawca> do <czas>. Stan zapisany (<sha>).” plus the ways on — continue in Claude Code
+(`/kierownik` in the same project) or wait for the reset. Start no new orders after it. Cut off before finishing →
+the other host recovers from the last checkpoint and the W TOKU lines, which you write before launching each order
+(section 5, step 3).
 
 ## 10. DIRECTION AND DRIFT
 

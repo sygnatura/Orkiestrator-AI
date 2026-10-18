@@ -145,6 +145,14 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      z wyjątkiem v10. Większa niezależność niż „klasa wyżej w tej samej rodzinie” i inny limit niż Claude.
    - **Fable tylko w rzadkich, decydujących krokach**: plan etapu, przejęcie, trudna diagnoza, „plan pod
      znakiem zapytania”, weryfikacja celu etapu. Architekt domyślnie w MOCNY.
+   - Po recenzji innej rodziny (Codex): rodzina należy do modelu, nie subskrypcji; limit bez czasu odnowienia
+     to szacunek +5 h z podwajaniem; każde zlecenie podaje model jawnie (zmiana mapowania = tylko rejestr);
+     tryb bez sandboxa (`agy --dangerously-skip-permissions`) tylko za zapisaną zgodą właściciela; katalog
+     roli dla każdej roli CLI, także odczytowych i etapu, oraz tryb cloud; recenzent CLI z zapisem do własnego
+     katalogu i kontrolą niezmienności; wykonawca CLI, któremu sandbox nie pozwala na commit, zostawia zmiany,
+     a commit robi kierownik; wiersz W TOKU przed każdym zleceniem i LIMIT HANDOFF jako „best effort” —
+     drugi host odzyskuje pracę z ostatniego punktu kontrolnego; WZNOWIENIE nie usuwa worktree zadania,
+     które może jeszcze działać w innej sesji.
    Ograniczenia: kierownik zawsze działa w jednym hoście i zatrzymuje się razem z jego dostawcą; stanu limitu
    nie da się sprawdzić z góry, tylko zapisać po komunikacie; recenzja przez CLI kosztuje więcej pracy
    kierownika (worktree `-rec`, zależności, plik zlecenia) i jest wolniejsza; `agy` działa bez sandboxa.

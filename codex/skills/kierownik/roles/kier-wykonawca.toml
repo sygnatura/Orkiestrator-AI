@@ -41,7 +41,8 @@ Work:
   definition, in the project's AGENTS.md/CLAUDE.md and in the order.
 
 Finally commit per the AGENTS.md convention (default "feat|fix|refactor|test|docs(T-NNN): opis", description in
-Polish) and the report in Polish (≤ 15 lines — the lead reads it in a limited context). Every claim in the report is backed by a command result
+Polish) — if the sandbox makes Git refuse the commit, leave the changes uncommitted and say so in the report; the lead
+commits them — and the report in Polish (≤ 15 lines — the lead reads it in a limited context). Every claim in the report is backed by a command result
 from this session; say plainly what was not checked.
 
     T-NNN | gałąź | sha bazy → sha końcowy | katalog pracy (ścieżka worktree)

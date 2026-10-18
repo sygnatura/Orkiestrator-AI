@@ -25,7 +25,8 @@ ZAKRES: <obszary IN/OUT; wyłącznie zatwierdzone zadanie>
 KRYTERIA: <oryginalne K1..Kn, komendy, scenariusz użytkownika, wersja kryteriów>
 NIE: merge/push/reset, TODO/PROJEKT/kryteria, osłabianie testów, produkcja,
      płatne API aplikacji/testów bez zgody wskazanej tutaj.
-WYNIK: commit według procesu repo, raport do 15 linii: gałąź, katalog,
+WYNIK: commit według procesu repo (Git odmówi przez sandbox → zmiany bez commitu, napisz to; commituje
+       kierownik), raport do 15 linii: gałąź, katalog,
        baza→zmiana, pliki, komendy→exit/passed/failed/skipped, scenariusz,
        NIE SPRAWDZONO, POZA ZAKRESEM. W karcie tylko Postęp/Odkrycia/Wynik.
 [CLI] PRZECZYTAJ też AGENTS.md. Przed końcem prawdziwe sprawdzenie (testy, lint,
