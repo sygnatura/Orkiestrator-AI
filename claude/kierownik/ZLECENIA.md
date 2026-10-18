@@ -9,13 +9,13 @@ are acceptable. Paths and shas are established, not invented.
 
 To a `kier-*` subagent give only the order content — role, rules and output format are in its definition, and it
 gets AGENTS.md automatically (through the project's CLAUDE.md). Lines prefixed `[CLI]` are added only to orders
-for Codex/`agy`, which have no role definition; a `[CLI zamiast …]` line REPLACES the named line of the Claude
-version, it doesn't add to it. `[CLI: AGENTS.md]` in PRZECZYTAJ is needed only by `agy` (Codex loads AGENTS.md by
-itself). `general-purpose` (when there are no `kier-*` subagents — SKILL.md, section 1, step 5) gets the `[CLI]`
+for external CLI runners (Codex, `agy`, `claude -p` or any other in the registry), which have no role definition; a `[CLI zamiast …]` line REPLACES the named line of the Claude
+version, it doesn't add to it. `[CLI: AGENTS.md]` in PRZECZYTAJ is needed by runners that don't load AGENTS.md themselves (Codex
+does; for others the smoke test decides). `general-purpose` (when there are no `kier-*` subagents — SKILL.md, section 1, step 5) gets the `[CLI]`
 lines except AGENTS.md (it gets CLAUDE.md), but GAŁĄŹ and KATALOG as a Claude subagent, because it works in a
 Claude Code worktree; add the "On start" steps from the package's `agents/kier-wykonawca.md`.
 
-## A. Executor (`kier-wykonawca`, class per SKILL.md section 7; backup: CLI)
+## A. Executor (`kier-wykonawca` or an external CLI runner, class per SKILL.md section 7)
 
     ZADANIE: T-NNN — <cel jednym zdaniem>
     PO CO: <cel etapu i komu służy; co użytkownik będzie mógł zrobić po zmianie — 1–2 zdania>
@@ -42,7 +42,7 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
             POZA ZAKRESEM: propozycje (niewdrożone)
           Nie podejmuj innych zadań.
 
-## B. Reviewer (`kier-recenzent` one class above the author; selectively: other family via CLI)
+## B. Reviewer (runner per SKILL.md section 7: other family via CLI, or host `kier-recenzent`)
 
     RECENZJA: T-NNN — <cel>   (albo: CEL ETAPU E<n> na main)
     KATALOG: <ścieżka worktree wykonawcy — z jego raportu lub `git worktree list`; tam jest

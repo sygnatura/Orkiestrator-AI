@@ -1,10 +1,17 @@
-# Kierownik projektu AI — instrukcja (v11, Claude Max)
+# Kierownik projektu AI — instrukcja (v12, wielu dostawców)
 
 Skill dla Claude Code, który robi z sesji Claude kierownika technicznego projektu: rozumie system,
 prowadzi plan rozwoju i stan w repozytorium, deleguje pracę zespołowi subagentów Claude (model
 dobierany do zadania spośród klas od najszybszego do najmocniejszego), niezależnie weryfikuje, scala
 i wypycha to, co zweryfikowane, a do Ciebie wraca z raportem po etapie albo z decyzją, która należy do
-Ciebie. Codex i Antigravity są zapasem oraz dodatkową recenzją innej rodziny modeli, gdy jest wskazana.
+Ciebie.
+
+Od v12 zespół to nie tylko Claude. Kierownik wybiera wykonawców i recenzentów z **rejestru runnerów**
+(`~/.kierownik/ZESPOL.md`, jeden na maszynę, wspólny dla kierownika w Claude Code i w Codex): subagenci
+Claude, Codex CLI, Antigravity `agy` i każde narzędzie, które dopiszesz. Role mają wymagania (klasa
+modelu, preferowana rodzina), a nie przypisane narzędzia. Wyczerpany limit u jednego dostawcy oznacza
+przejście do następnego, a nie zatrzymanie projektu. Nowa lub anulowana subskrypcja to jedna zmiana
+w rejestrze.
 
 Instrukcje dla modeli (skill i subagenci) są od v11 po angielsku — to mniej tokenów w każdej sesji
 i każdym wywołaniu subagenta. Kierownik pisze do Ciebie wyłącznie po polsku, a pliki projektu
@@ -29,34 +36,33 @@ subagentów są widoczne w każdej sesji — to kilka linii.
 
 ### Aktualizacja zestawu
 
-Kopiuj tylko instrukcje; `ZESPOL.md` to stan Twojej maszyny — nie nadpisuj go.
+Kopiuj instrukcje i agentów. Stan maszyny jest w `~/.kierownik/ZESPOL.md`, poza zestawem.
 
     # Linux / macOS
-    cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
+    cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ZESPOL_WZOR.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
     # Windows (PowerShell)
-    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md, .\kierownik\START_PROJEKTU.md, .\kierownik\ZESPOL_PROCEDURY.md $HOME\.claude\skills\kierownik\
+    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md, .\kierownik\START_PROJEKTU.md, .\kierownik\ZESPOL_PROCEDURY.md, .\kierownik\ZESPOL_WZOR.md $HOME\.claude\skills\kierownik\
     Copy-Item .\agents\*.md $HOME\.claude\agents\
 
-Aktualizacja z v10: Twój stary `ZESPOL.md` zawiera procedury, które od v11 są w `ZESPOL_PROCEDURY.md`.
-Kierownik przy pierwszym starcie zostawi w nim tylko tabele stanu (Twoje odstępstwa od poleceń CLI
-przeniesie do tabeli zapasu) i ustawi próg `/autocompact` na 200k. Jeśli w `~/.claude/agents/kier-*.md`
-zmieniałeś `model:` (np. architekt na `opus`, gdy `fable` wymaga credits), po skopiowaniu agentów
-przywróć tę zmianę.
+Aktualizacja z v10/v11: stary `~/.claude/skills/kierownik/ZESPOL.md` zostaje na miejscu (polecenia wyżej
+go nie nadpisują). Przy pierwszym starcie kierownik przeniesie z niego aliasy, limity i Twoje decyzje do
+rejestru `~/.kierownik/ZESPOL.md` i zapyta raz o modele, klasy i priorytety pozostałych dostawców.
+Jeśli w `~/.claude/agents/kier-*.md` zmieniałeś `model:`, po skopiowaniu agentów przywróć tę zmianę.
 
 ## Użycie
 
 1. Otwórz Claude Code w katalogu projektu i ustaw model kierownika: `/model opus` (alias — zawsze
    najnowszy model tej linii). `/model` nie zmienia effortu — zostaje domyślny dla modelu; jeśli chcesz
    wyższego, dodaj `/effort high`. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
-   pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi `kierownik/ZESPOL.md`).
+   pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi rejestr `~/.kierownik/ZESPOL.md`).
    Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8).
 2. Wpisz `/kierownik`.
-3. Pierwszy raz na maszynie: kierownik wykryje zapasowe narzędzia (`codex`, `agy`; są opcjonalne —
-   bez nich cała pętla działa na Claude), każde obecne sprawdzi krótkim testem dymnym w tymczasowym
-   repozytorium, tym samym poleceniem, którego potem używa (`agy` już w trybie bez pytań o zgodę —
-   patrz „Bezpieczeństwo”; test zużywa odrobinę limitu narzędzia), zapyta Cię o stan limitów i o to,
-   co pokazuje `/model`, i zapisze wszystko w `~/.claude/skills/kierownik/ZESPOL.md`. Jeśli któregoś
-   narzędzia nie chcesz używać, powiedz `zespół: nie używaj codex` — kierownik zapisze to w ZESPOL.md.
+3. Pierwszy raz na maszynie: kierownik wykryje narzędzia innych dostawców (`codex`, `agy` i inne, które
+   wskażesz; są opcjonalne — bez nich cała pętla działa na Claude), każde obecne sprawdzi `--help`
+   i krótkim testem dymnym w tymczasowym repozytorium, tym samym poleceniem, którego potem używa (`agy`
+   już w trybie bez pytań o zgodę — patrz „Bezpieczeństwo”; test zużywa odrobinę limitu), zapyta Cię
+   jednym pytaniem o modele każdej subskrypcji, ich klasy, priorytety i limity, i zapisze wszystko
+   w rejestrze `~/.kierownik/ZESPOL.md`.
 4. Pierwszy raz w projekcie:
    - **istniejący projekt** — trzech analityków równolegle mapuje kod, kierownik uruchamia testy
      (jeśli są bezpieczne), pisze `docs/PROJEKT.md`, `AGENTS.md`, `CLAUDE.md`, a architekt przygotowuje
@@ -77,44 +83,45 @@ Nic nie kopiujesz — stan jest w plikach.
 | Wykonawca | `kier-wykonawca` | implementuje jedno zadanie w osobnym worktree |
 | Recenzent | `kier-recenzent` | niezależna weryfikacja zmiany albo celu etapu |
 | Architekt | `kier-architekt` | plan, recenzja planu, przejęcie, specyfikacje, diagnozy, decyzje |
-| Zapas / recenzja innej rodziny | Antigravity `agy`, Codex `codex exec` | wykonawstwo i recenzja, gdy Claude jest niedostępny; dodatkowa recenzja w przypadkach poniżej |
+| Inne rodziny | Codex `codex exec`, Antigravity `agy`, inne z rejestru | domyślna recenzja pracy klasy MOCNY, druga opinia, wykonawstwo, gdy Claude ma limit |
 
-Modele są opisane klasami: SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY. Który alias Claude Code
-(`haiku`, `sonnet`, `opus`, `fable`, …) stoi za którą klasą, który model pełni którą rolę, z jakim
-effortem, i jakie są bieżące ograniczenia (limity, kredyty) — to jedno miejsce:
-`kierownik/ZESPOL.md` (po instalacji `~/.claude/skills/kierownik/ZESPOL.md`). Kierownik aktualizuje
-ten plik w czasie pracy, dlatego README go nie powiela. Domyślnie: kierownik i recenzent w klasie
-MOCNY, analityk i wykonawca w STANDARDOWY (trudne zadania → MOCNY), architekt i weryfikacja celu
-etapu w NAJMOCNIEJSZY. Ryzykowne zadania (ŚREDNIE/WYSOKIE) dostają recenzenta klasy NAJMOCNIEJSZY.
+Modele są opisane klasami: SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY, porównywalnymi między
+dostawcami. Który model którego dostawcy stoi za którą klasą, priorytety subskrypcji, limity i
+sprawdzone polecenia CLI — to jedno miejsce: rejestr `~/.kierownik/ZESPOL.md`. Domyślnie: kierownik,
+recenzent i architekt w klasie MOCNY, analityk i wykonawca w STANDARDOWY (trudne zadania → MOCNY).
+Klasę NAJMOCNIEJSZY (dziś Fable) kierownik zostawia na rzadkie, decydujące kroki: plan etapu, przejęcie
+projektu, trudną diagnozę i weryfikację celu etapu.
 
-Niezależność weryfikacji: recenzent to z zasady model klasy wyżej niż autor (gdy najmocniejsza klasa
-jest poza limitem planu — co najmniej świeży kontekst i niezależnie uruchomione testy), startuje ze
-świeżym kontekstem i widzi tylko kryteria, diff i polecenia — nie rozumowanie autora. Recenzję innej
-rodziny (Antigravity lub Codex) kierownik dodaje tylko przy zmianach dotyczących bezpieczeństwa,
-danych, pieniędzy lub kontraktów zewnętrznych, przy sprzecznych sygnałach, których nie rozstrzygnęła
-recenzja w klasie NAJMOCNIEJSZY, po dwóch nieudanych rundach poprawek i przy weryfikacji celu etapu
-kluczowego dla MVP. Gdy Claude jest niedostępny, zapas przejmuje wykonawstwo i recenzję.
+Niezależność weryfikacji: recenzent startuje ze świeżym kontekstem i widzi tylko kryteria, diff
+i polecenia — nie rozumowanie autora — i jest albo z innej rodziny, albo o klasę wyżej. Pracę klasy
+MOCNY (i zadania ryzykowne) recenzuje najpierw inna rodzina (Codex lub `agy`, według priorytetu
+i limitu); gdy żadna nie jest dostępna, recenzuje Opus w trybie „recenzja tą samą klasą” z własnymi
+testami kierownika. Inna rodzina jest dodawana zawsze przy zmianach dotyczących bezpieczeństwa,
+danych, pieniędzy lub kontraktów zewnętrznych, przy sprzecznych sygnałach, po dwóch nieudanych rundach
+poprawek i przy weryfikacji celu etapu kluczowego dla MVP.
+
+**Gdy kończy się limit.** Kierownik zapisuje stan runnera w rejestrze i wysyła to samo zlecenie
+następnemu, który spełnia wymagania roli. Jeśli żadnego nie ma, obniża wymaganie o jeden krok
+i zapisuje to w `TODO.md`. Projekt zatrzymuje się dopiero, gdy nikt nie może wykonać pozostałej pracy
+albo limit ma dostawca samego kierownika — wtedy dostajesz stan zapisany w Gicie i gotowe polecenie
+do kontynuacji w drugim narzędziu (Codex: `$kierownik Wznów…`).
 
 Niezależne zadania etapu idą równolegle (do 4 wykonawców naraz, każdy w swoim worktree).
 
-**Nowe modele.** Aliasy `opus`, `sonnet`, `haiku`, `fable` wskazują zawsze najnowszy model swojej
-linii, więc po wydaniu nowej wersji nic nie zmieniasz. Gdy pojawi się nowa linia (inna nazwa), napisz:
-`zespół: wyszedł nowy model <nazwa>` — kierownik zaproponuje, do której klasy (SZYBKI…NAJMOCNIEJSZY) go
-przypisać, a po Twoim potwierdzeniu zaktualizuje tabelę klas w ZESPOL.md i pole `model:` (alias albo pełne ID
-modelu; w razie potrzeby także `effort:`) u agentów tej klasy w `~/.claude/agents/kier-*.md`.
-Czy model mieści się w limicie planu, widzisz w `/model`: dopisek „Requires usage credits” oznacza, że
-pobiera kredyty — zgłoś to `zespół: <alias> wymaga credits`, a kierownik przestawi rolę na inną klasę
-z planu i odnotuje to w ZESPOL.md.
+**Nowe modele i subskrypcje.** Aliasy Claude (`opus`, `sonnet`, `haiku`, `fable`) wskazują zawsze
+najnowszy model swojej linii, więc po nowej wersji nic nie zmieniasz. Wszystko inne zgłaszasz jednym
+zdaniem, a kierownik aktualizuje rejestr: `zespół: wyszedł nowy model <nazwa>` (zaproponuje klasę),
+`zespół: mam <dostawca>` (wykryje CLI, sprawdzi `--help`, zrobi test dymny), `zespół: rezygnuję z <dostawca>`,
+`zespół: oszczędzaj <dostawca>` (niższy priorytet), `zespół: <alias> wymaga credits`.
 
 ## Bezpieczeństwo
 
-Zapasowe CLI działają w trybie bez pytań (`agy --dangerously-skip-permissions`; Codex w sandboxie
+CLI innych dostawców działają w trybie bez pytań (`agy --dangerously-skip-permissions`; Codex w sandboxie
 `-s workspace-write`). Worktree zadania (`.kierownik/wt/T-NNN`) porządkuje zmiany w repozytorium, ale
 nie ogranicza dostępu `agy` do maszyny — a kierownik uruchamia `agy` już przy pierwszym `/kierownik`
 (test dymny). Jeśli masz na tej maszynie cenne dane poza repozytorium, uruchamiaj Claude Code
-w kontenerze albo wyłącz `agy`: w `~/.claude/skills/kierownik/ZESPOL.md` (tabela „Limity”, wiersz
-Google / Antigravity) wpisz stan `wyłączony przez właściciela` — kierownik go wtedy nie testuje i nie
-używa. Kierownik nie przekazuje sekretów w zleceniu i po każdym przebiegu sprawdza `git status` oraz
+w kontenerze albo wyłącz `agy`: napisz `zespół: nie używaj agy` albo w `~/.kierownik/ZESPOL.md` wpisz
+w jego wierszu stan `wyłączony przez właściciela` — kierownik go wtedy nie testuje i nie używa. Kierownik nie przekazuje sekretów w zleceniu i po każdym przebiegu sprawdza `git status` oraz
 stderr. Reguły `deny` z `settings.json` (SZABLONY.md, sekcja 8) blokują czytanie `.env` także
 subagentom.
 
@@ -129,7 +136,7 @@ subagentom.
     docs/decisions/        decyzje trudne do odwrócenia (ADR)
     .claude/worktrees/     worktree subagentów Claude (tworzy Claude Code na gałęzi worktree-<nazwa>;
                            kierownik sprząta po scaleniu; poza Gitem)
-    .kierownik/            worktree i wyniki zleceń zapasowych CLI (poza Gitem)
+    .kierownik/            worktree, zlecenia i wyniki runnerów CLI, logi testów (poza Gitem)
     .claude/settings.json  uprawnienia i ustawienia dla pętli (propozycja kierownika wg SZABLONY.md,
                            sekcja 8; Ty akceptujesz)
 
@@ -159,26 +166,26 @@ w trybie auto.
 | `dalej` | Kontynuuj pętlę |
 | `pomysł: …` | Zapis do „Pomysły” — nic nie jest uruchamiane |
 | `zmiana: …` | Zmiana celu/zakresu/priorytetów — najpierw pokazany wpływ |
-| `zespół: …` | Np. „Codex wyczerpany do piątku”, „fable wymaga credits”, „wyszedł nowy model X”, „nie używaj agy” |
+| `zespół: …` | Np. „Codex wyczerpany do piątku”, „mam Gemini CLI”, „rezygnuję z agy”, „oszczędzaj Claude”, „wyszedł nowy model X” |
 | `stop` | Dokończ bieżący krok, zapisz stan, nie zaczynaj nowych zadań |
 
 ## Gdy Claude jest niedostępny
 
-Kierownikiem jest zawsze sesja Claude Code — SKILL.md zakłada jej narzędzia (subagenci `kier-*`,
-worktree, `/clear`, `/model`), więc Codex ani `agy` nie poprowadzą według niego projektu. Gdy w trakcie
-etapu modele Claude mają limit lub awarię, kierownik przekazuje role wykonawcy i recenzenta zapasowym
-CLI (SKILL.md, sekcja 7 „BACKUP”). Gdy Claude jest niedostępny całkiem, nic nie przepada: stan projektu
-jest w plikach (`docs/TODO.md`, `docs/PROJEKT.md`, `AGENTS.md`) — możesz ręcznie zlecić pojedyncze
-zadanie Codexowi lub `agy` szablonem A z `kierownik/ZLECENIA.md`, a po powrocie Claude kierownik wznowi
-pracę z Gita i TODO.md (tryb WZNOWIENIE).
+Gdy limit mają tylko niektóre modele Claude, kierownik przechodzi na inne runnery z rejestru (wyżej:
+„Gdy kończy się limit”). Gdy limit ma cały Claude, zatrzymuje się też sam kierownik, bo działa w Claude
+Code. Zanim to nastąpi, zapisuje stan w `docs/TODO.md`, robi commit i push, a Tobie podaje polecenie
+dla Codex: zainstaluj tam pakiet z `codex/` i wpisz w tym samym projekcie
+`$kierownik Wznów z PROJEKT.md i TODO.md; zachowaj aktywne zlecenia i kontynuuj zapisany następny krok.`
+Kierownik w Codex czyta ten sam rejestr, więc wie, że Claude ma limit, i używa Claude CLI dopiero po
+jego odnowieniu. Po powrocie wystarczy `/kierownik`.
 
 ## Pliki tego repozytorium
 
 | Plik | Do czego |
 |---|---|
 | `kierownik/SKILL.md` | Metoda pracy kierownika (wczytywana w każdej sesji) |
-| `kierownik/ZESPOL.md` | Stan maszyny: klasy modeli i aliasy, role, effort, zapas, limity (jeden na maszynę) |
-| `kierownik/ZESPOL_PROCEDURY.md` | Konfiguracja maszyny, zmiany zespołu, uruchamianie Codex/`agy` (czytane tylko w razie potrzeby) |
+| `kierownik/ZESPOL_WZOR.md` | Wzór rejestru runnerów; żywy rejestr to `~/.kierownik/ZESPOL.md` (jeden na maszynę) |
+| `kierownik/ZESPOL_PROCEDURY.md` | Zakładanie rejestru, zmiany (limit, model, dostawca), uruchamianie CLI (czytane tylko w razie potrzeby) |
 | `kierownik/START_PROJEKTU.md` | Przejęcie istniejącego projektu i nowy projekt (czytane raz na projekt) |
 | `kierownik/ZLECENIA.md` | Szablony zleceń dla wykonawcy, recenzenta i analityka/architekta |
 | `kierownik/SZABLONY.md` | Wzory plików projektu + zasady AGENTS.md/CLAUDE.md wg OpenAI i Anthropic (po polsku) |

@@ -1,4 +1,4 @@
-# ANALIZA I DECYZJE (v10–v11)
+# ANALIZA I DECYZJE (v10–v12)
 
 Do czytania, gdy chcesz zmieniać system. Do codziennej pracy niepotrzebne.
 
@@ -124,6 +124,26 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - Pomiar: tokeny sesji wykonawcy i recenzenta zapisywane w „Zrobione”, suma w raporcie etapu.
    Czego nie zmierzono: rzeczywistej liczby tokenów w sesji — pilot to pokaże (pole tokenów w „Zrobione”).
 
+
+13. **(v12) Zespół wielu dostawców.** W v10–v11 Codex i `agy` były zapasem i wybiórczą recenzją, więc
+   w praktyce kierownik zmieniał tylko klasy modeli Claude, a recenzję każdej pracy klasy MOCNY robił Fable —
+   najdroższy model, z limitu Claude. Właściciel chce zestawu niezależnego od dzisiejszych subskrypcji. Zmiany:
+   - **Rejestr runnerów** `~/.kierownik/ZESPOL.md`, jeden na maszynę i wspólny dla kierownika w Claude Code
+     i w Codex (limit zapisany przez jednego zna drugi). Wiersz = sposób wykonania pracy: rodzina, modele →
+     klasy, priorytet właściciela, stan limitu, sprawdzone polecenie CLI. Nowa lub anulowana subskrypcja to
+     zmiana wiersza; procedury (`ZESPOL_PROCEDURY.md`) i wzór (`ZESPOL_WZOR.md`) są identyczne w obu pakietach
+     (pilnuje tego test w `codex/tests`).
+   - **Routing według wymagań roli** (klasa + preferowana rodzina), nie nazw narzędzi; wybór po priorytecie,
+     przy remisie na zmianę. Limit → to samo zlecenie do następnego kandydata; brak kandydata → obniżenie
+     o jeden krok z zapisem; zatrzymanie dopiero, gdy nikt nie może pracować albo limit ma dostawca samego
+     kierownika — wtedy LIMIT HANDOFF do drugiego hosta (stan w Gicie, gotowe polecenie startowe).
+   - **Inna rodzina jako domyślny recenzent pracy klasy MOCNY** i zadań ryzykownych; brak → ta sama klasa
+     z wyjątkiem v10. Większa niezależność niż „klasa wyżej w tej samej rodzinie” i inny limit niż Claude.
+   - **Fable tylko w rzadkich, decydujących krokach**: plan etapu, przejęcie, trudna diagnoza, „plan pod
+     znakiem zapytania”, weryfikacja celu etapu. Architekt domyślnie w MOCNY.
+   Ograniczenia: kierownik zawsze działa w jednym hoście i zatrzymuje się razem z jego dostawcą; stanu limitu
+   nie da się sprawdzić z góry, tylko zapisać po komunikacie; recenzja przez CLI kosztuje więcej pracy
+   kierownika (worktree `-rec`, zależności, plik zlecenia) i jest wolniejsza; `agy` działa bez sandboxa.
 
 ## 4. Czy to ma sens — uczciwa ocena
 

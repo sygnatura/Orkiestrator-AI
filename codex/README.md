@@ -1,9 +1,12 @@
-# Kierownik v11 dla Codex
+# Kierownik v12 dla Codex
 
 Odpowiednik **kierownika v10 z gałęzi
 `claude/eloquent-meitner-98b5px`**, commit
 [`c45c525`](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2).
-Zastępuje wcześniejszy port v6/SDD w tym folderze. Od v11 instrukcje dla modeli
+Zastępuje wcześniejszy port v6/SDD w tym folderze. Od v12 zespół obejmuje wielu
+dostawców: wspólny rejestr runnerów `~/.kierownik/ZESPOL.md` (ten sam co dla kierownika
+w Claude Code) mówi, kto i jakim modelem może wykonać rolę, a limit u jednego dostawcy
+oznacza przejście do następnego. Od v11 instrukcje dla modeli
 są po angielsku (mniej tokenów), a kierownik pisze do Ciebie po polsku; pliki
 projektu, zlecenia i raporty zostają po polsku, statusy bez zmian.
 [Wersja Claude](../claude/README.md) jest w `../claude/`, a
@@ -64,7 +67,7 @@ $kierownik
 Do przejęcia:
 
 ```text
-$kierownik Przejmij projekt po kierowniku Claude v10/v11. Wznów z istniejących
+$kierownik Przejmij projekt po kierowniku Claude v10–v12. Wznów z istniejących
 PROJEKT.md, TODO.md i Git. Zachowaj aktywne zadania, statusy i zatwierdzony
 plan; kontynuuj zapisany następny krok bez ponownego zlecania trwającej pracy.
 ```
@@ -90,13 +93,14 @@ odczyta ten sam wspólny stan. `codex resume` dotyczy wyłącznie sesji Codex.
 | `kier-recenzent` | Świeży kontekst, kryteria/diff/scenariusz; bez napraw |
 | `kier-architekt` | Plan, recenzja planu, specyfikacja i diagnoza |
 
-Konkretnych modeli nie pinujemy. [ZESPOL.md](skills/kierownik/ZESPOL.md)
-mapuje klasy na modele dostępne na Twoim koncie. TOML ról początkowo
+Konkretnych modeli nie pinujemy. Rejestr `~/.kierownik/ZESPOL.md` (wzór:
+[ZESPOL_WZOR.md](skills/kierownik/ZESPOL_WZOR.md), procedury:
+[ZESPOL_PROCEDURY.md](skills/kierownik/ZESPOL_PROCEDURY.md)) mapuje klasy na modele
+każdej Twojej subskrypcji, z priorytetem i stanem limitu. TOML ról początkowo
 dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
-Recenzent preferuje klasę wyżej niż autor (ryzykowne zadania: klasa
-NAJMOCNIEJSZY); wyjątek v10 dopuszcza tę samą
-klasę/model w świeżym kontekście z własnymi testami kierownika i zapisem
-odstępstwa. Recenzja innej rodziny jest wybiórcza, a jej brak jest odnotowany.
+Pracę klasy MOCNY i zadania ryzykowne recenzuje najpierw inna rodzina (Claude CLI,
+`agy`); gdy żadna nie jest dostępna, wyjątek v10 dopuszcza tę samą klasę/model
+w świeżym kontekście z własnymi testami kierownika i zapisem odstępstwa.
 
 Natywny subagent Codex nie jest automatycznie worktree Claude. Jeśli API
 nie zapewnia osobnego katalogu, kierownik uruchamia świeże `codex exec`
@@ -113,9 +117,11 @@ chyba że właściciel zażąda, i tylko jeden zapisujący agent naraz. Proces
 integracji/PR/ochrona gałęzi platformy nadal obowiązuje. Kod nie jest
 GOTOWE przed dowodem z rzeczywiście zintegrowanej wersji.
 
-Claude CLI/Antigravity lub skonfigurowane inne narzędzie są zapasem
-i recenzją innej rodziny. Ich aktualne flagi, autoryzację i limity sprawdza
-kierownik. Pakiet nie zakłada, że są zainstalowane lub zalogowane, i nie
+Claude CLI, Antigravity i każde inne narzędzie dopisane do rejestru są
+pełnoprawnymi runnerami: recenzja innej rodziny, druga opinia i ciągłość pracy
+przy limicie. Ich aktualne flagi i autoryzację sprawdza kierownik (`--help`,
+test dymny); limity zapisuje po komunikacie. Gdy limit ma sam Codex, kierownik
+zapisuje stan i podaje polecenie kontynuacji w Claude Code. Pakiet nie zakłada, że są zainstalowane lub zalogowane, i nie
 wyłącza ich zabezpieczeń. Uprawnienia klienta mogą wymagać osobnej decyzji
 technicznej mimo autoryzacji pracy w skill.
 
@@ -126,11 +132,12 @@ python3 install.py --user --register-agents --upgrade
 ```
 
 Odpowiednio użyj `--project` przy instalacji projektowej. Różniący się skill
-bez `--upgrade` jest zachowany. Aktualizacja zachowuje lokalny ZESPOL i całą
+bez `--upgrade` jest zachowany. Aktualizacja zachowuje stary lokalny ZESPOL.md
+(źródło migracji do `~/.kierownik/ZESPOL.md`) i całą
 poprzednią instalację w `.agents/backups/`, poza katalogiem discovery skills.
 Własne zmiany instrukcji/role models porównaj z backupem i przenieś potrzebne
 ustawienia; nowe role są wzorcami z modelami dziedziczonymi. Kierownik sprawdza
-zgodność ZESPOL z faktycznie działającą konfiguracją, nie z samą tabelą.
+zgodność rejestru z faktycznie działającą konfiguracją, nie z samą tabelą.
 
 Jeśli instalowałeś pierwszy port, zaktualizuj `kierownik` z `--upgrade`.
 Starszego osobnego `$architekt` installer nie usuwa; v10 korzysta z roli

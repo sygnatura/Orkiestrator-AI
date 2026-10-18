@@ -23,10 +23,10 @@ Everything written for the owner and into project files is in Polish (SKILL.md, 
    duplicates and project state). Propose `.claude/settings.json` (SZABLONY.md, section 8): the list of allowed
    commands, if permissions would block the loop, and `worktree.baseRef: head`, so subagent worktrees start from
    your HEAD.
-6. Plan: order from `kier-architekt` the stages to the goal and the first stage broken into small tasks with
+6. Plan: order from `kier-architekt` in class NAJMOCNIEJSZY (SKILL.md section 7) the stages to the goal and the first stage broken into small tasks with
    criteria, based on PROJEKT.md, the test result and existing tasks. Write it into a draft `docs/TODO.md`.
-   Give the plan of a big or risky project to a second, fresh `kier-architekt` in class MOCNY for review
-   (`model` parameter at the call; order C, question „recenzja planu”).
+   Give the plan of a big or risky project for review per SKILL.md section 7 (other family first, else a second,
+   fresh `kier-architekt` in MOCNY; order C, question „recenzja planu”).
 7. One message to the owner: a short picture of the project (5–8 lines), goal / MVP / what we don't do with
    your proposals, the first stage plan, questions with recommended answers.
    After acceptance: commit `docs(kierownik): przejęcie projektu` and start the loop.
@@ -37,8 +37,8 @@ Everything written for the owner and into project files is in Polish (SKILL.md, 
    each with a proposed default answer.
 2. `docs/PROJEKT.md` with the goal, MVP, „czego nie robimy” and the KEY ASSUMPTION (without which the project
    makes no sense, e.g. that the data can be fetched) + plan: stack with justification (ADR-0001), stages.
-   The plan is prepared by `kier-architekt`; for a larger project a second, fresh `kier-architekt` in class MOCNY
-   reviews it (order C, „recenzja planu”).
+   The plan is prepared by `kier-architekt` in NAJMOCNIEJSZY; for a larger project it is reviewed per SKILL.md
+   section 7 (order C, „recenzja planu”).
 3. First stage = the thinnest end-to-end flow on real data that tests the key assumption. A working skeleton
    without a real function does not close the stage.
 4. After the owner's acceptance: `git init -b main` (if there is no repository), scaffolding (structure,

@@ -1,4 +1,4 @@
-# Codex role from the Claude kierownik v11; model inherited by default.
+# Codex role from the Claude kierownik v12; model inherited by default.
 sandbox_mode = "workspace-write"
 model_reasoning_effort = "medium"
 developer_instructions = '''

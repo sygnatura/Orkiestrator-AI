@@ -73,3 +73,11 @@ z eskalacją klasy przy ryzyku ŚREDNIM/WYSOKIM. Własne testy kierownika przed 
 niezależnej inaczej niż klasą wyżej. Testy kierownika z pełnym logiem
 w `.kierownik/log/` i zachowanym kodem wyjścia. SOURCE.json nadal opisuje
 źródło v10, z którego powstał port.
+
+## v12 — wielu dostawców
+
+Wspólny z Claude rejestr runnerów `~/.kierownik/ZESPOL.md` oraz identyczne pliki
+ZESPOL_WZOR.md i ZESPOL_PROCEDURY.md (test w `tests/`). Routing według klasy i
+rodziny, inna rodzina jako domyślny recenzent pracy klasy MOCNY, przejście do
+następnego runnera przy limicie i LIMIT HANDOFF do Claude Code, gdy limit ma sam
+Codex. Uzasadnienie: claude/ANALIZA.md, decyzja 13.

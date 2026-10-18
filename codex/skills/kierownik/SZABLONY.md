@@ -1,4 +1,4 @@
-# SZABLONY v11 — wspólny stan projektu i reguły Codex
+# SZABLONY v12 — wspólny stan projektu i reguły Codex
 
 Czytaj przy tworzeniu/naprawie plików, nie w każdym wznowieniu.
 Wzory PROJEKT/TODO/karty pochodzą z Claude v10. Nie nadpisuj działających
@@ -161,7 +161,7 @@ main @ <sha> | ostatni zweryfikowany: <sha> (<data>, <co potwierdzono>)
 W toku: T-007 | W TOKU | kier-wykonawca (<klasa>) | task/T-007-import
 Blokady: brak
 Następny krok: <konkretnie: zadanie, wykonawca, czynność>
-Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
+Ustalenia: <np. gałąź główna `master`, brak remote, odstępstwa od rejestru ~/.kierownik/ZESPOL.md, mapowanie plików (ROADMAP.md → TODO.md)>
 
 ## E2 — <nazwa>: <obserwowalny cel etapu>
 - [ ] T-006 | DO SPRAWDZENIA | wyk. <klasa> → rec. <klasa> | <opis>
@@ -254,7 +254,7 @@ Nie dodawaj flag multi-agent z pamięci: sprawdź wersję i `codex features list
 Nie zmieniaj ustawień zarządzanych przez platformę.
 
 Effort i model to opcjonalne pola TOML ról, a nie model Claude z frontmatter.
-Ustaw je zgodnie z ZESPOL i dostępnymi modelami. Nie powielaj identyfikatorów
+Ustaw je zgodnie z rejestrem `~/.kierownik/ZESPOL.md` i dostępnymi modelami. Nie powielaj identyfikatorów
 modeli w README/zleceniach jako stałej polityki; historyczny zapis faktycznie
 użytego modelu w dowodach jest potrzebny.
 

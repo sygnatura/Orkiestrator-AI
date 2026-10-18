@@ -4,11 +4,12 @@
 
 | Folder | Co zawiera | Instrukcja |
 |---|---|---|
-| **`codex/`** | Kierownik v11 przystosowany do Codex; wywołanie `$kierownik` | [Instalacja i użycie](codex/README.md) |
-| **`claude/`** | Kierownik v11 dla Claude Code; wywołanie `/kierownik` | [Instalacja i użycie](claude/README.md) |
+| **`codex/`** | Kierownik v12 przystosowany do Codex; wywołanie `$kierownik` | [Instalacja i użycie](codex/README.md) |
+| **`claude/`** | Kierownik v12 dla Claude Code; wywołanie `/kierownik` | [Instalacja i użycie](claude/README.md) |
 | `archiwum/` | Starsze prompty v6, SDD i v7, zachowane do porównania | [Spis archiwum](archiwum/README.md) |
 
-Obie wersje to v11: v10 z gałęzi **`claude/eloquent-meitner-98b5px`**,
+Obie wersje to v12 — zespół wielu dostawców ze wspólnym rejestrem `~/.kierownik/ZESPOL.md`
+([claude/ANALIZA.md](claude/ANALIZA.md), decyzja 13) — zbudowana na v11: v10 z gałęzi **`claude/eloquent-meitner-98b5px`**,
 commit [c45c525](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2),
 po optymalizacji zużycia tokenów (instrukcje dla modeli po angielsku, komunikacja
 i pliki projektu po polsku; uzasadnienie w [claude/ANALIZA.md](claude/ANALIZA.md),
@@ -46,7 +47,7 @@ Wzmianka o `archiwum/` w tej instrukcji odnosi się teraz do
 Otwórz ten sam projekt z aktualnym stanem Gita i wpisz:
 
 ```text
-$kierownik Przejmij projekt po kierowniku Claude v11 i kontynuuj
+$kierownik Przejmij projekt po kierowniku Claude i kontynuuj
 z istniejących docs/PROJEKT.md, docs/TODO.md oraz Gita.
 ```
 
@@ -60,10 +61,10 @@ zadania w toku i artefakty, które trzeba przenieść między maszynami.
 
 ```text
 README.md           punkt startowy
-claude/             zestaw Claude v11
+claude/             zestaw Claude v12
   kierownik/        skill, zlecenia, szablony i stan zespołu
   agents/           cztery role Claude
-codex/              zestaw Codex v11
+codex/              zestaw Codex v12
   install.py        instalator
   skills/kierownik/ skill i wszystkie jego zasoby
   docs/             analiza portu, wyniki walidacji i źródła
