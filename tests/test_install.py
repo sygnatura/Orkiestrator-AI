@@ -1,5 +1,9 @@
 """Tests of the root installer: Claude files, history-based change detection, legacy cleanup, Codex hand-off."""
 
+import sys
+
+sys.dont_write_bytecode = True  # no __pycache__ inside the package directories the installers copy
+
 from contextlib import redirect_stdout
 import importlib.util
 import io
@@ -31,8 +35,11 @@ class InstallerTest(unittest.TestCase):
     def test_fresh_install_copies_package_and_manifest(self):
         code, _ = self.run_installer('--claude')
         self.assertEqual(code, 0)
-        for src in (REPO / 'claude/kierownik').iterdir():
-            self.assertEqual((self.skill / src.name).read_bytes(), src.read_bytes())
+        for src in install.package_files().values():
+            if src.is_relative_to(REPO / 'claude/kierownik'):
+                relative = src.relative_to(REPO / 'claude/kierownik')
+                self.assertEqual((self.skill / relative).read_bytes(), src.read_bytes())
+        self.assertTrue((self.skill / 'scripts/kier.py').is_file())
         for src in (REPO / 'claude/agents').glob('*.md'):
             self.assertEqual((self.agents / src.name).read_bytes(), src.read_bytes())
         self.assertTrue((self.skill / install.MANIFEST).is_file())

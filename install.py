@@ -52,10 +52,14 @@ def load_history() -> dict[str, set[str]]:
     return {key: set(values) for key, values in data['pliki'].items()}
 
 
+def packaged(path: Path) -> bool:
+    return path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'
+
+
 def package_files() -> dict[str, Path]:
     managed: dict[str, Path] = {}
     for src in sorted(CLAUDE_SKILL_SRC.rglob('*')):
-        if src.is_file():
+        if packaged(src):
             managed['skill/' + src.relative_to(CLAUDE_SKILL_SRC).as_posix()] = src
     for src in sorted(CLAUDE_AGENTS_SRC.glob('*.md')):
         managed['agents/' + src.name] = src

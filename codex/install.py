@@ -18,9 +18,13 @@ DESCRIPTIONS = (
 )
 
 
+def packaged(path: Path) -> bool:
+    return path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'
+
+
 def identical(source: Path, target: Path) -> bool:
-    left = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()}
-    right = {p.relative_to(target): p.read_bytes() for p in target.rglob('*') if p.is_file()}
+    left = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if packaged(p)}
+    right = {p.relative_to(target): p.read_bytes() for p in target.rglob('*') if packaged(p)}
     # ZESPOL is user-maintained machine state; never replace it on reinstall.
     left.pop(Path('ZESPOL.md'), None)
     right.pop(Path('ZESPOL.md'), None)
@@ -99,7 +103,7 @@ def main(argv=None) -> int:
         agents_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix='kierownik-stage-', dir=agents_root) as stage_root:
             staged = Path(stage_root) / 'kierownik'
-            shutil.copytree(source, staged)
+            shutil.copytree(source, staged, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
             if target.exists() and (target / 'ZESPOL.md').is_file():
                 shutil.copy2(target / 'ZESPOL.md', staged / 'ZESPOL.md')
             backup = None

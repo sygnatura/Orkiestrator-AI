@@ -1,5 +1,9 @@
 """Installer/CLI adapter tests; fake CLI results are not model-behavior evidence."""
 
+import sys
+
+sys.dont_write_bytecode = True  # no __pycache__ inside the package directories the installers copy
+
 from contextlib import redirect_stdout, redirect_stderr
 import importlib.util
 import io
