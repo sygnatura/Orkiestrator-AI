@@ -22,9 +22,15 @@ def packaged(path: Path) -> bool:
     return path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'
 
 
+def content(path: Path) -> bytes:
+    """File bytes with CRLF normalised, so a Windows checkout is not mistaken for a changed skill."""
+    data = path.read_bytes()
+    return data.replace(b'\r\n', b'\n') if path.suffix in ('.md', '.py', '.toml', '.yaml', '.json') else data
+
+
 def identical(source: Path, target: Path) -> bool:
-    left = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if packaged(p)}
-    right = {p.relative_to(target): p.read_bytes() for p in target.rglob('*') if packaged(p)}
+    left = {p.relative_to(source): content(p) for p in source.rglob('*') if packaged(p)}
+    right = {p.relative_to(target): content(p) for p in target.rglob('*') if packaged(p)}
     # ZESPOL is user-maintained machine state; never replace it on reinstall.
     left.pop(Path('ZESPOL.md'), None)
     right.pop(Path('ZESPOL.md'), None)

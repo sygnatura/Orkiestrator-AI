@@ -39,8 +39,11 @@ with the README install it is `~/.claude/skills/kierownik/`). Read each one ONLY
 - `SZABLONY.md` — project file templates and AGENTS.md/CLAUDE.md rules. When you create or repair those files.
 - `scripts/kier.py` — the git and test mechanics; run it, don't read it. `KIER` below means
   `python3 ${CLAUDE_SKILL_DIR}/scripts/kier.py` (Windows: `py -3 …`). It prints short `KLUCZ: wartość` lines ending
-  in `WYNIK:`; exit 0 OK, 1 tests red (merge undone), 2 error, 3 refused (nothing changed), 4 conflict (aborted),
-  5 merged and green but push failed. It never forces or deletes unmerged work — what it refuses, you decide.
+  in `WYNIK:`; exit 0 OK, 1 tests red or untrustworthy (merge undone), 2 error, 3 refused (nothing changed),
+  4 conflict (aborted), 5 merged and green but push failed, 6 merged and pushed but cleanup incomplete. It never
+  forces, overwrites untracked or ignored files, or deletes work. Test commands come only from the `- Testy:` /
+  `- Lint:` lines of AGENTS.md committed on main. A main branch other than origin/HEAD, main or master → add
+  `--main <gałąź>` (recorded in the TODO.md header).
 
 Your team is Claude Code subagents (in `~/.claude/agents/`, each definition holds role, rules, output format, default
 class and effort): `kier-analityk` (read-only summaries), `kier-wykonawca` (implementation in a worktree),
@@ -99,8 +102,9 @@ Then go straight into the loop (section 5) from „Następny krok”.
 
 Statuses in TODO.md: TODO → W TOKU → DO SPRAWDZENIA → GOTOWE; ZABLOKOWANE (reason + condition).
 
-TEST RUNS (all of yours): `KIER test --name <nazwa> [--cwd <katalog>] -- "<polecenie>"` — full log in
-`.kierownik/log/`, the real exit code, passed/failed/skipped and the tail. Exit 0 alone is not enough — check the
+TEST RUNS (all of yours): `KIER test --name <nazwa> [--cwd <katalog>] [--klucz Lint]` — the AGENTS.md command
+from main, full log in `.kierownik/log/`, the real exit code, passed/failed/skipped and the tail (a changed test
+command → commit AGENTS.md on main first). Anything else: plain Bash with output to a log file, exit code, tail. Exit 0 alone is not enough — check the
 counts and skipped tests. Need more of a long log → `grep` it or have a subagent read it.
 
 For the next task of the current stage (by dependencies):
@@ -119,11 +123,13 @@ For the next task of the current stage (by dependencies):
    orders in the background and wait for the notification instead of polling. You read only the report (≤ 15 lines).
 4. **Check** (section 8) → DO SPRAWDZENIA → verdict.
 5. **Merge** (when ZALICZONE), in the main directory on a clean main (commit your own changes first):
-   `KIER merge T-NNN --test "<testy z AGENTS.md>" --push --opis "<opis>"` — merge --no-ff, tests on main, push,
-   cleanup of the task's worktrees and branches. Exit 1 → main is back where it was, the branch stays: the task
-   returns to W TOKU with the log's observations (a fix round). Exit 4 → CONFLICT below. Exit 3 in cleanup →
-   a worktree holds files outside commits: compare `git -C <path> status --short` with the report; `--force` only
-   after ruling out forgotten work. Exit 5 → fix the push (never force), then `KIER cleanup T-NNN`.
+   `KIER merge T-NNN --push --opis "<opis>"` — merge --no-ff, the AGENTS.md tests on main, push, cleanup of the
+   task's worktrees and branches. Exit 1 → main is back where it was (changes the tests made to tracked files are in
+   a stash it names), the branch stays: the task returns to W TOKU with the log's observations (a fix round).
+   Exit 3 → nothing changed (e.g. the merge would overwrite an ignored local file — it lists them). Exit 4 →
+   CONFLICT below. Exit 6 → merged and pushed, but a worktree holds work that is not recreatable output: compare
+   it with the report, secure or delete it by hand, then `KIER cleanup T-NNN`. Exit 5 → fix the push (never force),
+   then `KIER cleanup T-NNN`.
 6. **Record**: GOTOWE + an entry in „Zrobione” (sha, executor class/model, number of fix rounds, who verified,
    command → result, scenario, tokens of the executor and reviewer sessions as reported in their completion
    result/notification — „—” when not reported), update the TODO.md header, commit `docs(kierownik): …`. This is

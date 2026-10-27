@@ -9,9 +9,11 @@ in (Claude Code or Codex); "runner" = a row of the registry.
 
 LOCAL DECISIONS WIN: whatever the owner decided on this machine — a `wyłączony przez właściciela` state, a revoked or
 never-given consent (e.g. to a no-sandbox mode), a priority — always overrides the template. A consent counts only
-when the live registry records it with „(potwierdzona na tej maszynie)”; any other consent (copied from an older
+when the live registry records it with „(potwierdzona na tej maszynie: <hostname>)”; any other consent (copied from an older
 template, e.g. „2026-10-18”, or without that note) counts as not given — ask once, before the next use of that mode,
-and record the answer either way (TAK/NIE <data> „(potwierdzona na tej maszynie)” + „Historia zmian”).
+and record the answer either way (TAK/NIE <data> „(potwierdzona na tej maszynie: <hostname>)” + „Historia zmian”).
+A consent whose <hostname> differs from this machine's `hostname` (a registry copied from another computer) counts
+as not given either.
 
 0. A registry that says „Registry v12” without „schemat 2” (an early v12 draft) is updated in place before use: every
    `niedostępny od <czas>` becomes `niedostępny do <czas + 5 h> (szacunek)`; „Modele” gets the „Rodzina” column (the
@@ -46,7 +48,7 @@ and record the answer either way (TAK/NIE <data> „(potwierdzona na tej maszyni
    A CLI whose non-interactive mode needs a no-sandbox / skip-permissions flag (today `agy`): before its first test or
    use, ask the owner one question — „<CLI> działa bez pytań tylko bez sandboxa: dostęp do całej maszyny, także do
    plików poza repozytorium. Zgadzasz się? Bezpieczniej: kontener albo VM.” — and record TAK/NIE <data>
-   „(potwierdzona na tej maszynie)” in its runner row. NIE → no flag, no test; the runner stays `NIEZNANY` with the
+   „(potwierdzona na tej maszynie: <hostname>)” in its runner row. NIE → no flag, no test; the runner stays `NIEZNANY` with the
    note „bez zgody na tryb bez sandboxa”. Bundle this question with step 5 when both are open.
 5. Ask the owner one combined question (with proposed answers): models of each subscription and their class (your
    proposal from capability and cost), priorities, current limits, what `/model` shows. Record; set „Stan wypełnienia”.

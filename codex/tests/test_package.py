@@ -33,7 +33,7 @@ class ProjectTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='kierownik-v10-')
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.project = self.root / 'project with spaces'
         self.project.mkdir()
         self.git('init', '-q')
@@ -110,7 +110,10 @@ class InstallationTests(ProjectTest):
     def test_symlink_does_not_write_outside_project(self):
         outside = self.root / 'outside'
         outside.mkdir()
-        (self.project / '.agents').symlink_to(outside, target_is_directory=True)
+        try:
+            (self.project / '.agents').symlink_to(outside, target_is_directory=True)
+        except OSError as error:  # Windows without the symlink privilege: nothing to test here
+            self.skipTest(f'dowiązania niedostępne: {error}')
         with self.assertRaises(ValueError):
             self.install()
         self.assertEqual(list(outside.iterdir()), [])
@@ -196,6 +199,9 @@ class RunnerTests(ProjectTest):
             (self.project / 'pkg/__pycache__').mkdir(parents=True)
             (self.project / 'pkg/__pycache__/m.cpython-312.pyc').write_bytes(b'\0')
         self.assertEqual(self.run_role(mutate=caches), 0)
+
+    def test_reviewer_adding_a_source_file_invalidates_result(self):
+        self.assertEqual(self.run_role(mutate=lambda: (self.project / 'new_source.py').write_text('x = 1\n')), 3)
 
     def test_reviewer_deleting_existing_untracked_file_invalidates_result(self):
         source = self.project / 'untracked.txt'

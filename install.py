@@ -43,8 +43,15 @@ class Action:
         return self.kind in ('zmieniony', 'usun-zmieniony')
 
 
+TEXT = {'.md', '.py', '.json', '.toml', '.yaml', '.yml', '.txt'}
+
+
 def sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """Content hash with line endings normalised for text files, so a CRLF checkout (Windows) matches history."""
+    data = path.read_bytes()
+    if path.suffix in TEXT:
+        data = data.replace(b'\r\n', b'\n')
+    return hashlib.sha256(data).hexdigest()
 
 
 def load_history() -> dict[str, set[str]]:

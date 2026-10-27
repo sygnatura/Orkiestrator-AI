@@ -132,7 +132,7 @@ zdaniem, a kierownik aktualizuje rejestr: `zespół: wyszedł nowy model <nazwa>
 CLI innych dostawców działają w trybie bez pytań: Codex w sandboxie `-s workspace-write`, a `agy`
 działa bez pytań tylko z `--dangerously-skip-permissions`, czyli bez sandboxa. Dlatego kierownik pyta Cię
 o zgodę raz, przy zakładaniu rejestru (albo przed pierwszym użyciem `agy`), i zapisuje odpowiedź
-w `~/.kierownik/ZESPOL.md` z dopiskiem „(potwierdzona na tej maszynie)”. Bez zgody `agy` nie jest
+w `~/.kierownik/ZESPOL.md` z dopiskiem „(potwierdzona na tej maszynie: <hostname>)”. Bez zgody `agy` nie jest
 testowany ani używany; zgodę cofa `zespół: agy bez trybu bez sandboxa`. Zgoda przeniesiona ze starszego
 wzoru rejestru (v12) nie liczy się — kierownik zapyta ponownie. Worktree zadania (`.kierownik/wt/T-NNN`)
 porządkuje zmiany w repozytorium, ale nie ogranicza dostępu `agy` do maszyny. Jeśli masz na tej maszynie cenne dane poza repozytorium, uruchamiaj Claude Code

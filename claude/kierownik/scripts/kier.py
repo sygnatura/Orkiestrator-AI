@@ -5,21 +5,33 @@ The lead calls one subcommand per step and reads only the short `KLUCZ: wartoś�
 logged to <repo>/.kierownik/log/kier.log. The script never forces, deletes unmerged work or rewrites pushed
 history: what it refuses, the lead decides by hand.
 
-Exit codes: 0 OK | 1 tests red (merge undone) | 2 usage/internal error | 3 refused, nothing changed |
-4 conflict, aborted | 5 merged and green, but push failed | `test`: the command's own exit code.
+Test commands come only from the `- Testy:` / `- Lint:` lines of AGENTS.md as committed on main, never from the
+command line, so a blanket permission for this script doesn't allow arbitrary commands.
+
+Exit codes: 0 OK | 1 tests red or untrustworthy (merge undone) | 2 usage/internal error | 3 refused, nothing changed |
+4 conflict, aborted | 5 merged and green, but push failed | 6 merged and pushed, cleanup incomplete |
+`test`: the command's own exit code.
 """
 
 import argparse
 from datetime import datetime
+from fnmatch import fnmatch
 import os
 from pathlib import Path
 import platform
 import re
+import shutil
 import subprocess
 import sys
 
 EXCLUDES = ('.kierownik/', '.claude/worktrees/')
+# Files a test run or an install may leave behind and that can be recreated; anything else untracked is work.
+# Keep identical to REGENERABLE in codex/skills/kierownik/scripts/run_agent.py (tests/test_spojnosc.py checks it).
+REGENERABLE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache',
+               '.tox', 'coverage', '.coverage', '.coverage.*', 'htmlcov', 'dist', 'build', 'target', '.next', '*.log')
+NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 REPO: Path = Path.cwd()
+MAIN: str | None = None
 
 
 class Stop(Exception):
@@ -70,14 +82,74 @@ def find_repo(start: Path) -> Path:
     return path.parent if path.name == '.git' else path
 
 
+def branch_exists(name: str) -> bool:
+    return bool(name) and ok('rev-parse', '--verify', '--quiet', f'refs/heads/{name}')
+
+
 def main_branch() -> str:
+    if MAIN:
+        if not branch_exists(MAIN):
+            raise Stop(3, 'ODMOWA', f'gałąź główna {MAIN} (z --main) nie istnieje')
+        return MAIN
     head = git('symbolic-ref', '--short', 'refs/remotes/origin/HEAD', check=False)
     if head.returncode == 0 and head.stdout.strip():
         return head.stdout.strip().removeprefix('origin/')
-    for name in ('main', 'master'):
-        if ok('rev-parse', '--verify', '--quiet', f'refs/heads/{name}'):
+    configured = git('config', 'init.defaultBranch', check=False).stdout.strip()
+    for name in ('main', 'master', configured):
+        if branch_exists(name):
             return name
-    return text('branch', '--show-current') or 'main'
+    raise Stop(3, 'ODMOWA', 'nie ustalono gałęzi głównej (brak origin/HEAD, main, master) — podaj --main <gałąź> '
+               'i zapisz ją w TODO.md („Ustalenia”)')
+
+
+def regenerable(entry: str, root: Path) -> bool:
+    """A `git status` path (a directory ends with /) that only holds recreatable output."""
+    parts = entry.rstrip('/').split('/')
+    if any(fnmatch(part, pattern) for part in parts for pattern in REGENERABLE):
+        return True
+    example = root / '.env.example'
+    return entry == '.env' and example.is_file() and (root / '.env').read_bytes() == example.read_bytes()
+
+
+def leftovers(cwd: Path) -> list[str]:
+    """Untracked or ignored entries that are someone's work, not recreatable output."""
+    lines = git('status', '--porcelain=v1', '--ignored', cwd=cwd).stdout.splitlines()
+    entries = [line[3:].strip('"') for line in lines if line[:2] in ('??', '!!')]
+    return [entry for entry in entries if not regenerable(entry, cwd)]
+
+
+def remove_worktree(path: Path) -> bool:
+    """`git worktree remove` without --force; untracked recreatable output (which Git refuses on) goes first."""
+    for line in git('status', '--porcelain=v1', cwd=path).stdout.splitlines():
+        entry = line[3:].strip('"')
+        if line.startswith('??') and regenerable(entry, path):
+            target = path / entry.rstrip('/')
+            shutil.rmtree(target) if target.is_dir() and not target.is_symlink() else target.unlink()
+    return ok('worktree', 'remove', str(path))
+
+
+def collisions(cwd: Path, base: str, incoming: str) -> list[str]:
+    """Files `incoming` adds over `base` that already exist on disk (ignored files Git would silently overwrite)."""
+    added = text('diff', '--name-only', '--no-renames', '--diff-filter=A', f'{base}...{incoming}', cwd=cwd).splitlines()
+    return [name for name in added if os.path.lexists(cwd / name)]
+
+
+def refuse_collisions(names: list[str], where: Path) -> None:
+    if names:
+        for name in names[:10]:
+            out('ISTNIEJE', name)
+        raise Stop(3, 'ODMOWA', f'scalenie nadpisałoby pliki istniejące w {relative(where)} (zwykle ignorowane, '
+                   'np. lokalna konfiguracja) — przenieś je albo zabezpiecz i powtórz')
+
+
+def agents_command(key: str, ref: str) -> str:
+    """The `- <key>: `command`` line of AGENTS.md as committed at `ref`."""
+    shown = git('show', f'{ref}:AGENTS.md', check=False)
+    found = re.search(rf'(?mi)^\s*[-*]\s*{re.escape(key)}\b[^:\n]*:\s*`([^`]+)`', shown.stdout) if not shown.returncode else None
+    if not found or '<' in found.group(1):
+        raise Stop(3, 'ODMOWA', f'brak polecenia „- {key}: `…`” w AGENTS.md na {ref} — uzupełnij AGENTS.md, '
+                   'scommituj na main i powtórz')
+    return found.group(1)
 
 
 def has_remote() -> bool:
@@ -127,12 +199,12 @@ def task_branch(task: str, required: bool = True) -> str | None:
 def ensure_exclude() -> list[str]:
     """Keep the lead's own directories (logs, CLI worktrees, Claude worktrees) out of `git status`."""
     exclude = Path(text('rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'))
-    existing = exclude.read_text(encoding='utf-8').splitlines() if exclude.is_file() else []
-    missing = [line for line in EXCLUDES if line not in existing]
+    content = exclude.read_text(encoding='utf-8') if exclude.is_file() else ''
+    missing = [line for line in EXCLUDES if line not in content.splitlines()]
     if missing:
         exclude.parent.mkdir(parents=True, exist_ok=True)
         with exclude.open('a', encoding='utf-8') as handle:
-            handle.write(''.join(line + '\n' for line in missing))
+            handle.write(('\n' if content and not content.endswith('\n') else '') + ''.join(f'{m}\n' for m in missing))
     return missing
 
 
@@ -182,16 +254,14 @@ def count_tests(output: str) -> str:
     return 'nierozpoznane'
 
 
-def run_test(name: str, command: list[str], cwd: Path, tail: int) -> int:
+def run_test(name: str, command: str, cwd: Path, tail: int) -> int:
     log_path = REPO / '.kierownik' / 'log' / f'{name}.log'
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    shell = len(command) == 1
     with log_path.open('w', encoding='utf-8', errors='replace') as handle:
-        code = subprocess.run(command[0] if shell else command, shell=shell, cwd=cwd, stdout=handle,
-                              stderr=subprocess.STDOUT).returncode
+        code = subprocess.run(command, shell=True, cwd=cwd, stdout=handle, stderr=subprocess.STDOUT).returncode
     output = log_path.read_text(encoding='utf-8', errors='replace')
     counts = count_tests(output)
-    out('TEST', f'{" ".join(command)} (katalog: {relative(cwd)})')
+    out('TEST', f'{command} (katalog: {relative(cwd)})')
     out('LOG', relative(log_path))
     out('exit', code)
     out('LICZBY', counts)
@@ -296,22 +366,30 @@ def cmd_ro_check(args) -> int:
     path = Path(args.katalog).resolve()
     head, expected = text('rev-parse', 'HEAD', cwd=path), text('rev-parse', '--verify', args.sha + '^{commit}')
     changes = dirty(path, untracked=False)
-    new = [line[3:] for line in dirty(path) if line.startswith('??')]
-    if new:
-        shown = sorted({name.split('/')[0] for name in new})
-        out('UWAGA', 'nowe nieśledzone (dozwolone): ' + ', '.join(shown[:5]) + (' …' if len(shown) > 5 else ''))
-    if head != expected or changes:
+    new = [line[3:].strip('"') for line in dirty(path) if line.startswith('??')]
+    added = [name for name in new if not regenerable(name, path)]
+    if len(new) > len(added):
+        out('UWAGA', 'nowe pliki odtwarzalne (dozwolone): ' + ', '.join(sorted(set(new) - set(added))[:5]))
+    if head != expected or changes or added:
         out('HEAD', f'{head[:9]} (oczekiwany {expected[:9]})')
         for line in changes[:10]:
             out('ZMIANA', line)
-        raise Stop(3, 'ODMOWA', 'rola odczytu/recenzji zmieniła HEAD albo pliki śledzone — odrzuć jej wynik')
+        for name in added[:10]:
+            out('NOWY PLIK', name)
+        raise Stop(3, 'ODMOWA', 'rola odczytu/recenzji zmieniła HEAD, pliki śledzone albo dodała pliki — odrzuć '
+                   'jej wynik')
     return 0
 
 
-def legacy_revert(main: str, branch: str) -> str | None:
-    """A previous merge of this branch reverted on main and not restored yet → that revert's sha."""
-    merges = [line.split() for line in text('rev-list', '--merges', '--first-parent', '--parents', main).splitlines()]
-    earlier = [m[0] for m in merges if len(m) > 2 and ok('merge-base', '--is-ancestor', m[2], branch)]
+def legacy_revert(main: str, task: str, branch: str) -> str | None:
+    """A previous merge of THIS task (subject `merge(T-NNN)`) reverted on main and not restored yet → the revert."""
+    earlier = []
+    for line in text('log', '--first-parent', '--merges', '--format=%H %P%x09%s', main).splitlines():
+        shas, _, subject = line.partition('\t')
+        parents = shas.split()
+        if (len(parents) > 2 and subject.startswith(f'merge({task})')
+                and ok('merge-base', '--is-ancestor', parents[2], branch)):
+            earlier.append(parents[0])
     if not earlier:
         return None
     bodies = text('log', main, '--format=%H %b%x00').split('\0')
@@ -329,10 +407,15 @@ def legacy_revert(main: str, branch: str) -> str | None:
     return None
 
 
-def undo(before: str) -> None:
+def undo(before: str, task: str) -> None:
+    """Undo this run's own, unpushed commits on main; changes the tests made to tracked files go to a stash."""
+    if dirty(REPO, untracked=False):
+        git('stash', 'push', '-m', f'kier: zmiany testów {task}')
+        out('STASH', text('stash', 'list', '-1') + ' (zmiany zrobione przez testy w plikach śledzonych)')
     if not ok('reset', '--keep', before):
-        raise Stop(3, 'ODMOWA', f'nie udało się bezpiecznie cofnąć do {before[:9]} — main ma zmiany po testach; '
-                   'sprawdź `git status` i cofnij scalenie ręcznie (`git revert -m 1`)')
+        merged = text('rev-parse', '--short', 'HEAD')
+        raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — nie udało się cofnąć do '
+                   f'{before[:9]}; sprawdź `git status` i cofnij ręcznie')
 
 
 def cmd_merge(args) -> int:
@@ -344,8 +427,12 @@ def cmd_merge(args) -> int:
         raise Stop(3, 'ODMOWA', f'{main} ma niezacommitowane zmiany ({len(changes)}) — najpierw commit')
     branch = task_branch(args.task)
     before = text('rev-parse', 'HEAD')
-    revert = legacy_revert(main, branch)
+    command = agents_command('Testy', before)
+    refuse_collisions(collisions(REPO, before, branch), REPO)
+    revert = legacy_revert(main, args.task, branch)
     if revert:
+        refuse_collisions([n for n in text('diff', '--name-only', '--no-renames', '--diff-filter=D',
+                                            f'{revert}^', revert).splitlines() if os.path.lexists(REPO / n)], REPO)
         restore = git('revert', '--no-edit', revert, check=False)
         if restore.returncode:
             git('revert', '--abort', check=False)
@@ -356,21 +443,21 @@ def cmd_merge(args) -> int:
         files = text('diff', '--name-only', '--diff-filter=U').splitlines()
         git('merge', '--abort', check=False)
         if revert:
-            undo(before)
+            undo(before, args.task)
         for name in files:
             out('KONFLIKT', name)
         out('DALEJ', f'kier.py sync {args.task}')
         raise Stop(4, 'KONFLIKT', f'{main} bez zmian')
     merge_sha = text('rev-parse', 'HEAD')
     out('MERGE', f'{merge_sha[:9]} {message}')
-    if args.test:
-        code = run_test(f'{args.task}-main', [args.test], REPO, args.tail)
-        if code:
-            undo(before)
-            out('COFNIĘTO', f'{main} @ {before[:9]} (scalenie i testy czerwone — gałąź {branch} zostaje)')
-            raise Stop(1, 'CZERWONE', 'zadanie wraca do W TOKU z obserwacjami z logu')
-    else:
-        out('UWAGA', 'bez --test: scalenie niezweryfikowane testami na main')
+    code = run_test(f'{args.task}-main', command, REPO, args.tail)
+    touched = dirty(REPO, untracked=False)
+    if code or touched:
+        undo(before, args.task)
+        out('COFNIĘTO', f'{main} @ {before[:9]} (bez push — gałąź {branch} zostaje)')
+        reason = ('testy zmieniły pliki śledzone — wynik niewiarygodny' if touched else
+                  'testy czerwone') + '; zadanie wraca do W TOKU z obserwacjami z logu'
+        raise Stop(1, 'CZERWONE', reason)
     if args.push and has_remote():
         if not ok('push', 'origin', main):
             raise Stop(5, 'BŁĄD', f'scalone i zielone, ale `git push origin {main}` się nie udał')
@@ -378,7 +465,12 @@ def cmd_merge(args) -> int:
     elif args.push:
         out('PUSH', 'pominięty — brak remote')
     if not args.no_cleanup:
-        return cleanup(args.task, branch)
+        try:
+            return cleanup(args.task, branch)
+        except Stop as stop:
+            if stop.code == 3:
+                raise Stop(6, 'SPRZĄTANIE NIEPEŁNE', 'scalone i wypchnięte; ' + stop.message) from None
+            raise
     return 0
 
 
@@ -388,7 +480,14 @@ def cleanup(task: str, branch: str | None) -> int:
     for tree in worktrees():
         if tree['typ'] == 'główny' or not (tree['branch'] == branch and branch or tree['path'] == rec):
             continue
-        if git('worktree', 'remove', str(tree['path']), check=False).returncode:
+        work = leftovers(tree['path']) if tree['path'].is_dir() else []
+        if work:
+            refused = True
+            out('ZOSTAWIONO', f'{relative(tree["path"])} — pliki poza commitami, które nie są odtwarzalne:')
+            for entry in work[:10]:
+                print('   ' + entry)
+            continue
+        if dirty(tree['path'], untracked=False) or not remove_worktree(tree['path']):
             refused = True
             out('ZOSTAWIONO', f'{relative(tree["path"])} — pliki poza commitami:')
             for line in dirty(tree['path'])[:10]:
@@ -425,11 +524,12 @@ def cmd_fix_round(args) -> int:
             continue
         if tree['typ'] != 'claude':
             raise Stop(3, 'ODMOWA', f'{branch} jest wyewidencjonowana w {tree["path"]}')
-        changes = dirty(tree['path'])
+        changes = dirty(tree['path'], untracked=False) + leftovers(tree['path'])
         if changes:
             raise Stop(3, 'ODMOWA', f'{relative(tree["path"])} ma niezapisaną pracę ({len(changes)} zmian) — '
                        'zabezpiecz ją commitem na gałęzi zadania')
-        git('worktree', 'remove', str(tree['path']))
+        if not remove_worktree(tree['path']):
+            raise Stop(3, 'ODMOWA', f'git nie usunął {relative(tree["path"])} — sprawdź `git -C <katalog> status`')
         out('USUNIĘTO', relative(tree['path']))
         helper = f'worktree-{tree["path"].name}'
         if ok('rev-parse', '--verify', '--quiet', f'refs/heads/{helper}') and ok('branch', '-d', helper):
@@ -447,6 +547,7 @@ def cmd_sync(args) -> int:
         git('worktree', 'add', str(path), branch)
     if dirty(path, untracked=False):
         raise Stop(3, 'ODMOWA', f'{relative(path)} ma niezacommitowane zmiany')
+    refuse_collisions(collisions(path, branch, main), path)
     out('KATALOG', path)
     merge = git('merge', '--no-ff', '-m', f'merge({args.task}): {main} do gałęzi zadania', main, cwd=path, check=False)
     if merge.returncode:
@@ -468,60 +569,64 @@ def cmd_sync(args) -> int:
 
 
 def cmd_test(args) -> int:
-    command = [c for c in args.polecenie if c != '--'] if args.polecenie else []
-    if not command:
-        raise Stop(2, 'BŁĄD', 'podaj polecenie po `--`')
+    command = agents_command(args.klucz, main_branch())
     return run_test(args.name, command, Path(args.cwd).resolve() if args.cwd else REPO, args.tail)
+
+
+def name(value: str) -> str:
+    if not NAME.fullmatch(value) or '..' in value:
+        raise argparse.ArgumentTypeError(f'niedozwolona nazwa: {value!r} (litery, cyfry, . _ -)')
+    return value
 
 
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     root.add_argument('--repo', type=Path, help='katalog repozytorium (domyślnie: główny worktree bieżącego)')
+    root.add_argument('--main', type=name, help='gałąź główna, gdy nie wynika z origin/HEAD ani main/master')
     sub = root.add_subparsers(dest='cmd', required=True)
     env = sub.add_parser('env', help='fakty startu sesji, fetch/fast-forward, worktree, gałęzie zadań, exclude')
     env.add_argument('--no-fetch', action='store_true')
     env.set_defaults(func=cmd_env)
     tree = sub.add_parser('worktree', help='katalog CLI w .kierownik/wt/: wykonawca, --rec, --ro')
-    tree.add_argument('task', nargs='?')
-    tree.add_argument('nazwa', nargs='?')
+    tree.add_argument('task', nargs='?', type=name)
+    tree.add_argument('nazwa', nargs='?', type=name)
     tree.add_argument('--base')
     tree.add_argument('--rec', action='store_true', help='odłączony katalog recenzenta T-NNN-rec')
-    tree.add_argument('--ro', metavar='ID', help='odłączony katalog odczytu <ID>-ro')
+    tree.add_argument('--ro', metavar='ID', type=name, help='odłączony katalog odczytu <ID>-ro')
     tree.add_argument('--at', help='commit dla --ro (domyślnie main)')
     tree.set_defaults(func=cmd_worktree)
     check = sub.add_parser('ro-check', help='czy rola odczytu/recenzji niczego nie zmieniła')
     check.add_argument('katalog')
     check.add_argument('--sha', required=True)
     check.set_defaults(func=cmd_ro_check)
-    merge = sub.add_parser('merge', help='scalenie --no-ff, testy na main, push, sprzątanie')
-    merge.add_argument('task')
-    merge.add_argument('--test', help='polecenie testów z AGENTS.md')
+    merge = sub.add_parser('merge', help='scalenie --no-ff, testy z AGENTS.md na main, push, sprzątanie')
+    merge.add_argument('task', type=name)
     merge.add_argument('--push', action='store_true')
     merge.add_argument('--opis')
     merge.add_argument('--no-cleanup', action='store_true')
     merge.add_argument('--tail', type=int, default=30)
     merge.set_defaults(func=cmd_merge)
     clean = sub.add_parser('cleanup', help='usuń worktree i gałęzie scalonego zadania (bez --force)')
-    clean.add_argument('task')
+    clean.add_argument('task', type=name)
     clean.set_defaults(func=cmd_cleanup)
     fix = sub.add_parser('fix-round', help='przygotuj rundę poprawek i podaj linię GAŁĄŹ')
-    fix.add_argument('task')
+    fix.add_argument('task', type=name)
     fix.set_defaults(func=cmd_fix_round)
     sync = sub.add_parser('sync', help='scal main do gałęzi zadania (po konflikcie)')
-    sync.add_argument('task')
+    sync.add_argument('task', type=name)
     sync.add_argument('--keep-conflict', action='store_true')
     sync.set_defaults(func=cmd_sync)
-    test = sub.add_parser('test', help='uruchom testy z logiem, kodem wyjścia i liczbami')
-    test.add_argument('--name', required=True)
+    test = sub.add_parser('test', help='polecenie z AGENTS.md na main (Testy albo Lint) z logiem i liczbami')
+    test.add_argument('--name', required=True, type=name)
+    test.add_argument('--klucz', default='Testy', choices=('Testy', 'Lint'))
     test.add_argument('--cwd')
     test.add_argument('--tail', type=int, default=30)
-    test.add_argument('polecenie', nargs=argparse.REMAINDER)
     test.set_defaults(func=cmd_test)
     return root
 
 
 def main(argv=None) -> int:
-    global REPO
+    global REPO, MAIN
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8', errors='replace')
@@ -529,7 +634,7 @@ def main(argv=None) -> int:
     if args.cmd == 'worktree' and not args.ro and not args.task:
         parser().error('worktree: podaj T-NNN (albo --ro ID)')
     try:
-        REPO = find_repo((args.repo or Path.cwd()).resolve())
+        REPO, MAIN = find_repo((args.repo or Path.cwd()).resolve()), args.main
         added = ensure_exclude()
         if added:
             out('EXCLUDE', 'dopisano ' + ', '.join(added))

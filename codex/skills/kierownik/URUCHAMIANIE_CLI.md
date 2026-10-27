@@ -39,7 +39,7 @@ own configured default, not the lead's model.
 
 Safety: a skip-permissions / no-sandbox flag gives the agent the whole machine, including secrets readable by its
 process (keeping secrets out of the order doesn't protect those). Use such a flag only when the registry row records
-„zgoda … TAK <data> (potwierdzona na tej maszynie)” — the owner decides, ideally after moving the work into a container
+„zgoda … TAK <data> (potwierdzona na tej maszynie: <hostname>)” — the owner decides, ideally after moving the work into a container
 or VM; never on a host whose own rules forbid bypassing approvals (Codex) without that explicit consent. Without it the
 runner is used in its prompting/sandboxed mode, or not at all (`agy -p` without the flag silently skips shell
 commands — useless for tasks that need them). Everywhere: only in the role directory, no secrets in the order. After every run check the

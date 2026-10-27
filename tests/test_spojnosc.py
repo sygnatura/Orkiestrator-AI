@@ -61,6 +61,15 @@ class SharedFilesTest(unittest.TestCase):
             for name in re.findall(r'(?:KIER|kier\.py) ([a-z][a-z-]+)', read(path)):
                 self.assertIn(name, known, f'kier.py {name} w {path.relative_to(REPO)}')
 
+    def test_recreatable_patterns_match_in_both_scripts(self):
+        modules = []
+        for path in (CLAUDE / 'scripts' / 'kier.py', CODEX / 'scripts' / 'run_agent.py'):
+            spec = importlib.util.spec_from_file_location(f'kierownik_{path.stem}_wzorce', path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            modules.append(module)
+        self.assertEqual(modules[0].REGENERABLE, modules[1].REGENERABLE)
+
     def test_no_stale_versions_in_codex_metadata(self):
         for path in (CODEX / 'agents' / 'openai.yaml', REPO / 'codex' / 'install.py'):
             self.assertNotRegex(read(path), r'v1[01]\b', str(path.relative_to(REPO)))

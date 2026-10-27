@@ -37,8 +37,10 @@ variable. Paths below are relative to this file; read each file only when its tr
 - `scripts/run_agent.py`: a fresh CLI session in a given role directory.
 - `scripts/kier.py`: git and test mechanics — run it, don't read it. `KIER` below means `python3 <this skill's
   directory>/scripts/kier.py` (Windows: `py -3 …`). Short `KLUCZ: wartość` lines ending in `WYNIK:`; exit 0 OK,
-  1 tests red (merge undone), 2 error, 3 refused (nothing changed), 4 conflict (aborted), 5 green but push failed.
-  It never forces or deletes unmerged work. If the sandbox blocks its writes to `.git`, record it in the registry
+  1 tests red or untrustworthy (merge undone), 2 error, 3 refused (nothing changed), 4 conflict (aborted), 5 green
+  but push failed, 6 pushed but cleanup incomplete. It never forces, overwrites untracked/ignored files or deletes
+  work; test commands come only from the `- Testy:`/`- Lint:` lines of AGENTS.md on main; another main branch →
+  `--main <gałąź>`. If the sandbox blocks its writes to `.git`, record it in the registry
   (smoke test) and do the same steps by hand.
 
 Higher-level instructions, the sandbox, permissions and branch protection still apply. Invoking the skill
@@ -125,11 +127,12 @@ verdict; the task returns to W TOKU. Don't impose statuses or artefacts of the o
    executor whose sandbox refused the commit leaves the changes uncommitted — commit them yourself after checking
    them against the report (URUCHAMIANIE_CLI).
 4. **Check:** formal check, your own tests when section 8 requires them, a fresh reviewer, verdict.
-5. **Integration:** only after ZALICZONE, locally on a clean main: `KIER merge T-NNN --test "<testy>" --push
-   --opis "<opis>"` — merge --no-ff, tests of that version, a normal push (never force), cleanup of the task's
-   worktrees and merged branches. Exit 3 in cleanup → files outside commits: compare with the report, never delete
+5. **Integration:** only after ZALICZONE, locally on a clean main: `KIER merge T-NNN --push --opis "<opis>"`
+   — merge --no-ff, the AGENTS.md tests of that version, a normal push (never force), cleanup of the task's
+   worktrees and merged branches. Exit 3 → nothing changed (e.g. it would overwrite ignored local files). Exit 6 →
+   pushed, but a worktree holds work that isn't recreatable output: compare with the report, never delete
    unsecured work. Don't delete other people's `worktree-*`.
-6. **Red after merge (exit 1):** main is back where it was, nothing pushed, the branch and its directory stay; the
+6. **Red after merge (exit 1):** main is back where it was (test changes to tracked files in a named stash), nothing pushed, the branch and its directory stay; the
    task returns to W TOKU with the log's observations. Conflict (exit 4): `KIER sync T-NNN`; clean → merge again;
    trivial → `sync --keep-conflict`, resolve, commit, `KIER test`, merge; otherwise an order A with the KONFLIKT line
    (ZLECENIA). New review only when the resolution (`git show --remerge-diff`) touches logic or the criteria's area;
@@ -224,8 +227,9 @@ remaining quotas reliably — use the recorded states and the owner's priorities
 
 ## 8. VERIFICATION
 
-TEST RUNS (all of yours): `KIER test --name <nazwa> [--cwd <katalog>] -- "<polecenie>"` — full log in
-`.kierownik/log/`, the real exit code, passed/failed/skipped and the tail. Exit 0 with zero tests is not PASS.
+TEST RUNS (all of yours): `KIER test --name <nazwa> [--cwd <katalog>] [--klucz Lint]` — the AGENTS.md command from
+main, full log in `.kierownik/log/`, the real exit code, passed/failed/skipped and the tail; other commands with a
+plain shell and a log file. Exit 0 with zero tests is not PASS.
 
 You: version/branch/base, diff scope, unchanged criteria/TODO/PROJEKT, justified dependencies. Your own tests in the
 change directory before the merge for „ścieżka szybka” and whenever the review is not a fresh host role one class

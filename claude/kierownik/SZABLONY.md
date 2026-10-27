@@ -66,7 +66,7 @@ Puste pozycje usuń. Kolejność ma znaczenie (Codex obcina od końca).
 ## Polecenia
 - Instalacja: `<…>`
 - Uruchomienie: `<…>`
-- Testy: `<…>` | jeden test: `<…>`
+- Testy: `<…>` | jeden test: `<…>`   (pierwsze polecenie w backtickach uruchamia `kier.py merge` i `kier.py test`)
 - Lint / format / typy: `<…>`
 
 ## Środowisko i koszty
@@ -380,8 +380,10 @@ Uwagi:
   kasują niezacommitowaną pracę. `agy` jest w ask, bo bez sandboxa ma dostęp do całej maszyny.
 - `kier.py` (skrypt mechaniki gita kierownika) wpisz z bezwzględną ścieżką skilla, np.
   `~/.claude/skills/kierownik/scripts/kier.py` rozwinięte do pełnej ścieżki; `allowed-tools` skilla działa
-  tylko w turze wywołania `/kierownik`, a kolejne tury („dalej”) potrzebują tej reguły. Skrypt nigdy nie
-  używa `--force`, `reset` ani `clean`. Reguły `ask` wygrywają z `allow` także między plikami ustawień.
+  tylko w turze wywołania `/kierownik`, a kolejne tury („dalej”) potrzebują tej reguły. Reguła obejmuje cały
+  skrypt, więc skrypt nie przyjmuje poleceń z wiersza poleceń: testy i lint uruchamia wyłącznie z linii
+  `- Testy:` / `- Lint …:` w AGENTS.md scommitowanym na main (nie z gałęzi zadania). Zmiana tych linii jest
+  więc zawsze commitem widocznym w historii. Skrypt nie używa `--force`, `reset --hard` ani `clean`. Reguły `ask` wygrywają z `allow` także między plikami ustawień.
 - `"effortLevel": "high"` dopisz tylko wtedy, gdy właściciel chce wyższego effortu kierownika niż domyślny
   modelu (SKILL.md, sekcja 1, krok 6).
 - Tryb auto w Claude Code (klasyfikator zamiast pytań): `"permissions": {"defaultMode": "auto"}` działa

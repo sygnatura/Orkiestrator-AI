@@ -18,13 +18,15 @@ kier = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(kier)
 
 TEST = f'"{sys.executable}" check.py'
+AGENTS = (f'# Fixture\n\n## Polecenia\n- Instalacja: `brak`\n- Testy: `{TEST}` | jeden test: `brak`\n'
+          f'- Lint / format / typy: `"{sys.executable}" -c "print(42)"`\n')
 
 
-class KierTest(unittest.TestCase):
+class Fixture(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='kier-')
         self.addCleanup(self.temp.cleanup)
-        root = Path(self.temp.name)
+        root = Path(self.temp.name).resolve()
         self.remote = root / 'remote.git'
         subprocess.run(['git', 'init', '-q', '--bare', '-b', 'main', str(self.remote)], check=True)
         self.repo = root / 'repo'
@@ -34,6 +36,8 @@ class KierTest(unittest.TestCase):
         self.git('config', 'user.email', 'fixture@example.invalid')
         (self.repo / 'f.txt').write_text('a\nb\nc\n')
         (self.repo / 'check.py').write_text('import sys\nsys.exit(1 if "BAD" in open("f.txt").read() else 0)\n')
+        (self.repo / 'AGENTS.md').write_text(AGENTS)
+        (self.repo / '.gitignore').write_text('local.py\nprivate/\n')
         self.git('add', '.')
         self.git('commit', '-qm', 'init')
         self.git('remote', 'add', 'origin', str(self.remote))
@@ -58,6 +62,7 @@ class KierTest(unittest.TestCase):
         self.git('commit', '-qam', f'feat({task}): {name}', cwd=path)
         return path
 
+class KierTest(Fixture):
     def test_env_adds_excludes_and_removes_orphan_helper_branch(self):
         self.git('branch', 'worktree-gone')
         code, output = self.kier('env')
@@ -70,7 +75,7 @@ class KierTest(unittest.TestCase):
 
     def test_green_merge_pushes_and_cleans_up(self):
         self.task('T-001', 'alfa', 'a\n', 'A\n')
-        code, output = self.kier('merge', 'T-001', '--test', TEST, '--push')
+        code, output = self.kier('merge', 'T-001', '--push')
         self.assertEqual(code, 0, output)
         self.assertIn('WYNIK: OK', output)
         self.assertEqual(self.git('rev-parse', 'main'), self.git('rev-parse', 'origin/main'))
@@ -81,9 +86,9 @@ class KierTest(unittest.TestCase):
     def test_conflict_aborts_and_leaves_main_unchanged(self):
         self.task('T-001', 'alfa', 'a\n', 'A1\n')
         self.task('T-002', 'beta', 'a\n', 'A2\n')
-        self.assertEqual(self.kier('merge', 'T-001', '--test', TEST)[0], 0)
+        self.assertEqual(self.kier('merge', 'T-001')[0], 0)
         before = self.git('rev-parse', 'HEAD')
-        code, output = self.kier('merge', 'T-002', '--test', TEST)
+        code, output = self.kier('merge', 'T-002')
         self.assertEqual(code, 4, output)
         self.assertIn('KONFLIKT: f.txt', output)
         self.assertEqual(self.git('rev-parse', 'HEAD'), before)
@@ -95,7 +100,7 @@ class KierTest(unittest.TestCase):
     def test_red_tests_undo_the_merge_and_keep_the_branch(self):
         self.task('T-003', 'zle', 'c\n', 'BAD\n')
         before = self.git('rev-parse', 'HEAD')
-        code, output = self.kier('merge', 'T-003', '--test', TEST, '--push')
+        code, output = self.kier('merge', 'T-003', '--push')
         self.assertEqual(code, 1, output)
         self.assertIn('WYNIK: CZERWONE', output)
         self.assertEqual(self.git('rev-parse', 'HEAD'), before)
@@ -108,7 +113,7 @@ class KierTest(unittest.TestCase):
         self.git('revert', '--no-edit', '-m', '1', 'HEAD')
         (path / 'f.txt').write_text((path / 'f.txt').read_text().replace('b\n', 'B\n'))
         self.git('commit', '-qam', 'fix(T-004)', cwd=path)
-        code, output = self.kier('merge', 'T-004', '--test', TEST)
+        code, output = self.kier('merge', 'T-004')
         self.assertEqual(code, 0, output)
         self.assertIn('COFNIĘTO REWERT', output)
         self.assertEqual((self.repo / 'f.txt').read_text(), 'A\nB\nc\n')
@@ -116,7 +121,7 @@ class KierTest(unittest.TestCase):
     def test_dirty_main_is_refused(self):
         self.task('T-005', 'x', 'a\n', 'A\n')
         (self.repo / 'f.txt').write_text('local\n')
-        code, output = self.kier('merge', 'T-005', '--test', TEST)
+        code, output = self.kier('merge', 'T-005')
         self.assertEqual(code, 3, output)
         self.assertIn('WYNIK: ODMOWA', output)
 
@@ -146,16 +151,142 @@ class KierTest(unittest.TestCase):
         (rec / '.pytest_cache/lastfailed').write_text('{}')
         code, output = self.kier('ro-check', str(rec), '--sha', sha)
         self.assertEqual(code, 0, output)
-        self.assertIn('UWAGA: nowe nieśledzone (dozwolone): .pytest_cache', output)
+        self.assertIn('UWAGA: nowe pliki odtwarzalne (dozwolone): .pytest_cache', output)
         (rec / 'f.txt').write_text('zmiana\n')
         code, output = self.kier('ro-check', str(rec), '--sha', sha)
         self.assertEqual(code, 3, output)
 
     def test_test_command_keeps_exit_code_and_writes_log(self):
-        code, output = self.kier('test', '--name', 'probe', '--', f'"{sys.executable}" -c "import sys; sys.exit(7)"')
+        (self.repo / 'AGENTS.md').write_text(AGENTS.replace(TEST, f'"{sys.executable}" -c "import sys; sys.exit(7)"'))
+        self.git('commit', '-qam', 'docs: test kończy się kodem 7')
+        code, output = self.kier('test', '--name', 'probe')
         self.assertEqual(code, 7)
         self.assertIn('exit: 7', output)
         self.assertTrue((self.repo / '.kierownik/log/probe.log').is_file())
+
+
+class ReviewFindingsTest(Fixture):
+    """Regressions for the scenarios of the v13 Codex review."""
+
+    def add_file(self, task, name, relative, content):
+        code, output = self.kier('worktree', task, name)
+        self.assertEqual(code, 0, output)
+        path = self.repo / '.kierownik/wt' / task
+        (path / relative).parent.mkdir(parents=True, exist_ok=True)
+        (path / relative).write_text(content)
+        self.git('add', '-f', relative, cwd=path)
+        self.git('commit', '-qm', f'feat({task}): {name}', cwd=path)
+        return path
+
+    def test_merge_refuses_to_overwrite_an_ignored_local_file(self):
+        (self.repo / 'local.py').write_text('właściciela\n')
+        self.add_file('T-008', 'local', 'local.py', 'z gałęzi\n')
+        before = self.git('rev-parse', 'HEAD')
+        code, output = self.kier('merge', 'T-008')
+        self.assertEqual(code, 3, output)
+        self.assertIn('local.py', output)
+        self.assertEqual((self.repo / 'local.py').read_text(), 'właściciela\n')
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+
+    def test_cleanup_keeps_ignored_work_but_not_caches(self):
+        path = self.task('T-009', 'p', 'a\n', 'A\n')
+        (path / 'private').mkdir()
+        (path / 'private/work.py').write_text('praca\n')
+        (path / '__pycache__').mkdir()
+        (path / '__pycache__/x.pyc').write_bytes(b'\0')
+        code, output = self.kier('merge', 'T-009')
+        self.assertEqual(code, 6, output)
+        self.assertIn('private', output)
+        self.assertTrue((path / 'private/work.py').is_file())
+        (path / 'private/work.py').unlink()
+        (path / 'private').rmdir()
+        code, output = self.kier('cleanup', 'T-009')
+        self.assertEqual(code, 0, output)
+        self.assertFalse(path.exists())
+
+    def test_test_takes_no_arbitrary_command(self):
+        (self.repo / 'f.txt').write_text('niezacommitowane\n')
+        with self.assertRaises(SystemExit):
+            self.kier('test', '--name', 'proof', '--', 'git reset --hard HEAD')
+        self.assertEqual((self.repo / 'f.txt').read_text(), 'niezacommitowane\n')
+        code, output = self.kier('test', '--name', 'z-agents')
+        self.assertEqual(code, 0, output)
+        self.assertIn('check.py', output)
+
+    def test_lint_line_of_the_agents_template_is_found(self):
+        code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')
+        self.assertEqual(code, 0, output)
+        self.assertIn('print(42)', output)
+
+    def test_merge_without_test_line_in_agents_is_refused(self):
+        (self.repo / 'AGENTS.md').write_text('# bez poleceń\n')
+        self.git('commit', '-qam', 'docs: bez testów')
+        self.task('T-010', 'x', 'a\n', 'A\n')
+        before = self.git('rev-parse', 'HEAD')
+        code, output = self.kier('merge', 'T-010')
+        self.assertEqual(code, 3, output)
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+
+    def test_test_command_comes_from_main_not_from_the_task_branch(self):
+        path = self.task('T-011', 'zle', 'c\n', 'BAD\n')
+        (path / 'AGENTS.md').write_text(AGENTS.replace(TEST, 'exit 0'))
+        self.git('commit', '-qam', 'feat(T-011): podmiana testów', cwd=path)
+        code, output = self.kier('merge', 'T-011')
+        self.assertEqual(code, 1, output)
+
+    def test_unrelated_task_does_not_restore_someone_elses_revert(self):
+        self.task('T-001', 'alfa', 'a\n', 'A\n')
+        self.assertEqual(self.kier('merge', 'T-001')[0], 0)
+        self.git('revert', '--no-edit', '-m', '1', 'HEAD')
+        self.add_file('T-002', 'beta', 'g.txt', 'osobny plik\n')
+        code, output = self.kier('merge', 'T-002')
+        self.assertEqual(code, 0, output)
+        self.assertNotIn('COFNIĘTO REWERT', output)
+        self.assertEqual((self.repo / 'f.txt').read_text(), 'a\nb\nc\n')
+
+    def test_tests_that_change_tracked_files_are_not_trusted(self):
+        (self.repo / 'check.py').write_text('import sys\nopen("f.txt", "w").write("naprawione\\n")\nsys.exit(0)\n')
+        self.git('commit', '-qam', 'test: modyfikuje f.txt')
+        self.git('push', '-q', 'origin', 'main')
+        self.task('T-012', 'zle', 'c\n', 'BAD\n')
+        before = self.git('rev-parse', 'HEAD')
+        code, output = self.kier('merge', 'T-012', '--push')
+        self.assertEqual(code, 1, output)
+        self.assertIn('STASH', output)
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        self.assertEqual(self.git('rev-parse', 'origin/main'), before)
+        self.assertEqual(self.git('status', '--porcelain'), '')
+        self.assertIn('kier: zmiany testów T-012', self.git('stash', 'list'))
+
+    def test_ro_check_rejects_a_new_source_file(self):
+        self.task('T-013', 'r', 'a\n', 'A\n')
+        self.kier('worktree', '--rec', 'T-013')
+        rec = self.repo / '.kierownik/wt/T-013-rec'
+        (rec / 'new_source.py').write_text('print(1)\n')
+        code, output = self.kier('ro-check', str(rec), '--sha', self.git('rev-parse', 'task/T-013-r'))
+        self.assertEqual(code, 3, output)
+        self.assertIn('new_source.py', output)
+
+    def test_unknown_main_branch_is_refused_unless_given(self):
+        self.git('remote', 'remove', 'origin')
+        self.git('branch', '-m', 'main', 'trunk')
+        self.git('switch', '-q', '-c', 'feature')
+        code, output = self.kier('env', '--no-fetch')
+        self.assertEqual(code, 3, output)
+        self.git('config', 'init.defaultBranch', 'nieistniejaca')
+        code, output = self.kier('--main', 'trunk', 'env', '--no-fetch')
+        self.assertEqual(code, 0, output)
+        self.assertIn('MAIN: trunk', output)
+
+    def test_exclude_without_final_newline_keeps_existing_rule(self):
+        exclude = self.repo / '.git/info/exclude'
+        exclude.write_text('private.txt')
+        self.assertEqual(self.kier('env', '--no-fetch')[0], 0)
+        self.assertIn('private.txt\n.kierownik/\n', exclude.read_text())
+
+    def test_task_names_cannot_escape_the_worktree_directory(self):
+        with self.assertRaises(SystemExit):
+            self.kier('worktree', '../../poza', 'x')
 
 
 class CountTests(unittest.TestCase):

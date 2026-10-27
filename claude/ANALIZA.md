@@ -198,6 +198,14 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      pliki nieśledzone; nowe nieśledzone są zgłaszane jako UWAGA.
    - **Straż spójności** `tests/test_spojnosc.py`: wspólne pliki identyczne, słowa protokołu, pola zleceń
      i skróty w obu pakietach, każde wspomniane podpolecenie `kier.py` istnieje, limit długości SKILL.md.
+   - **v13.1 — po recenzji Codex (Windows)**: `kier.py` nie nadpisuje plików ignorowanych (scalenie odmawia,
+     gdy gałąź dodaje plik istniejący lokalnie) i nie kasuje pracy przy sprzątaniu (usuwa tylko wyjście
+     odtwarzalne: cache, build, zależności); polecenia testów wyłącznie z AGENTS.md na main — reguła allow
+     dla skryptu nie otwiera już dowolnych poleceń; wcześniejsze scalenie rozpoznawane po temacie
+     `merge(T-NNN)`, więc cudzy rewert nie wraca; testy zmieniające pliki śledzone → wynik niewiarygodny,
+     zmiany w stashu, scalenie cofnięte; recenzent dopisujący pliki źródłowe traci werdykt; bez ustalonej
+     gałęzi głównej odmowa zamiast zgadywania (`--main`); poprawne dopisywanie do `info/exclude`; sumy
+     instalatora niezależne od CRLF i `.gitattributes` z LF; zgoda na `agy` powiązana z nazwą hosta.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

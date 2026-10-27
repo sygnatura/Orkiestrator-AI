@@ -2,6 +2,7 @@
 """Run one kierownik role in a fresh Codex CLI session without interpreting a shell prompt."""
 
 import argparse
+from fnmatch import fnmatch
 import hashlib
 import json
 import os
@@ -11,6 +12,13 @@ import sys
 import tomllib
 
 ROLES = ('kier-analityk', 'kier-wykonawca', 'kier-recenzent', 'kier-architekt')
+# Recreatable output a review may leave behind; any other new file is a change. Same list as kier.py.
+REGENERABLE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache',
+               '.tox', 'coverage', '.coverage', '.coverage.*', 'htmlcov', 'dist', 'build', 'target', '.next', '*.log')
+
+
+def regenerable(path: str) -> bool:
+    return any(fnmatch(part, pattern) for part in path.split('/') for pattern in REGENERABLE)
 
 
 def git(cwd: Path, *args: str) -> bytes:
@@ -38,11 +46,13 @@ def snapshot(cwd: Path) -> tuple[tuple[bytes, bytes, bytes], dict[bytes, bytes]]
 
 
 def changed(before, after) -> tuple[bool, list[str]]:
-    """Return (sources changed, new untracked paths). Pre-existing untracked files must stay as they were."""
+    """Return (sources changed, new recreatable paths). Pre-existing untracked files must stay as they were, and a
+    new file counts as a change unless it is recreatable output (test caches, builds)."""
     (tracked_before, untracked_before), (tracked_after, untracked_after) = before, after
-    altered = tracked_before != tracked_after or any(
-        untracked_after.get(name) != digest for name, digest in untracked_before.items())
     new = sorted(os.fsdecode(name) for name in untracked_after.keys() - untracked_before.keys())
+    altered = tracked_before != tracked_after or any(
+        untracked_after.get(name) != digest for name, digest in untracked_before.items()) or not all(
+        regenerable(path) for path in new)
     return altered, new
 
 
@@ -85,12 +95,13 @@ def main(argv=None) -> int:
     if before is not None:
         altered, new = changed(before, snapshot(cwd))
         if altered:
-            print('ODRZUCONO: rola odczytu/recenzji zmieniła HEAD, źródła, indeks lub status.',
-                  file=sys.stderr)
+            added = [path for path in new if not regenerable(path)]
+            print('ODRZUCONO: rola odczytu/recenzji zmieniła HEAD, źródła, indeks, status'
+                  + (' albo dodała pliki: ' + ', '.join(added[:5]) if added else '') + '.', file=sys.stderr)
             return process.returncode if process.returncode else 3
         if new:
             shown = sorted({path.split('/')[0] for path in new})
-            print('UWAGA: nowe nieśledzone (dozwolone): ' + ', '.join(shown[:5])
+            print('UWAGA: nowe pliki odtwarzalne (dozwolone): ' + ', '.join(shown[:5])
                   + (' …' if len(shown) > 5 else ''), file=sys.stderr)
     if process.returncode:
         return process.returncode

@@ -121,6 +121,18 @@ class InstallerTest(unittest.TestCase):
         code, output = self.run_installer('--claude')
         self.assertIn('wszystkie pliki aktualne', output)
 
+    def test_crlf_install_from_windows_is_recognised_as_a_release(self):
+        files = subprocess.check_output(['git', '-C', str(REPO), 'ls-tree', '-r', '--name-only', 'd87a48b',
+                                         'claude/agents'], text=True).split()
+        self.agents.mkdir(parents=True)
+        for name in files:
+            data = subprocess.check_output(['git', '-C', str(REPO), 'show', f'd87a48b:{name}'])
+            (self.agents / Path(name).name).write_bytes(data.replace(b'\n', b'\r\n'))
+        code, output = self.run_installer('--claude')
+        self.assertEqual(code, 0, output)
+        self.assertNotIn('ZMIENIONEGO', output)
+        self.assertEqual(install.verify(self.home), [])
+
     def test_dropped_nested_file_is_deleted_and_its_empty_directory_removed(self):
         self.run_installer('--claude')
         stale = self.skill / 'narzedzia/stary.py'
