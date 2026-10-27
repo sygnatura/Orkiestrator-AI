@@ -185,6 +185,26 @@ class RunnerTests(ProjectTest):
         source.write_text('before')
         self.assertEqual(self.run_role(mutate=lambda: source.write_text('after')), 3)
 
+    def test_reviewer_new_test_caches_are_allowed(self):
+        def caches():
+            (self.project / '.pytest_cache/v/cache').mkdir(parents=True)
+            (self.project / '.pytest_cache/v/cache/lastfailed').write_text('{}')
+            (self.project / 'pkg/__pycache__').mkdir(parents=True)
+            (self.project / 'pkg/__pycache__/m.cpython-312.pyc').write_bytes(b'\0')
+        self.assertEqual(self.run_role(mutate=caches), 0)
+
+    def test_reviewer_deleting_existing_untracked_file_invalidates_result(self):
+        source = self.project / 'untracked.txt'
+        source.write_text('before')
+        self.assertEqual(self.run_role(mutate=source.unlink), 3)
+
+    def test_reviewer_caches_do_not_hide_tracked_change(self):
+        def both():
+            (self.project / '.pytest_cache').mkdir()
+            (self.project / '.pytest_cache/x').write_text('c')
+            (self.project / 'tracked.txt').write_text('changed')
+        self.assertEqual(self.run_role(mutate=both), 3)
+
     def test_analyzer_source_change_invalidates_result(self):
         self.assertEqual(self.run_role(role='kier-analityk', mutate=lambda: (self.project / 'tracked.txt').write_text('changed')), 3)
         self.assertEqual(self.calls[0][0][self.calls[0][0].index('-s') + 1], 'read-only')

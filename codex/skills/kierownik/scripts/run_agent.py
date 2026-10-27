@@ -17,21 +17,33 @@ def git(cwd: Path, *args: str) -> bytes:
     return subprocess.check_output(['git', '-C', str(cwd), *args], stderr=subprocess.PIPE)
 
 
-def snapshot(cwd: Path) -> tuple[bytes, bytes, bytes]:
+def snapshot(cwd: Path) -> tuple[tuple[bytes, bytes, bytes], dict[bytes, bytes]]:
+    """HEAD, tracked state and pre-existing untracked files; new untracked files (test caches) don't count."""
     root = Path(os.fsdecode(git(cwd, 'rev-parse', '--show-toplevel')).strip())
     content = hashlib.sha256(git(cwd, 'diff', 'HEAD', '--binary') +
                              git(cwd, 'diff', '--cached', '--binary'))
+    untracked = {}
     for name in git(root, 'ls-files', '--others', '--exclude-standard', '-z').split(b'\0'):
         if not name:
             continue
         path = root / os.fsdecode(name)
         data = os.fsencode(os.readlink(path)) if path.is_symlink() else path.read_bytes()
-        content.update(name + b'\0' + hashlib.sha256(data).digest())
-    return (
+        untracked[name] = hashlib.sha256(data).digest()
+    tracked = (
         git(cwd, 'rev-parse', 'HEAD'),
-        git(cwd, 'status', '--porcelain=v1', '-z'),
+        git(cwd, 'status', '--porcelain=v1', '-z', '--untracked-files=no'),
         content.digest(),
     )
+    return tracked, untracked
+
+
+def changed(before, after) -> tuple[bool, list[str]]:
+    """Return (sources changed, new untracked paths). Pre-existing untracked files must stay as they were."""
+    (tracked_before, untracked_before), (tracked_after, untracked_after) = before, after
+    altered = tracked_before != tracked_after or any(
+        untracked_after.get(name) != digest for name, digest in untracked_before.items())
+    new = sorted(os.fsdecode(name) for name in untracked_after.keys() - untracked_before.keys())
+    return altered, new
 
 
 def main(argv=None) -> int:
@@ -70,11 +82,16 @@ def main(argv=None) -> int:
     result.parent.mkdir(parents=True, exist_ok=True)
     with stderr_path.open('x', encoding='utf-8') as error_log:
         process = subprocess.run(command, input=order, text=True, stdout=subprocess.DEVNULL, stderr=error_log, check=False)
-    after = snapshot(cwd) if before is not None else None
-    if before is not None and before != after:
-        print('ODRZUCONO: rola odczytu/recenzji zmieniła HEAD, źródła, indeks lub status.',
-              file=sys.stderr)
-        return process.returncode if process.returncode else 3
+    if before is not None:
+        altered, new = changed(before, snapshot(cwd))
+        if altered:
+            print('ODRZUCONO: rola odczytu/recenzji zmieniła HEAD, źródła, indeks lub status.',
+                  file=sys.stderr)
+            return process.returncode if process.returncode else 3
+        if new:
+            shown = sorted({path.split('/')[0] for path in new})
+            print('UWAGA: nowe nieśledzone (dozwolone): ' + ', '.join(shown[:5])
+                  + (' …' if len(shown) > 5 else ''), file=sys.stderr)
     if process.returncode:
         return process.returncode
     if not result.is_file() or not result.read_text(encoding='utf-8').strip():
