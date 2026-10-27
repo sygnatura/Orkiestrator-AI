@@ -1,4 +1,4 @@
-# Kierownik v12 dla Codex
+# Kierownik v13 dla Codex
 
 Odpowiednik **kierownika v10 z gałęzi
 `claude/eloquent-meitner-98b5px`**, commit
