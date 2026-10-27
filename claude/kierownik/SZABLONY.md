@@ -285,9 +285,9 @@ i pcha main bezpośrednio). Polecenia testów dopasuj do projektu. Sprawdzenie: 
 
 Opcjonalnie zapisz tu także model i effort kierownika — zastępują ręczne `/model` i `/effort` w każdej
 sesji; wpis obowiązuje każdą sesję Claude Code w tym projekcie (gdy ma dotyczyć wszystkich projektów,
-wpisz go w `~/.claude/settings.json`). Próg kompaktowania ma trwały odpowiednik `autoCompactWindow`
-(wartość w tokenach, np. 200000); do czasu sprawdzenia formatu w dokumentacji wystarczy `/autocompact`
-w sesji.
+wpisz go w `~/.claude/settings.json`). Próg kompaktowania: `/autocompact 200k` (Claude Code ≥ 2.1.221)
+zapisuje go w ustawieniach użytkownika i działa we wszystkich projektach; ten sam klucz to
+`"autoCompactWindow": 200000` — opcjonalnie tutaj, gdy ma dotyczyć tylko tego projektu.
 
 `worktree.baseRef: head` — worktree subagenta (`isolation: worktree`) odgałęzia się od bieżącego HEAD
 sesji, nie od `origin/HEAD`; bez tego klucza baza może nie zawierać niewypchniętych commitów kierownika.
@@ -303,7 +303,6 @@ nie warunkiem działania.
       "Bash(<polecenie testów> *)",
       "Bash(<polecenie lintu> *)",
       "Bash(codex exec *)",
-      "Bash(agy *)",
       "Bash(git status)",
       "Bash(git status *)",
       "Bash(git log *)",
@@ -319,7 +318,7 @@ nie warunkiem działania.
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git switch *)",
-      "Bash(git checkout *)",
+      "Bash(python3 <bezwzględna ścieżka skilla>/scripts/kier.py *)",
       "Bash(git merge *)",
       "Bash(git revert *)",
       "Bash(git worktree *)",
@@ -327,6 +326,15 @@ nie warunkiem działania.
       "Bash(git push origin main)"
     ],
     "ask": [
+      "Bash(agy *)",
+      "Bash(git checkout -- *)",
+      "Bash(git checkout .)",
+      "Bash(git checkout -f*)",
+      "Bash(git checkout --force*)",
+      "Bash(git restore *)",
+      "Bash(git switch -f*)",
+      "Bash(git switch --discard-changes*)",
+      "Bash(git worktree remove -f*)",
       "Bash(git push origin --delete *)",
       "Bash(git push origin -d *)",
       "Bash(git branch -D *)",
@@ -368,6 +376,12 @@ Uwagi:
   stąd osobne wpisy Bash; `grep`/`sed` na .env, ścieżki bezwzględne i narzędzie Grep nadal nie są objęte.
   Gdy sekrety są krytyczne, dodaj hook PreToolUse odrzucający polecenia zawierające `.env`. Reguły deny
   obejmują także subagentów (ich pytania o uprawnienia trafiają do sesji głównej).
+- `git checkout` nie jest w allow: wykonawcy używają `git switch`, a `git checkout -- .` / `git restore`
+  kasują niezacommitowaną pracę. `agy` jest w ask, bo bez sandboxa ma dostęp do całej maszyny.
+- `kier.py` (skrypt mechaniki gita kierownika) wpisz z bezwzględną ścieżką skilla, np.
+  `~/.claude/skills/kierownik/scripts/kier.py` rozwinięte do pełnej ścieżki; `allowed-tools` skilla działa
+  tylko w turze wywołania `/kierownik`, a kolejne tury („dalej”) potrzebują tej reguły. Skrypt nigdy nie
+  używa `--force`, `reset` ani `clean`. Reguły `ask` wygrywają z `allow` także między plikami ustawień.
 - `"effortLevel": "high"` dopisz tylko wtedy, gdy właściciel chce wyższego effortu kierownika niż domyślny
   modelu (SKILL.md, sekcja 1, krok 6).
 - Tryb auto w Claude Code (klasyfikator zamiast pytań): `"permissions": {"defaultMode": "auto"}` działa

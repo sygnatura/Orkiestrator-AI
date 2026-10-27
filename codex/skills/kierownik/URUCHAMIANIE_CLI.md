@@ -29,7 +29,7 @@ Use the verified command from the registry; starting templates (POSIX; PowerShel
 | Runner | Starting template — verify with `--help` and the smoke test before use |
 |---|---|
 | codex-cli | `codex exec -C <katalog roli> -s workspace-write -m <model> -o <wynik> - < <zlecenie> 2> <err>` (analysis only: `-s read-only`) |
-| agy-cli | `cd <katalog roli> && agy -p "$(cat <zlecenie>)" --dangerously-skip-permissions <flaga modelu> > <wynik> 2> <err>` — the flag needs the owner's consent in the registry row (given in the template; revoked → drop the flag) |
+| agy-cli | `cd <katalog roli> && agy -p "$(cat <zlecenie>)" --dangerously-skip-permissions <flaga modelu> > <wynik> 2> <err>` — the flag only with the owner's consent recorded in the registry row (ZESPOL_PROCEDURY.md, A.4); none → no flag, no run |
 | claude-cli | `cd <katalog roli> && claude -p --model <alias> < <zlecenie> > <wynik> 2> <err>` (permission mode per `claude --help`; no blanket skip-permissions) |
 | codex-sub (Codex host) | `python3 <skill>/scripts/run_agent.py --role kier-<rola> --model <model> --cwd <katalog roli> --prompt <zlecenie> --result <wynik>` |
 
@@ -38,7 +38,7 @@ own configured default, not the lead's model.
 
 Safety: a skip-permissions / no-sandbox flag gives the agent the whole machine, including secrets readable by its
 process (keeping secrets out of the order doesn't protect those). Use such a flag only when the registry row records
-„zgoda właściciela na tryb bez sandboxa: <data>” — the owner decides, ideally after moving the work into a container
+„zgoda … TAK <data> (potwierdzona na tej maszynie)” — the owner decides, ideally after moving the work into a container
 or VM; never on a host whose own rules forbid bypassing approvals (Codex) without that explicit consent. Without it the
 runner is used in its prompting/sandboxed mode, or not at all (`agy -p` without the flag silently skips shell
 commands — useless for tasks that need them). Everywhere: only in the role directory, no secrets in the order. After every run check the

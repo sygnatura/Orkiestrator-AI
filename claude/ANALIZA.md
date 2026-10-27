@@ -1,4 +1,4 @@
-# ANALIZA I DECYZJE (v10–v12)
+# ANALIZA I DECYZJE (v10–v13)
 
 Do czytania, gdy chcesz zmieniać system. Do codziennej pracy niepotrzebne.
 
@@ -24,7 +24,7 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
 | Oszczędzanie kontekstu przez niewiedzę | „Czytaj tylko `git --stat`” | (v8) Oszczędzanie przez delegowanie: ciężkie czytanie robią subagenci, do kierownika wracają streszczenia |
 | Po wyjściu nowego modelu trzeba poprawiać pięć plików; recenzent „inny model niż autor” przestaje być jednoznaczny | Nazwy i wersje modeli (Opus 5.5, Fable 5.1) wpisane w SKILL.md, README, ZESPOL.md, ANALIZA | (v10) Klasy modeli; mapowanie klasa → alias tylko w ZESPOL.md (decyzja 9) |
 | Pętla poprawek i recenzja nie działają z worktree subagentów | Instrukcje zakładały, że subagent wraca do tego samego worktree, odgałęzia się od lokalnego main i że jedną gałąź da się wyewidencjonować w dwóch worktree | (v10) Przepływ Git napisany pod faktyczną mechanikę `isolation: worktree` (decyzja 10) |
-| Kierownik „ustawia effort” subagentowi, którego ustawić nie może | Założenie, że effort jest parametrem wywołania | (v10) Effort tylko we frontmatter agentów; przy wywołaniu zmienia się wyłącznie klasę modelu |
+| Kierownik „ustawia effort” subagentowi, którego ustawić nie może | Założenie, że effort jest parametrem wywołania | (v10) Effort tylko we frontmatter agentów; przy wywołaniu zmienia się wyłącznie klasę modelu. (v13) Claude Code ≥ 2.1.292 przyjmuje `effort` przy wywołaniu — kierownik go podaje (decyzja 14) |
 
 
 ## 3. Kluczowe decyzje (v8–v10)
@@ -161,6 +161,25 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    Ograniczenia: kierownik zawsze działa w jednym hoście i zatrzymuje się razem z jego dostawcą; stanu limitu
    nie da się sprawdzić z góry, tylko zapisać po komunikacie; recenzja przez CLI kosztuje więcej pracy
    kierownika (worktree `-rec`, zależności, plik zlecenia) i jest wolniejsza; `agy` działa bez sandboxa.
+14. **(v13) Mocniejszy wykonawca, effort przy wywołaniu, zgoda na `agy` na maszynie.** Przegląd v12
+   (2026-10-27) wskazał:
+   - **Wykonawca domyślnie w MOCNY (Opus, effort medium).** Opus 5.5 kosztuje dziś tylko 2× Sonnet 5.5
+     ($4/$20 wobec $2/$10 za 1M tokenów), a nieudana runda poprawek kosztuje znacznie więcej niż różnica
+     ceny: drugie zlecenie, ponowną recenzję innej rodziny, worktree i kontekst kierownika. Anthropic
+     zaleca liczyć koszt ukończonego zadania, nie pojedynczego wywołania. STANDARDOWY (Sonnet) zostaje dla
+     prostych zadań: ryzyko NISKIE, typowa trudność, kryteria sprawdzalne jednym poleceniem. Każda poprawka
+     po nieudanej rundzie → MOCNY. „Zrobione” zapisuje klasę wykonawcy i liczbę rund — po kilku etapach
+     decyzję da się zweryfikować liczbami.
+   - **Recenzja pracy klasy MOCNY**: inna rodzina; bez niej NAJMOCNIEJSZY (Fable) tylko przy
+     bezpieczeństwie, danych, pieniądzach i kontraktach zewnętrznych, w pozostałych przypadkach wyjątek
+     „recenzja tą samą klasą” z testami kierownika — tak, żeby mocniejszy wykonawca nie zużywał limitu Fable.
+   - **Effort przy wywołaniu** (Claude Code ≥ 2.1.292): trudniejsze zadanie najpierw dostaje wyższy effort,
+     klasa rośnie, gdy potrzeba większych możliwości. Linia „przydział” może podać `effort <poziom>`.
+   - **Zgoda na `agy` bez sandboxa** nie jest już we wzorze rejestru: kierownik pyta o nią raz na maszynie
+     i zapisuje odpowiedź z dopiskiem „(potwierdzona na tej maszynie)”; zgoda skopiowana ze starszego wzoru
+     się nie liczy. Wzór `settings.json`: `agy` i destrukcyjne formy `git checkout`/`git restore` w `ask`.
+   - `/autocompact` jest udokumentowane (Claude Code ≥ 2.1.221) i zapisuje się w ustawieniach użytkownika,
+     więc obowiązuje we wszystkich projektach; opis w README i SZABLONY to mówi.
 
 ## 4. Czy to ma sens — uczciwa ocena
 
@@ -182,13 +201,13 @@ Ograniczenia, o których trzeba wiedzieć:
   w ZESPOL.md).
 - Dla małego projektu lub jednorazowej zmiany wystarczy zwykła sesja Claude Code z trybem planu; kierownik
   zaczyna się opłacać, gdy ciągłość między sesjami staje się problemem.
-- Effortu subagenta nie da się zmienić przy wywołaniu — tylko w pliku agenta. Eskalacja trudnego
-  zadania to zmiana klasy modelu, nie effortu; to świadomy kompromis, żeby nie mnożyć definicji agentów.
+- Effort subagenta przy wywołaniu działa od Claude Code 2.1.292; starsza wersja go ignoruje i obowiązuje
+  wartość z pliku agenta (wtedy eskalacja to zmiana klasy).
 - Zapasowe `codex exec` i `agy` wymagają zalogowania i działania bez interakcji na tej maszynie —
   kierownik sprawdza to testem dymnym przy pierwszym uruchomieniu.
 - `agy --dangerously-skip-permissions` to agent bez żadnych pytań o zgodę i bez sandboxa. Worktree
   porządkuje zmiany w repozytorium, ale nie ogranicza dostępu do maszyny. Producent zaleca kontener
-  lub sandbox — właściciel może wyłączyć `agy` jednym wpisem w ZESPOL.md. Bez flagi `agy -p` po cichu
+  lub sandbox — kierownik używa tego trybu tylko po zgodzie właściciela zapisanej na tej maszynie. Bez flagi `agy -p` po cichu
   pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek czytania stderr.
 - v10 działała u właściciela na prawdziwym projekcie poprawnie, ale kosztownie — to był powód v11.
   v11 nie przeszła jeszcze pilota. Zalecany: jeden etap na projekcie prowadzonym wcześniej na v10;
@@ -209,5 +228,5 @@ elementów można dodać, gdy pojawi się konkretny problem, którego obecny uk�
 
 ## 6. Źródła
 Lista w kierownik/SZABLONY.md (sekcja „Źródła”). Fakty o mechanice Claude Code (frontmatter subagentów
-i skilli, worktree, aliasy modeli, effort, uprawnienia) sprawdzone w dokumentacji 2026-10-06.
+i skilli, worktree, aliasy modeli, effort, uprawnienia) sprawdzone w dokumentacji 2026-10-06; effort przy wywołaniu subagenta i `/autocompact` — 2026-10-27.
 Poprzednia analiza (v7) z oceną materiałów wejściowych: archiwum/ANALIZA_v7.md.

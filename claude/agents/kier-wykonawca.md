@@ -2,7 +2,7 @@
 name: kier-wykonawca
 description: Wykonawca kierownika projektu — implementuje jedno zadanie T-NNN w izolowanym worktree, na gałęzi task/T-NNN, z testami i krótkim raportem. Używany przez /kierownik.
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 effort: medium
 isolation: worktree
 ---

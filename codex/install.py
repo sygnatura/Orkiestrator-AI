@@ -45,7 +45,7 @@ def config_addition(path: Path, skill: Path) -> str:
                       f'config_file = {json.dumps(role_path, ensure_ascii=False)}\n')
     if not blocks:
         return original
-    result = original.rstrip('\n') + '\n\n# Kierownik Codex v10 — role\n' + '\n'.join(blocks)
+    result = original.rstrip('\n') + '\n\n# Kierownik Codex — role\n' + '\n'.join(blocks)
     tomllib.loads(result)
     return result
 

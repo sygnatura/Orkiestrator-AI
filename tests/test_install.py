@@ -60,17 +60,17 @@ class InstallerTest(unittest.TestCase):
     def test_user_modified_file_needs_consent_and_is_backed_up(self):
         self.run_installer('--claude')
         target = self.agents / 'kier-wykonawca.md'
-        target.write_text(target.read_text(encoding='utf-8').replace('model: sonnet', 'model: opus'),
+        target.write_text(target.read_text(encoding='utf-8').replace('model: opus', 'model: fable'),
                           encoding='utf-8')
         code, output = self.run_installer('--claude')
         self.assertEqual(code, 1)
-        self.assertIn('model: opus', output)
-        self.assertIn('model: opus', target.read_text(encoding='utf-8'))
+        self.assertIn('model: fable', output)
+        self.assertIn('model: fable', target.read_text(encoding='utf-8'))
         code, _ = self.run_installer('--claude', '--yes')
         self.assertEqual(code, 0)
         self.assertEqual(target.read_bytes(), (REPO / 'claude/agents/kier-wykonawca.md').read_bytes())
         backup = next((self.home / '.kierownik/backups').rglob('kier-wykonawca.md'))
-        self.assertIn('model: opus', backup.read_text(encoding='utf-8'))
+        self.assertIn('model: fable', backup.read_text(encoding='utf-8'))
 
     def test_file_removed_from_package_is_deleted_with_backup(self):
         self.run_installer('--claude')

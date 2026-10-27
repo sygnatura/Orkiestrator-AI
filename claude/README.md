@@ -59,13 +59,14 @@ Jeśli w `~/.claude/agents/kier-*.md` zmieniałeś `model:`, po skopiowaniu agen
    i to wystarcza na co dzień, bo kierownik działa przez cały wątek, a high podnosi koszt każdej tury.
    `/effort high` (potem z powrotem `/effort medium`) włącz na przejęcie projektu, plan i akceptację etapu,
    „plan pod znakiem zapytania”, trudną diagnozę albo gdy we wpisach „przydział” widzisz powtarzające się błędy. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
-   pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi rejestr `~/.kierownik/ZESPOL.md`).
+   pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi rejestr `~/.kierownik/ZESPOL.md`). Wymaga
+   Claude Code ≥ 2.1.221 i zapisuje się w Twoich ustawieniach użytkownika, więc działa we wszystkich projektach.
    Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8).
 2. Wpisz `/kierownik`.
 3. Pierwszy raz na maszynie: kierownik wykryje narzędzia innych dostawców (`codex`, `agy` i inne, które
    wskażesz; są opcjonalne — bez nich cała pętla działa na Claude), każde obecne sprawdzi `--help`
-   i krótkim testem dymnym w tymczasowym repozytorium, tym samym poleceniem, którego potem używa (`agy`
-   już w trybie bez pytań o zgodę — patrz „Bezpieczeństwo”; test zużywa odrobinę limitu), zapyta Cię
+   i krótkim testem dymnym w tymczasowym repozytorium, tym samym poleceniem, którego potem używa (test zużywa
+   odrobinę limitu; `agy` dopiero po Twojej zgodzie na tryb bez sandboxa — patrz „Bezpieczeństwo”), zapyta Cię
    jednym pytaniem o modele każdej subskrypcji, ich klasy, priorytety i limity, i zapisze wszystko
    w rejestrze `~/.kierownik/ZESPOL.md`.
 4. Pierwszy raz w projekcie:
@@ -93,7 +94,11 @@ Nic nie kopiujesz — stan jest w plikach.
 Modele są opisane klasami: SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY, porównywalnymi między
 dostawcami. Który model którego dostawcy stoi za którą klasą, priorytety subskrypcji, limity i
 sprawdzone polecenia CLI — to jedno miejsce: rejestr `~/.kierownik/ZESPOL.md`. Domyślnie: kierownik,
-recenzent i architekt w klasie MOCNY, analityk i wykonawca w STANDARDOWY (trudne zadania → MOCNY).
+recenzent, architekt i wykonawca w klasie MOCNY, analityk w STANDARDOWY. Proste zadania (ryzyko NISKIE,
+typowa trudność, kryteria sprawdzalne jednym poleceniem) kierownik daje wykonawcy w STANDARDOWY (Sonnet).
+Powód: Opus kosztuje dziś tylko dwa razy więcej niż Sonnet, a każda nieudana runda poprawek to dodatkowa
+recenzja i kontekst kierownika — liczy się koszt ukończonego zadania ([ANALIZA.md](ANALIZA.md), decyzja 14).
+Przy każdym wywołaniu kierownik może też podnieść effort (Claude Code ≥ 2.1.292).
 Klasę NAJMOCNIEJSZY (dziś Fable) kierownik zostawia na rzadkie, decydujące kroki: plan etapu, przejęcie
 projektu, trudną diagnozę, rozstrzygnięcie sprzecznego werdyktu i weryfikację celu etapu.
 
@@ -125,10 +130,12 @@ zdaniem, a kierownik aktualizuje rejestr: `zespół: wyszedł nowy model <nazwa>
 ## Bezpieczeństwo
 
 CLI innych dostawców działają w trybie bez pytań: Codex w sandboxie `-s workspace-write`, a `agy`
-z `--dangerously-skip-permissions`, czyli bez sandboxa — na to zgodziłeś się 2026-10-18 i zgoda jest
-zapisana we wzorze rejestru (`zespół: agy bez trybu bez sandboxa` ją cofa). Worktree zadania (`.kierownik/wt/T-NNN`) porządkuje zmiany w repozytorium, ale
-nie ogranicza dostępu `agy` do maszyny — a kierownik uruchamia `agy` już przy pierwszym `/kierownik`
-(test dymny). Jeśli masz na tej maszynie cenne dane poza repozytorium, uruchamiaj Claude Code
+działa bez pytań tylko z `--dangerously-skip-permissions`, czyli bez sandboxa. Dlatego kierownik pyta Cię
+o zgodę raz, przy zakładaniu rejestru (albo przed pierwszym użyciem `agy`), i zapisuje odpowiedź
+w `~/.kierownik/ZESPOL.md` z dopiskiem „(potwierdzona na tej maszynie)”. Bez zgody `agy` nie jest
+testowany ani używany; zgodę cofa `zespół: agy bez trybu bez sandboxa`. Zgoda przeniesiona ze starszego
+wzoru rejestru (v12) nie liczy się — kierownik zapyta ponownie. Worktree zadania (`.kierownik/wt/T-NNN`)
+porządkuje zmiany w repozytorium, ale nie ogranicza dostępu `agy` do maszyny. Jeśli masz na tej maszynie cenne dane poza repozytorium, uruchamiaj Claude Code
 w kontenerze albo wyłącz `agy`: napisz `zespół: nie używaj agy` albo w `~/.kierownik/ZESPOL.md` wpisz
 w jego wierszu stan `wyłączony przez właściciela` — kierownik go wtedy nie testuje i nie używa. Kierownik nie przekazuje sekretów w zleceniu i po każdym przebiegu sprawdza `git status` oraz
 stderr. Reguły `deny` z `settings.json` (SZABLONY.md, sekcja 8) blokują czytanie `.env` także

@@ -64,23 +64,27 @@ orchestrate). A runner is usable when its subscription and the chosen model are 
 | codex-cli | openai | CLI | Claude Code | <z URUCHAMIANIE_CLI.md po `--help`> | [?] |
 | codex-sub | openai | role `kier-*` / run_agent.py | Codex | role TOML, `run_agent.py --model/--effort` | [?] |
 | claude-cli | claude | CLI | Codex | <…> | [?] |
-| agy-cli | google | CLI | oba | <…> z `--dangerously-skip-permissions` — zgoda właściciela na tryb bez sandboxa: 2026-10-18 (cofnięcie: `zespół: agy bez trybu bez sandboxa`) | [?] |
+| agy-cli | google | CLI | oba | <…>; zgoda właściciela na tryb bez sandboxa (`--dangerously-skip-permissions`): BRAK — zapytaj przy konfiguracji (ZESPOL_PROCEDURY.md, A.4) | [?] |
 
 
 ## Host Claude Code — role i effort
 
-The model and effort in force are `model:`/`effort:` in `~/.claude/agents/kier-*.md`; this table must match them.
-`model` can be overridden per call (aliases only); `effort` only in the file.
+The defaults in force are `model:`/`effort:` in `~/.claude/agents/kier-*.md`; this table must match them. Both can be
+overridden per call (`model`: aliases; `effort`: Claude Code ≥ 2.1.292).
+
+Claude Code: <wersja z `claude --version`>
 
 | Rola | Subagent | Klasa domyślna | `effort:` |
 |---|---|---|---|
 | Kierownik | main thread `/kierownik` | MOCNY (`/model opus`) | session default; `/effort high` set by the owner |
 | Analityk | `kier-analityk` | STANDARDOWY (`sonnet`) | medium |
-| Wykonawca | `kier-wykonawca` | STANDARDOWY (`sonnet`) | medium |
+| Wykonawca | `kier-wykonawca` | MOCNY (`opus`); STANDARDOWY (`sonnet`) per call for simple tasks | medium |
 | Recenzent | `kier-recenzent` | MOCNY (`opus`) | high |
 | Architekt | `kier-architekt` | MOCNY (`opus`); NAJMOCNIEJSZY per call (SKILL.md, section 7) | high |
 
-Bezpiecznik kontekstu kierownika Claude: `/autocompact 200k` (by cost per turn, not by window size).
+Bezpiecznik kontekstu kierownika Claude: `/autocompact 200k` (by cost per turn, not by window size; Claude Code ≥ 2.1.221,
+saved in user settings — every project).
+Zgoda właściciela na `agy` bez sandboxa: BRAK (TAK/NIE <data> „(potwierdzona na tej maszynie)” — ZESPOL_PROCEDURY.md, A.4)
 Subagenci `kier-*` zainstalowani: [?]
 
 
@@ -92,13 +96,10 @@ Roles in `roles/kier-*.toml` inherit the Codex session model until `model` is se
 | Rola | Definicja | Klasa domyślna | Effort |
 |---|---|---|---|
 | Analityk | roles/kier-analityk.toml | STANDARDOWY | medium |
-| Wykonawca | roles/kier-wykonawca.toml | STANDARDOWY | medium |
+| Wykonawca | roles/kier-wykonawca.toml | MOCNY; STANDARDOWY per order for simple tasks | medium |
 | Recenzent | roles/kier-recenzent.toml | MOCNY | high |
 | Architekt | roles/kier-architekt.toml | MOCNY; NAJMOCNIEJSZY per order | high |
 
 
 ## Historia zmian
-- 2026-10-18 — właściciel zgodził się na uruchamianie `agy` z `--dangerously-skip-permissions` (tryb bez pytań
-  i bez sandboxa, dostęp do całej maszyny); obowiązuje rejestr tworzony od zera z tego wzoru. Istniejący rejestr
-  przejmuje ją tylko po potwierdzeniu właściciela; lokalne cofnięcie zgody zawsze ma pierwszeństwo.
 - <data> — <co zmieniono i dlaczego>

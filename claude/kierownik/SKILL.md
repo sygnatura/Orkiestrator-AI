@@ -80,7 +80,7 @@ only the registry says which model of which provider stands behind each class to
    then use `general-purpose` with the `model` parameter (class alias from the registry) and the order template
    with its `[CLI]` lines (ZLECENIA.md); the executor gets `isolation: worktree` at the call and works like
    `kier-wykonawca` (no KATALOG line; add the "On start" steps from the package's `agents/kier-wykonawca.md`).
-   Effort cannot be set at the call — the session effort applies. If the installed agents differ from the
+   Pass `effort` at the call too (section 7). If the installed agents differ from the
    registry's host table (e.g. `kier-architekt` still `model: fable`, from v11), the owner hasn't re-copied
    `agents/` after an update — ask once, don't edit the table to match the old files.
 6. Your model is the „Kierownik” row of the registry's host table (class MOCNY). If the session runs another
@@ -128,7 +128,7 @@ For the next task of the current stage (by dependencies):
    1–2 files, a few dozen lines, no design decision (typo, configuration, small bug with a clear cause,
    docs update). Delegate the rest (section 7) — also so your context doesn't fill with code.
 3. **Execution**: `kier-wykonawca` (order A) works in its worktree and creates `task/T-NNN-nazwa` from the
-   base sha given in the order; class per section 7 (default STANDARDOWY, hard or risky → MOCNY). The base
+   base sha given in the order; class per section 7 (default MOCNY; simple → STANDARDOWY). The base
    is your local `main` (`git rev-parse --short main`; order while standing on main) — the same sha starts
    the change in order B. Before starting, commit on main everything the executor must read
    (docs/tasks/T-NNN.md, AGENTS.md, PROJEKT.md) — the worktree sees only commits, and it may branch from
@@ -156,8 +156,8 @@ For the next task of the current stage (by dependencies):
       no push, no cleanup; the task returns to W TOKU with observations (new order on this branch, as in a
       fix round). Before merging this branch again after fixes: first `git revert <revert sha>` on main,
       then `git merge --no-ff` — otherwise the original changes won't return (git considers them merged).
-6. **Record**: GOTOWE + an entry in „Zrobione” (sha, who verified, command → result, scenario, tokens of the
-   executor and reviewer sessions as reported in their completion result/notification — „—” when not reported),
+6. **Record**: GOTOWE + an entry in „Zrobione” (sha, executor class/model, number of fix rounds, who verified,
+   command → result, scenario, tokens of the executor and reviewer sessions as reported in their completion result/notification — „—” when not reported),
    update the TODO.md header, commit `docs(kierownik): …`. This is the checkpoint — after it the thread can end
    without loss.
 7. Next task. The loop runs until the end of the stage unless a section 13 situation occurs (stop and report).
@@ -238,9 +238,9 @@ some runner can still do the work.
 |---|---|---|
 | You — the lead | MOCNY | this session |
 | Analysis / reading, summaries, "where is X" | STANDARDOWY; big repo or hard question → MOCNY; trivial → SZYBKI | any (host cheapest) |
-| Typical implementation | STANDARDOWY | any (host cheapest) |
-| Hard or risky implementation, fix after a failed round | MOCNY | any (host cheapest) |
-| Review of any task (STANDARDOWY or MOCNY work, also yours, any risk) | MOCNY (≥ the author's class) | **other family than the author** first; none usable → host one class above, else the same-class exception |
+| Implementation (default), hard or risky implementation, any fix after a failed round | MOCNY | any (host cheapest) |
+| Simple implementation: risk NISKIE, typical difficulty, criteria checkable by one command | STANDARDOWY | any (host cheapest) |
+| Review of any task (STANDARDOWY or MOCNY work, also yours, any risk) | MOCNY (≥ the author's class) | **other family than the author** first; none usable → host one class above for STANDARDOWY work, or for MOCNY work touching security / data / money / an external contract; otherwise the same-class exception |
 | T-NNN specification, routine design question | MOCNY | any (host cheapest) |
 | Stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture decision, deciding a conflicting verdict | NAJMOCNIEJSZY | any (host cheapest) |
 | Plan review | MOCNY | other family than the plan author first |
@@ -248,7 +248,7 @@ some runner can still do the work.
 
 CHOOSING A RUNNER for an order — before launching it, write one assignment line („przydział”) into the task's W TOKU line in
 TODO.md, so the choice is made by the rule and visible to the owner:
-`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
+`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[ effort <poziom>][; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class. Usable =
    `dostępny`, or a `niedostępny do` time that has passed (tried once — ZESPOL_PROCEDURY.md, B.1). The family that
    counts is the MODEL's family. `NIEZNANY` → run its smoke test first
@@ -272,9 +272,10 @@ Every order names its model explicitly — the Agent tool's `model:` parameter, 
 registry for the chosen class; agent and role-file defaults are only fallbacks. So a new model or a changed class
 mapping is a registry change only.
 
-Each `kier-*` agent has a default class in its definition; another one is given at the call with
-`model: <alias from the registry>`. Effort of host subagents can't be set per call — `effort:` from the definition
-applies; a task needs deeper work → change the class, not the effort, and write in the order what is hard and why.
+Each `kier-*` agent has a default class and effort in its definition; override them at the call with
+`model: <alias from the registry>` and `effort: <level>` (Claude Code ≥ 2.1.292; an older version ignores it — then
+the definition applies). A task harder than its class usually needs → first raise effort one level; it needs more
+capability (design, ambiguity, a failed round) → raise the class. Write in the order what is hard and why.
 CLIs take model and effort as flags, per the registry. Give every runner, whatever its class, the goal, context,
 reason and constraints, not steps — it plans and checks its own work; give steps only where order is critical (git,
 destructive operations).
@@ -350,8 +351,9 @@ buffer, not a workspace. Therefore:
    (especially „Następny krok” — concrete, with the task and executor), commit, then write one line to the
    owner: „Stan zapisany (<sha>). Wpisz /clear, a potem /kierownik.” The new thread starts in RESUME mode and
    needs no copying.
-6. Safety net: propose `/autocompact` with the threshold from the registry to the owner once — far below the full
-   window, because a handoff should come much earlier; it only stops a forgotten thread from growing.
+6. Safety net: propose `/autocompact <threshold from the registry>` to the owner once (Claude Code ≥ 2.1.221; it is
+   saved in the owner's user settings, so it applies to every project) — far below the full window, because a
+   handoff should come much earlier; it only stops a forgotten thread from growing.
    Treat auto-compaction as a handoff signal.
 7. LIMIT HANDOFF — the model you run on or your host's whole subscription reports a limit (a warning that it is
    close counts too), or no runner can do the remaining work. Best effort, because a hard limit may stop you mid-way:

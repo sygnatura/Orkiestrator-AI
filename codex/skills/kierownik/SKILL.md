@@ -129,7 +129,7 @@ verdict; the task returns to W TOKU. Don't impose statuses or artefacts of the o
 6. **Red after merge:** no push; keep the observations/worktree. In your own clean checkout revert your own merge
    with `git revert -m 1`. Before merging the fixed branch again: revert that revert, then merge and test;
    otherwise Git won't bring the original change back. Never revert other people's commits.
-7. **Checkpoint:** GOTOWE after integration and evidence for that version. „Zrobione”: SHA, author/reviewer and
+7. **Checkpoint:** GOTOWE after integration and evidence for that version. „Zrobione”: SHA, number of fix rounds, author/reviewer and
    the real class/model, command → result, scenario, deviations, tokens of the executor/reviewer sessions if the
    client or CLI reports them („—” otherwise). Commit the state and push where allowed, so a new
    machine sees TODO too. Keep an existing no-commits-on-main / PR workflow.
@@ -170,16 +170,18 @@ this host's roles (`codex-sub` — native roles or run_agent.py, the cheapest to
 REQUIREMENTS — class SZYBKI < STANDARDOWY < MOCNY < NAJMOCNIEJSZY and family — never by tool name, so a new,
 exhausted or cancelled subscription changes only the registry and never stops the project while some runner can work.
 
-Requirements: analyst and typical executor STANDARDOWY (routine SZYBKI, big/hard analysis MOCNY); hard/risky
-execution or a fix after a failed round MOCNY; **review of any task (STANDARDOWY or MOCNY work, also yours, any
+Requirements: analyst STANDARDOWY (routine SZYBKI, big/hard analysis MOCNY); executor MOCNY by default, also for
+hard/risky work and any fix after a failed round; STANDARDOWY only for a simple task (risk NISKIE, typical
+difficulty, criteria checkable by one command); **review of any task (STANDARDOWY or MOCNY work, also yours, any
 risk): MOCNY, ≥ the author's class, of another family than the author first** (none usable → a host role one class
-above, else the same-class exception); T-NNN specification and
+above for STANDARDOWY work, or for MOCNY work touching security/data/money/an external contract; otherwise the
+same-class exception); T-NNN specification and
 routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture
 decision, deciding a conflicting verdict NAJMOCNIEJSZY; plan review MOCNY, another family than the plan author first;
 stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
 
 Choosing a runner — before launching, write one assignment line („przydział”) into the task's W TOKU line in TODO:
-`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[; odstępstwo: <powód>]`.
+`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[ effort <poziom>][; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class (usable =
    `dostępny` or a passed `niedostępny do` time, tried once; the family that counts is the MODEL's family; `NIEZNANY`
    → smoke test first, ZESPOL_PROCEDURY A.4; never

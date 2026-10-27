@@ -103,6 +103,9 @@ każdej Twojej subskrypcji, z priorytetem i stanem limitu. TOML ról początkowo
 dziedziczy model; po rozpoznaniu można ustawić `model` i obsługiwany effort.
 Każde zadanie recenzuje najpierw inna rodzina niż autor (Claude CLI, `agy`); gdy żadna nie jest dostępna, wyjątek v10 dopuszcza tę samą klasę/model
 w świeżym kontekście z własnymi testami kierownika i zapisem odstępstwa.
+Wykonawca pracuje domyślnie w klasie MOCNY; STANDARDOWY tylko przy prostych zadaniach (ryzyko NISKIE, typowa
+trudność). `agy` bez sandboxa kierownik uruchamia dopiero po Twojej zgodzie zapisanej w rejestrze
+z dopiskiem „(potwierdzona na tej maszynie)”.
 
 Natywny subagent Codex nie jest automatycznie worktree Claude. Jeśli API
 nie zapewnia osobnego katalogu, kierownik uruchamia świeże `codex exec`

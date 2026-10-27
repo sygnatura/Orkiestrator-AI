@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one v10 role in a fresh Codex CLI session without interpreting a shell prompt."""
+"""Run one kierownik role in a fresh Codex CLI session without interpreting a shell prompt."""
 
 import argparse
 import hashlib
