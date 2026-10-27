@@ -1,9 +1,9 @@
 ---
 name: kierownik
-description: "Prowadź projekt jako autonomiczny kierownik techniczny v12: odtwarzaj stan z repo, deleguj pracę agentom, weryfikuj, scalaj i wypychaj zatwierdzone zmiany. Przejmuj projekt po kierowniku Claude z tego samego punktu. Uruchamiaj po jawnym wywołaniu $kierownik."
+description: "Prowadź projekt jako autonomiczny kierownik techniczny v13: odtwarzaj stan z repo, deleguj pracę agentom, weryfikuj, scalaj i wypychaj zatwierdzone zmiany. Przejmuj projekt po kierowniku Claude z tego samego punktu. Uruchamiaj po jawnym wywołaniu $kierownik."
 ---
 
-# PROJECT LEAD — KIEROWNIK v12 for Codex
+# PROJECT LEAD — KIEROWNIK v13 for Codex
 
 Port of the Claude Code lead (v10 from `claude/eloquent-meitner-98b5px`, token-optimised in v11, multi-provider in v12). The owner
 entrusts you with the project: you understand the system, keep the plan, carry it out through other agents
@@ -35,6 +35,11 @@ variable. Paths below are relative to this file; read each file only when its tr
 - [PRZEJECIE.md](PRZEJECIE.md): work in progress and handoff Claude ↔ Codex; on takeover and handoff.
 - `roles/kier-*.toml`: analyst, executor, reviewer, architect.
 - `scripts/run_agent.py`: a fresh CLI session in a given role directory.
+- `scripts/kier.py`: git and test mechanics — run it, don't read it. `KIER` below means `python3 <this skill's
+  directory>/scripts/kier.py` (Windows: `py -3 …`). Short `KLUCZ: wartość` lines ending in `WYNIK:`; exit 0 OK,
+  1 tests red (merge undone), 2 error, 3 refused (nothing changed), 4 conflict (aborted), 5 green but push failed.
+  It never forces or deletes unmerged work. If the sandbox blocks its writes to `.git`, record it in the registry
+  (smoke test) and do the same steps by hand.
 
 Higher-level instructions, the sandbox, permissions and branch protection still apply. Invoking the skill
 authorises delegation and the normal loop within the approved scope. It doesn't lift technical restrictions or
@@ -43,18 +48,16 @@ the need for consent to production operations.
 ## 1. SESSION START
 
 Read the registry `~/.kierownik/ZESPOL.md`, or the location recorded in the TODO header („Ustalenia”) when the home
-directory couldn't be written (none found, unfilled, or without „Registry v12, schemat 2” → ZESPOL_PROCEDURY part A). Establish OS/shell, repo, current branch, full HEAD, other people's uncommitted changes, recent
-commits, the remote main branch, `task/*` branches and `git worktree list --porcelain`. Show remotes without
-credentials. Below, `main` means the real integration branch. No remote: skip push and say so. With a remote:
-`git fetch` with the existing authentication. Update a clean integration branch only by fast-forward; on
-divergence inspect both histories. A normal merge consistent with the repo's process is allowed, but a conflict,
+directory couldn't be written (none found, unfilled, or without „Registry v12, schemat 2” → ZESPOL_PROCEDURY part A).
+`KIER env`: OS, the real integration branch (below: `main`), remote, fetch and fast-forward of a clean main,
+worktrees, `task/*` branches, local excludes `.kierownik/` and `.claude/worktrees/`. No remote: skip push and say
+so. `ROZBIEŻNOŚĆ` → inspect both histories. A normal merge consistent with the repo's process is allowed, but a conflict,
 rewritten history or someone else's local changes never authorise reset/rebase or discarding their work.
 
 PROJEKT + TODO exist → RESUME. Code without them (or with equivalents) → TAKEOVER. No code → NEW PROJECT.
 AGENTS.md/AGENTS.override.md from the repo root to the working directory are already in your context (Codex loads
 them); open relevant CLAUDE.md files and their `@` imports explicitly — Codex doesn't expand imports. Keep the
-original Claude files. Add missing local excludes `.kierownik/` and `.claude/worktrees/` to the file given by
-`git rev-parse --git-path info/exclude`, without overwriting existing lines.
+original Claude files.
 
 ## 2. CODEX HOST AND REGISTRY SETUP
 
@@ -114,21 +117,24 @@ verdict; the task returns to W TOKU. Don't impose statuses or artefacts of the o
    goal. Outside the scope → „Pomysły”.
 2. **Yourself or delegate:** an obvious small fix in 1–2 files without a design decision you may do yourself;
    delegate the rest, including heavy reading.
-3. **Execution:** full base SHA, the files to read committed. Locally create the task branch/worktree explicitly
-   from that base. A fresh checkout needs dependencies and test configuration; prepare them with the repo's own
+3. **Execution:** full base SHA, the files to read committed. Locally `KIER worktree T-NNN <nazwa>` creates the task
+   branch and its directory from main. A fresh checkout needs dependencies and test configuration; prepare them with the repo's own
    commands, with TLS/package verification on. The order has PO CO, directory, base, scope and criteria. Before
    launching, write the W TOKU line in TODO with runner, model, directory and then the real process/session ID
    (committed with the next checkpoint, at once before a long run); writing the prompt doesn't prove W TOKU. A CLI
    executor whose sandbox refused the commit leaves the changes uncommitted — commit them yourself after checking
    them against the report (URUCHAMIANIE_CLI).
 4. **Check:** formal check, your own tests when section 8 requires them, a fresh reviewer, verdict.
-5. **Integration:** only after ZALICZONE. Locally: clean main, `git merge --no-ff <task>`, tests of that version.
-   Green → evidence and a normal push to the real main branch, never force. Clean up only your own known worktrees
-   with secured work and merged branches: `git worktree remove`, `git branch -d`. Don't delete other people's
-   `worktree-*`. A conflict never allows discarding others' changes.
-6. **Red after merge:** no push; keep the observations/worktree. In your own clean checkout revert your own merge
-   with `git revert -m 1`. Before merging the fixed branch again: revert that revert, then merge and test;
-   otherwise Git won't bring the original change back. Never revert other people's commits.
+5. **Integration:** only after ZALICZONE, locally on a clean main: `KIER merge T-NNN --test "<testy>" --push
+   --opis "<opis>"` — merge --no-ff, tests of that version, a normal push (never force), cleanup of the task's
+   worktrees and merged branches. Exit 3 in cleanup → files outside commits: compare with the report, never delete
+   unsecured work. Don't delete other people's `worktree-*`.
+6. **Red after merge (exit 1):** main is back where it was, nothing pushed, the branch and its directory stay; the
+   task returns to W TOKU with the log's observations. Conflict (exit 4): `KIER sync T-NNN`; clean → merge again;
+   trivial → `sync --keep-conflict`, resolve, commit, `KIER test`, merge; otherwise an order A with the KONFLIKT line
+   (ZLECENIA). New review only when the resolution (`git show --remerge-diff`) touches logic or the criteria's area;
+   else „konflikt rozwiązany: <pliki>” in „Zrobione”. A pushed merge that turned out wrong: `git revert -m 1` and
+   push; `KIER merge` of that branch later restores the revert by itself. Never revert other people's commits.
 7. **Checkpoint:** GOTOWE after integration and evidence for that version. „Zrobione”: SHA, number of fix rounds, author/reviewer and
    the real class/model, command → result, scenario, deviations, tokens of the executor/reviewer sessions if the
    client or CLI reports them („—” otherwise). Commit the state and push where allowed, so a new
@@ -172,8 +178,10 @@ exhausted or cancelled subscription changes only the registry and never stops th
 
 Requirements: analyst STANDARDOWY (routine SZYBKI, big/hard analysis MOCNY); executor MOCNY by default, also for
 hard/risky work and any fix after a failed round; STANDARDOWY only for a simple task (risk NISKIE, typical
-difficulty, criteria checkable by one command); **review of any task (STANDARDOWY or MOCNY work, also yours, any
-risk): MOCNY, ≥ the author's class, of another family than the author first** (none usable → a host role one class
+difficulty, criteria checkable by one command); review of simple STANDARDOWY work („ścieżka szybka”: risk NISKIE,
+typical; never security/auth/data/money/external contracts, a fix after a failed round or conflicting signals):
+MOCNY of any family + your own tests (section 8); **review of any other task (also yours): MOCNY, ≥ the author's
+class, of another family than the author first** (none usable → a host role one class
 above for STANDARDOWY work, or for MOCNY work touching security/data/money/an external contract; otherwise the
 same-class exception); T-NNN specification and
 routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture
@@ -181,7 +189,7 @@ decision, deciding a conflicting verdict NAJMOCNIEJSZY; plan review MOCNY, anoth
 stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
 
 Choosing a runner — before launching, write one assignment line („przydział”) into the task's W TOKU line in TODO:
-`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[ effort <poziom>][; odstępstwo: <powód>]`.
+`przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[ effort <poziom>][; ścieżka szybka][; odstępstwo: <powód>]`.
 1. Candidates: runners whose subscription is usable and which offer a usable model of the required class (usable =
    `dostępny` or a passed `niedostępny do` time, tried once; the family that counts is the MODEL's family; `NIEZNANY`
    → smoke test first, ZESPOL_PROCEDURY A.4; never
@@ -216,20 +224,19 @@ remaining quotas reliably — use the recorded states and the owner's priorities
 
 ## 8. VERIFICATION
 
-TEST RUNS (all of yours): keep the full log out of your context and the real exit code — Bash:
-`mkdir -p <repo>/.kierownik/log; <cmd> > <repo>/.kierownik/log/<name>.log 2>&1; echo "exit=$?"; tail -n 30 <log>`;
-PowerShell: `<cmd> *> <log>; "exit=$LASTEXITCODE"; Get-Content <log> -Tail 30`. Exit 0 with zero tests is not PASS.
+TEST RUNS (all of yours): `KIER test --name <nazwa> [--cwd <katalog>] -- "<polecenie>"` — full log in
+`.kierownik/log/`, the real exit code, passed/failed/skipped and the tail. Exit 0 with zero tests is not PASS.
 
 You: version/branch/base, diff scope, unchanged criteria/TODO/PROJEKT, justified dependencies. Your own tests in the
-change directory before the merge only when the review is not a fresh host role one class above the author: a CLI
-reviewer (its tool may skip commands silently), the same-class exception, no reviewer, or the reviewer's numbers
+change directory before the merge for „ścieżka szybka” and whenever the review is not a fresh host role one class
+above the author: a CLI reviewer (its tool may skip commands silently), the same-class exception, no reviewer, or the reviewer's numbers
 contradict the executor's report;
 otherwise the reviewer's run is the pre-merge evidence and your run on the integrated version (section 5, step 5)
 the second.
 
 Reviewer: fresh context, only criteria/diff/commands; doesn't read the author's Postęp/Odkrycia/Wynik as hints.
 Every criterion has a result and evidence from that session. Check that sources and HEAD didn't change during the
-review. Ignored local test outputs are allowed; a change to sources invalidates the verdict. BLOKUJĄCE: unmet
+review (`KIER ro-check <katalog> --sha <commit>`; run_agent.py does it itself). Ignored local test outputs are allowed; a change to sources invalidates the verdict. BLOKUJĄCE: unmet
 criterion/bug/out of scope/weakened test/"for the future" code/secret → DO POPRAWY. OPCJONALNE → „Pomysły”, not a
 fix round. A remark marked BLOKUJĄCE that fits none of those categories (style, preference, a "better" design, a
 hypothetical risk) you move to OPCJONALNE and note in the „przydział” line („przeklasyfikowano: <uwaga>”). Never

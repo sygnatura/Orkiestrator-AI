@@ -23,7 +23,9 @@ PRZECZYTAJ: PROJEKT (sekcje ...), karta jeśli istnieje, konkretne pliki;
 ŚRODOWISKO: <instalacja repo, testowa konfiguracja, usługi, izolacja danych>
 ZAKRES: <obszary IN/OUT; wyłącznie zatwierdzone zadanie>
 KRYTERIA: <oryginalne K1..Kn, komendy, scenariusz użytkownika, wersja kryteriów>
-NIE: merge/push/reset, TODO/PROJEKT/kryteria, osłabianie testów, produkcja,
+[KONFLIKT: <pliki>; gałąź koliduje z main @ <sha> — wykonaj `git merge <sha main>`, rozwiąż konflikt tak,
+          żeby zostało zachowanie obu stron, uruchom testy i scommituj scalenie]   (tylko po `kier.py merge` → 4)
+NIE: merge (poza wierszem KONFLIKT)/push/reset, TODO/PROJEKT/kryteria, osłabianie testów, produkcja,
      płatne API aplikacji/testów bez zgody wskazanej tutaj.
 WYNIK: commit według procesu repo (Git odmówi przez sandbox → zmiany bez commitu, napisz to; commituje
        kierownik), raport do 15 linii: gałąź, katalog,

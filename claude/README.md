@@ -1,4 +1,4 @@
-# Kierownik projektu AI — instrukcja (v12, wielu dostawców)
+# Kierownik projektu AI — instrukcja (v13, wielu dostawców)
 
 Skill dla Claude Code, który robi z sesji Claude kierownika technicznego projektu: rozumie system,
 prowadzi plan rozwoju i stan w repozytorium, deleguje pracę zespołowi subagentów Claude (model
@@ -42,9 +42,9 @@ subagentów są widoczne w każdej sesji — to kilka linii.
 Zalecane: `python3 install.py` z głównego katalogu repozytorium. Ręcznie: kopiuj instrukcje i agentów. Stan maszyny jest w `~/.kierownik/ZESPOL.md`, poza zestawem.
 
     # Linux / macOS
-    cd kierownik && cp SKILL.md ZLECENIA.md SZABLONY.md START_PROJEKTU.md ZESPOL_PROCEDURY.md ZESPOL_WZOR.md URUCHAMIANIE_CLI.md ~/.claude/skills/kierownik/ && cd .. && cp agents/*.md ~/.claude/agents/
+    cp -r kierownik/. ~/.claude/skills/kierownik/ && cp agents/*.md ~/.claude/agents/
     # Windows (PowerShell)
-    Copy-Item .\kierownik\SKILL.md, .\kierownik\ZLECENIA.md, .\kierownik\SZABLONY.md, .\kierownik\START_PROJEKTU.md, .\kierownik\ZESPOL_PROCEDURY.md, .\kierownik\ZESPOL_WZOR.md, .\kierownik\URUCHAMIANIE_CLI.md $HOME\.claude\skills\kierownik\
+    Copy-Item -Recurse -Force .\kierownik\* $HOME\.claude\skills\kierownik\
     Copy-Item .\agents\*.md $HOME\.claude\agents\
 
 Aktualizacja z v10/v11: stary `~/.claude/skills/kierownik/ZESPOL.md` zostaje na miejscu (polecenia wyżej
@@ -205,6 +205,7 @@ jego odnowieniu. Po powrocie wystarczy `/kierownik`.
 | `kierownik/URUCHAMIANIE_CLI.md` | Katalogi, polecenia i kontrole runnerów CLI (czytane przed pierwszym użyciem CLI w sesji) |
 | `kierownik/START_PROJEKTU.md` | Przejęcie istniejącego projektu i nowy projekt (czytane raz na projekt) |
 | `kierownik/ZLECENIA.md` | Szablony zleceń dla wykonawcy, recenzenta i analityka/architekta |
+| `kierownik/scripts/kier.py` | Mechanika gita i testów kierownika (scalanie, konflikty, sprzątanie, logi testów) — wspólna z Codex |
 | `kierownik/SZABLONY.md` | Wzory plików projektu + zasady AGENTS.md/CLAUDE.md wg OpenAI i Anthropic (po polsku) |
 | `agents/kier-*.md` | Definicje subagentów: analityk, wykonawca, recenzent, architekt |
 | `ANALIZA.md` | Dlaczego tak; lekcje z poprzednich wersji; źródła |

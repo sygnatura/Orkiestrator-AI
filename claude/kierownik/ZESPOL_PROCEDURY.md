@@ -40,7 +40,9 @@ and record the answer either way (TAK/NIE <data> „(potwierdzona na tej maszyni
    later — „utwórz plik ok.txt z treścią OK i uruchom `git status`” (read-only roles: „podaj wynik `git status`”).
    Success = the expected file/answer, exit code and stderr checked; a "soft-denied"-type message on stderr (seen with
    `agy`) means shell commands were skipped despite exit 0. The test uses up limit — a tool reporting an exhausted
-   limit gets that state and no test. Record the verified command and „Test dymny: OK <data>”.
+   limit gets that state and no test. Record the verified command and „Test dymny: OK <data>”. In the same temporary
+   repository run the skill's `scripts/kier.py env` and `kier.py worktree T-000 test` from the host: refused writes
+   to `.git` (a sandbox) → note „kier.py: ręcznie” in the host table and do those steps by hand.
    A CLI whose non-interactive mode needs a no-sandbox / skip-permissions flag (today `agy`): before its first test or
    use, ask the owner one question — „<CLI> działa bez pytań tylko bez sandboxa: dostęp do całej maszyny, także do
    plików poza repozytorium. Zgadzasz się? Bezpieczniej: kontener albo VM.” — and record TAK/NIE <data>

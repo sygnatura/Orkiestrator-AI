@@ -180,6 +180,27 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      się nie liczy. Wzór `settings.json`: `agy` i destrukcyjne formy `git checkout`/`git restore` w `ask`.
    - `/autocompact` jest udokumentowane (Claude Code ≥ 2.1.221) i zapisuje się w ustawieniach użytkownika,
      więc obowiązuje we wszystkich projektach; opis w README i SZABLONY to mówi.
+   - **Mechanika gita w skrypcie `scripts/kier.py`** (wspólny, bajtowo identyczny w obu pakietach). Anthropic
+     zaleca, żeby przewidywalne kroki wykonywał kod, a model podejmował decyzje; skrypt skilla działa bez
+     wczytywania do kontekstu. `env`, `worktree`, `ro-check`, `merge`, `cleanup`, `fix-round`, `sync`, `test`
+     zastąpiły ~60 linii poleceń w SKILL.md (443 → ~375 linii) i są pokryte testami (`tests/test_kier.py`).
+     Czerwone testy po scaleniu: lokalne, niewypchnięte scalenie jest cofane (`reset --keep`) zamiast
+     `revert -m 1` — bez rewertów w historii i bez „rewertu rewertu” przy ponownym scaleniu; rewert z v12
+     w historii `merge` przywraca sam.
+   - **Konflikt przy scalaniu** (do 4 równoległych wykonawców) ma procedurę: `merge` przerywa z kodem 4,
+     `sync` scala main do gałęzi zadania, trywialny konflikt rozwiązuje kierownik, inny — wykonawca (wiersz
+     KONFLIKT w zleceniu A); ponowna recenzja tylko, gdy rozwiązanie dotyka logiki.
+   - **Ścieżka szybka**: prostą pracę klasy STANDARDOWY (ryzyko NISKIE, typowa) recenzuje host o klasę wyżej
+     plus testy kierownika, bez obowiązkowej innej rodziny — tańsza pętla tam, gdzie niezależność rodziny
+     niewiele daje. Nie dotyczy bezpieczeństwa, danych, pieniędzy, kontraktów, rund poprawek i sprzecznych
+     sygnałów.
+   - **Recenzja CLI nie jest odrzucana przez cache testów**: liczą się HEAD, pliki śledzone i wcześniejsze
+     pliki nieśledzone; nowe nieśledzone są zgłaszane jako UWAGA.
+   - **Straż spójności** `tests/test_spojnosc.py`: wspólne pliki identyczne, słowa protokołu, pola zleceń
+     i skróty w obu pakietach, każde wspomniane podpolecenie `kier.py` istnieje, limit długości SKILL.md.
+   Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
+   repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
+   Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).
 
 ## 4. Czy to ma sens — uczciwa ocena
 

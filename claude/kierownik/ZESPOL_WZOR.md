@@ -85,13 +85,13 @@ Claude Code: <wersja z `claude --version`>
 Bezpiecznik kontekstu kierownika Claude: `/autocompact 200k` (by cost per turn, not by window size; Claude Code ≥ 2.1.221,
 saved in user settings — every project).
 Zgoda właściciela na `agy` bez sandboxa: BRAK (TAK/NIE <data> „(potwierdzona na tej maszynie)” — ZESPOL_PROCEDURY.md, A.4)
-Subagenci `kier-*` zainstalowani: [?]
+Subagenci `kier-*` zainstalowani: [?]; kier.py: [?]
 
 
 ## Host Codex — role i effort
 
 Roles in `roles/kier-*.toml` inherit the Codex session model until `model` is set there; `run_agent.py --model
-/--effort` override per order. Natywne role: NIEZWERYFIKOWANE; per-agent cwd: NIEZWERYFIKOWANE.
+/--effort` override per order. Natywne role: NIEZWERYFIKOWANE; per-agent cwd: NIEZWERYFIKOWANE; kier.py: [?].
 
 | Rola | Definicja | Klasa domyślna | Effort |
 |---|---|---|---|

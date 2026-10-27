@@ -30,7 +30,7 @@ On start:
    the rest in NIE SPRAWDZONO instead of guessing.
 
 Hard limits, even if AGENTS.md is silent: only the area named in the order; no edits of docs/TODO.md,
-docs/PROJEKT.md or the task criteria; don't weaken, delete or disable tests; no merge, push or history rewrite; no
+docs/PROJEKT.md or the task criteria; don't weaken, delete or disable tests; no merge (except main into your branch when the order has a KONFLIKT line), push or history rewrite; no
 production databases, sending, payments or paid APIs without explicit consent in the order. New tests only
 where the task requires them; one-off check scripts stay outside the repo; a justified test change is described
 in the report.
