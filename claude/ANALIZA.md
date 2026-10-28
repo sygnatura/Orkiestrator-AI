@@ -206,6 +206,12 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      zmiany w stashu, scalenie cofnięte; recenzent dopisujący pliki źródłowe traci werdykt; bez ustalonej
      gałęzi głównej odmowa zamiast zgadywania (`--main`); poprawne dopisywanie do `info/exclude`; sumy
      instalatora niezależne od CRLF i `.gitattributes` z LF; zgoda na `agy` powiązana z nazwą hosta.
+   - **v13.2 — druga recenzja Codex**: „odtwarzalne” nie wynika już z dowolnego katalogu w ścieżce. `CACHE`
+     (node_modules, .venv, __pycache__, .pytest_cache…) jest odtwarzalne zawsze, `OUTPUT` (build, dist,
+     target, coverage…) tylko wtedy, gdy projekt je ignoruje — nieignorowany `build/x.py` to praca: sprzątanie
+     go nie usuwa, a recenzent, który go dopisze, traci werdykt. Kontrola kolizji sprawdza też rodziców
+     ścieżki (ignorowany plik tam, gdzie gałąź dodaje katalog) i czyta nazwy z `-z`, więc polskie znaki
+     nie omijają ochrony.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

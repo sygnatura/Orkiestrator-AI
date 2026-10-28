@@ -25,10 +25,12 @@ import subprocess
 import sys
 
 EXCLUDES = ('.kierownik/', '.claude/worktrees/')
-# Files a test run or an install may leave behind and that can be recreated; anything else untracked is work.
-# Keep identical to REGENERABLE in codex/skills/kierownik/scripts/run_agent.py (tests/test_spojnosc.py checks it).
-REGENERABLE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache',
-               '.tox', 'coverage', '.coverage', '.coverage.*', 'htmlcov', 'dist', 'build', 'target', '.next', '*.log')
+# Owned by tools — nobody writes code there, so they are recreatable wherever they appear. Keep identical to CACHE
+# in codex/skills/kierownik/scripts/run_agent.py (tests/test_spojnosc.py checks it).
+CACHE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache', '.tox',
+         '.coverage', '.coverage.*')
+# Usual build output — recreatable only when the project ignores it; an unignored build/x.py is someone's work.
+OUTPUT = ('build', 'dist', 'target', 'coverage', 'htmlcov', '.next', '*.log')
 NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 REPO: Path = Path.cwd()
 MAIN: str | None = None
@@ -56,8 +58,8 @@ def log(text: str) -> None:
 
 def git(*args: str, cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
     cwd = cwd or REPO
-    process = subprocess.run(['git', '-C', str(cwd), *args], capture_output=True, text=True,
-                             encoding='utf-8', errors='replace')
+    process = subprocess.run(['git', '-c', 'core.quotePath=false', '-C', str(cwd), *args], capture_output=True,
+                             text=True, encoding='utf-8', errors='replace')
     log(f'{datetime.now():%Y-%m-%d %H:%M:%S} [{cwd}] git {" ".join(args)} -> {process.returncode}\n'
         + (process.stdout[-2000:] + process.stderr[-2000:]).strip())
     if check and process.returncode:
@@ -75,7 +77,7 @@ def ok(*args: str, cwd: Path | None = None) -> bool:
 
 def find_repo(start: Path) -> Path:
     common = subprocess.run(['git', '-C', str(start), 'rev-parse', '--path-format=absolute', '--git-common-dir'],
-                            capture_output=True, text=True)
+                            capture_output=True, text=True, encoding='utf-8', errors='replace')
     if common.returncode:
         raise Stop(2, 'BŁĄD', f'{start} nie jest repozytorium Git')
     path = Path(common.stdout.strip())
@@ -102,36 +104,67 @@ def main_branch() -> str:
                'i zapisz ją w TODO.md („Ustalenia”)')
 
 
-def regenerable(entry: str, root: Path) -> bool:
-    """A `git status` path (a directory ends with /) that only holds recreatable output."""
-    parts = entry.rstrip('/').split('/')
-    if any(fnmatch(part, pattern) for part in parts for pattern in REGENERABLE):
-        return True
+def matches(entry: str, patterns: tuple[str, ...]) -> bool:
+    return any(fnmatch(part, pattern) for part in entry.rstrip('/').split('/') for pattern in patterns)
+
+
+def status_entries(cwd: Path, *options: str) -> list[tuple[str, str]]:
+    """(XY, path) from `git status --porcelain=v1 -z` — unquoted names, rename sources skipped."""
+    fields = git('status', '--porcelain=v1', '-z', *options, cwd=cwd).stdout.split('\0')
+    entries, skip = [], False
+    for field in fields:
+        if skip or not field:
+            skip = False
+            continue
+        entries.append((field[:2], field[3:]))
+        skip = field[0] in 'RC'
+    return entries
+
+
+def untracked(cwd: Path) -> list[str]:
+    return [path for code, path in status_entries(cwd, '--untracked-files=all') if code == '??']
+
+
+def ignored(cwd: Path) -> list[str]:
+    return [path for code, path in status_entries(cwd, '--ignored=matching') if code == '!!']
+
+
+def env_copy(entry: str, root: Path) -> bool:
     example = root / '.env.example'
     return entry == '.env' and example.is_file() and (root / '.env').read_bytes() == example.read_bytes()
 
 
 def leftovers(cwd: Path) -> list[str]:
-    """Untracked or ignored entries that are someone's work, not recreatable output."""
-    lines = git('status', '--porcelain=v1', '--ignored', cwd=cwd).stdout.splitlines()
-    entries = [line[3:].strip('"') for line in lines if line[:2] in ('??', '!!')]
-    return [entry for entry in entries if not regenerable(entry, cwd)]
+    """Untracked or ignored entries that are someone's work: untracked outside CACHE, ignored outside CACHE/OUTPUT."""
+    work = [entry for entry in untracked(cwd) if not matches(entry, CACHE)]
+    return work + [entry for entry in ignored(cwd)
+                   if not matches(entry, CACHE + OUTPUT) and not env_copy(entry, cwd)]
 
 
 def remove_worktree(path: Path) -> bool:
-    """`git worktree remove` without --force; untracked recreatable output (which Git refuses on) goes first."""
-    for line in git('status', '--porcelain=v1', cwd=path).stdout.splitlines():
-        entry = line[3:].strip('"')
-        if line.startswith('??') and regenerable(entry, path):
-            target = path / entry.rstrip('/')
-            shutil.rmtree(target) if target.is_dir() and not target.is_symlink() else target.unlink()
+    """`git worktree remove` without --force, called only after leftovers() found no work; untracked caches (which
+    Git refuses on) go first."""
+    for entry in untracked(path):
+        target = path / entry
+        if matches(entry, CACHE) and (target.is_file() or target.is_symlink()):
+            target.unlink()
     return ok('worktree', 'remove', str(path))
 
 
+def names(*args: str, cwd: Path | None = None) -> list[str]:
+    return [name for name in git(*args, '-z', cwd=cwd).stdout.split('\0') if name]
+
+
 def collisions(cwd: Path, base: str, incoming: str) -> list[str]:
-    """Files `incoming` adds over `base` that already exist on disk (ignored files Git would silently overwrite)."""
-    added = text('diff', '--name-only', '--no-renames', '--diff-filter=A', f'{base}...{incoming}', cwd=cwd).splitlines()
-    return [name for name in added if os.path.lexists(cwd / name)]
+    """Files `incoming` adds over `base` that would replace something on disk — the file itself, or a parent that is a
+    file or link where a directory must go (Git silently overwrites ignored files)."""
+    found = []
+    for name in names('diff', '--name-only', '--no-renames', '--diff-filter=A', f'{base}...{incoming}', cwd=cwd):
+        parts = name.split('/')
+        parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
+        if os.path.lexists(cwd / name) or any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents):
+            found.append(name)
+    return found
 
 
 def refuse_collisions(names: list[str], where: Path) -> None:
@@ -157,8 +190,7 @@ def has_remote() -> bool:
 
 
 def dirty(cwd: Path, untracked: bool = True) -> list[str]:
-    args = ['status', '--porcelain=v1'] + ([] if untracked else ['--untracked-files=no'])
-    return [line for line in git(*args, cwd=cwd).stdout.splitlines() if line]
+    return [f'{code} {path}' for code, path in status_entries(cwd, *([] if untracked else ['--untracked-files=no']))]
 
 
 def worktrees() -> list[dict]:
@@ -366,8 +398,8 @@ def cmd_ro_check(args) -> int:
     path = Path(args.katalog).resolve()
     head, expected = text('rev-parse', 'HEAD', cwd=path), text('rev-parse', '--verify', args.sha + '^{commit}')
     changes = dirty(path, untracked=False)
-    new = [line[3:].strip('"') for line in dirty(path) if line.startswith('??')]
-    added = [name for name in new if not regenerable(name, path)]
+    new = untracked(path)
+    added = [entry for entry in new if not matches(entry, CACHE)]
     if len(new) > len(added):
         out('UWAGA', 'nowe pliki odtwarzalne (dozwolone): ' + ', '.join(sorted(set(new) - set(added))[:5]))
     if head != expected or changes or added:
@@ -431,8 +463,8 @@ def cmd_merge(args) -> int:
     refuse_collisions(collisions(REPO, before, branch), REPO)
     revert = legacy_revert(main, args.task, branch)
     if revert:
-        refuse_collisions([n for n in text('diff', '--name-only', '--no-renames', '--diff-filter=D',
-                                            f'{revert}^', revert).splitlines() if os.path.lexists(REPO / n)], REPO)
+        refuse_collisions([n for n in names('diff', '--name-only', '--no-renames', '--diff-filter=D',
+                                            f'{revert}^', revert) if os.path.lexists(REPO / n)], REPO)
         restore = git('revert', '--no-edit', revert, check=False)
         if restore.returncode:
             git('revert', '--abort', check=False)

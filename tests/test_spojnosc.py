@@ -68,7 +68,7 @@ class SharedFilesTest(unittest.TestCase):
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             modules.append(module)
-        self.assertEqual(modules[0].REGENERABLE, modules[1].REGENERABLE)
+        self.assertEqual(modules[0].CACHE, modules[1].CACHE)
 
     def test_no_stale_versions_in_codex_metadata(self):
         for path in (CODEX / 'agents' / 'openai.yaml', REPO / 'codex' / 'install.py'):

@@ -12,13 +12,13 @@ import sys
 import tomllib
 
 ROLES = ('kier-analityk', 'kier-wykonawca', 'kier-recenzent', 'kier-architekt')
-# Recreatable output a review may leave behind; any other new file is a change. Same list as kier.py.
-REGENERABLE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache',
-               '.tox', 'coverage', '.coverage', '.coverage.*', 'htmlcov', 'dist', 'build', 'target', '.next', '*.log')
+# Tool-owned caches a review may leave behind; any other new unignored file is a change. Same as CACHE in kier.py.
+CACHE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache', '.tox',
+         '.coverage', '.coverage.*')
 
 
 def regenerable(path: str) -> bool:
-    return any(fnmatch(part, pattern) for part in path.split('/') for pattern in REGENERABLE)
+    return any(fnmatch(part, pattern) for part in path.split('/') for pattern in CACHE)
 
 
 def git(cwd: Path, *args: str) -> bytes:

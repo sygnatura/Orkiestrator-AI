@@ -37,7 +37,7 @@ class Fixture(unittest.TestCase):
         (self.repo / 'f.txt').write_text('a\nb\nc\n')
         (self.repo / 'check.py').write_text('import sys\nsys.exit(1 if "BAD" in open("f.txt").read() else 0)\n')
         (self.repo / 'AGENTS.md').write_text(AGENTS)
-        (self.repo / '.gitignore').write_text('local.py\nprivate/\n')
+        (self.repo / '.gitignore').write_text('local.py\nprivate/\nprivate\nzażółć.py\ndist/\n', encoding='utf-8')
         self.git('add', '.')
         self.git('commit', '-qm', 'init')
         self.git('remote', 'add', 'origin', str(self.remote))
@@ -46,7 +46,7 @@ class Fixture(unittest.TestCase):
 
     def git(self, *args, cwd=None):
         return subprocess.run(['git', '-C', str(cwd or self.repo), *args], check=True, capture_output=True,
-                              text=True).stdout.strip()
+                              text=True, encoding='utf-8').stdout.strip()
 
     def kier(self, *args):
         with redirect_stdout(io.StringIO()) as output:
@@ -212,6 +212,48 @@ class ReviewFindingsTest(Fixture):
         code, output = self.kier('test', '--name', 'z-agents')
         self.assertEqual(code, 0, output)
         self.assertIn('check.py', output)
+
+    def test_merge_refuses_when_an_ignored_file_stands_where_the_branch_adds_a_directory(self):
+        (self.repo / 'private').write_text('plik właściciela\n')
+        self.add_file('T-020', 'katalog', 'private/new_source.py', 'z gałęzi\n')
+        code, output = self.kier('merge', 'T-020', '--no-cleanup')
+        self.assertEqual(code, 3, output)
+        self.assertEqual((self.repo / 'private').read_text(), 'plik właściciela\n')
+
+    def test_merge_refuses_to_overwrite_an_ignored_file_with_a_polish_name(self):
+        (self.repo / 'zażółć.py').write_text('właściciela\n', encoding='utf-8')
+        self.add_file('T-022', 'pl', 'zażółć.py', 'z gałęzi\n')
+        code, output = self.kier('merge', 'T-022', '--no-cleanup')
+        self.assertEqual(code, 3, output)
+        self.assertEqual((self.repo / 'zażółć.py').read_text(encoding='utf-8'), 'właściciela\n')
+
+    def test_cleanup_keeps_untracked_work_in_a_build_directory(self):
+        path = self.task('T-021', 'b', 'a\n', 'A\n')
+        self.assertEqual(self.kier('merge', 'T-021', '--no-cleanup')[0], 0)
+        (path / 'build').mkdir()
+        (path / 'build/new_source.py').write_text('praca\n')
+        code, output = self.kier('cleanup', 'T-021')
+        self.assertEqual(code, 3, output)
+        self.assertTrue((path / 'build/new_source.py').is_file())
+
+    def test_cleanup_removes_ignored_output_and_untracked_caches(self):
+        path = self.task('T-023', 'c', 'a\n', 'A\n')
+        (path / 'dist').mkdir()
+        (path / 'dist/app.whl').write_text('x')
+        (path / 'pkg/__pycache__').mkdir(parents=True)
+        (path / 'pkg/__pycache__/m.pyc').write_bytes(b'\0')
+        code, output = self.kier('merge', 'T-023')
+        self.assertEqual(code, 0, output)
+        self.assertFalse(path.exists())
+
+    def test_ro_check_rejects_a_source_file_in_a_build_directory(self):
+        self.task('T-024', 'r', 'a\n', 'A\n')
+        self.kier('worktree', '--rec', 'T-024')
+        rec = self.repo / '.kierownik/wt/T-024-rec'
+        (rec / 'build').mkdir()
+        (rec / 'build/new_source.py').write_text('print(1)\n')
+        code, output = self.kier('ro-check', str(rec), '--sha', self.git('rev-parse', 'task/T-024-r'))
+        self.assertEqual(code, 3, output)
 
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')

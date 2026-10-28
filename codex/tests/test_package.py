@@ -203,6 +203,12 @@ class RunnerTests(ProjectTest):
     def test_reviewer_adding_a_source_file_invalidates_result(self):
         self.assertEqual(self.run_role(mutate=lambda: (self.project / 'new_source.py').write_text('x = 1\n')), 3)
 
+    def test_reviewer_adding_a_source_file_under_build_invalidates_result(self):
+        def build():
+            (self.project / 'build').mkdir()
+            (self.project / 'build/new_source.py').write_text('x = 1\n')
+        self.assertEqual(self.run_role(mutate=build), 3)
+
     def test_reviewer_deleting_existing_untracked_file_invalidates_result(self):
         source = self.project / 'untracked.txt'
         source.write_text('before')
