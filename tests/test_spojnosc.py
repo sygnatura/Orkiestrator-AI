@@ -15,7 +15,7 @@ CODEX = REPO / 'codex' / 'skills' / 'kierownik'
 SHARED = ('ZESPOL_WZOR.md', 'ZESPOL_PROCEDURY.md', 'URUCHAMIANIE_CLI.md', 'scripts/kier.py')
 PROTOCOL = ('TODO', 'W TOKU', 'DO SPRAWDZENIA', 'GOTOWE', 'ZABLOKOWANE', 'ZALICZONE', 'DO POPRAWY', 'BLOKUJĄCE',
             'OPCJONALNE', 'NIE SPRAWDZONO', 'przydział', 'ścieżka szybka', 'recenzja tą samą klasą',
-            'Registry v12, schemat 2', 'KONFLIKT')
+            'Registry v12, schemat 2', 'KONFLIKT', 'COLLECT FINISHED ORDERS')
 ORDER_FIELDS = ('ZADANIE', 'PO CO', 'PRZECZYTAJ', 'ŚRODOWISKO', 'ZAKRES', 'KRYTERIA', 'KONFLIKT', 'NIE',
                 'RECENZJA', 'PYTANIE')
 SHORTCUTS = ('status', 'dalej', 'pomysł:', 'zmiana:', 'zespół:', 'stop')
@@ -77,6 +77,12 @@ class SharedFilesTest(unittest.TestCase):
     def test_skill_stays_short(self):
         for skill in (CLAUDE / 'SKILL.md', CODEX / 'SKILL.md'):
             self.assertLessEqual(len(read(skill).splitlines()), SKILL_LIMIT, str(skill.relative_to(REPO)))
+
+    def test_every_role_works_in_the_foreground(self):
+        roles = list((REPO / 'claude' / 'agents').glob('kier-*.md')) + list((CODEX / 'roles').glob('kier-*.toml'))
+        self.assertEqual(len(roles), 8)
+        for role in roles:
+            self.assertIn('never start background processes', ' '.join(read(role).split()), role.name)
 
     def test_template_carries_no_pre_given_consent(self):
         self.assertNotIn('2026-10-18', read(CLAUDE / 'ZESPOL_WZOR.md'))

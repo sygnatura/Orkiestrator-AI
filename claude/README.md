@@ -179,7 +179,7 @@ w trybie auto.
 | Wpisz | Efekt |
 |---|---|
 | `status` | Stan z TODO.md i Gita |
-| `dalej` | Kontynuuj pętlę |
+| `dalej` | Zbierz zakończone zlecenia i kontynuuj pętlę — także gdy kierownik stoi, a zadanie w tle już się skończyło |
 | `pomysł: …` | Zapis do „Pomysły” — nic nie jest uruchamiane |
 | `zmiana: …` | Zmiana celu/zakresu/priorytetów — najpierw pokazany wpływ |
 | `zespół: …` | Np. „Codex wyczerpany do piątku”, „mam Gemini CLI”, „rezygnuję z agy”, „oszczędzaj Claude”, „wyszedł nowy model X” |

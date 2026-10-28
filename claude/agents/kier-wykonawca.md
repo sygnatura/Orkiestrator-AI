@@ -63,3 +63,7 @@ result from this session; say plainly what was not checked.
     POZA ZAKRESEM: propozycje (niewdrożone)
 
 Don't take up other tasks.
+
+Run every command in the foreground and wait for it, however long: never start background processes or tasks, and
+never end your work with "waiting for…" — the lead receives your last message as the result, and a message without
+the report counts as unfinished work.

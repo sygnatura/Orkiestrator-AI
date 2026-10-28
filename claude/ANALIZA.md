@@ -237,6 +237,14 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      worktree, sprawdzony w `.git/worktrees/` tego repozytorium) i `--work-tree`. Git niczego już nie wykrywa
      z plików na dysku, więc przeniesienie albo podmiana `.git` w trakcie działania (np. przez hook) nie
      przekieruje polecenia do głównego checkoutu.
+   - **v13.9 — pilot**: kierownik odpowiedział na pytanie właściciela w trakcie etapu, zakończył turę z
+     wykonawcą w tle i nie podjął jego wyniku. Przyczyna w prompcie: „czekaj na powiadomienie” bez zasady na
+     koniec tury i bez odzyskiwania. Teraz: nie kończ tury, gdy działają Twoje zlecenia (poza zatrzymaniem z §13),
+     pytanie właściciela to nie zatrzymanie, a każda tura zaczyna się od zebrania zakończonych zleceń
+     (`dalej` robi to samo). Druga przyczyna z tego samego pilota: wykonawca uruchomił testy w tle i skończył
+     komunikatem „czekam na zadania w tle” zamiast raportu (commity już były). Role dostały zasadę: wszystko na
+     pierwszym planie, koniec tylko raportem; kierownik wynik bez raportu traktuje jako niedokończony
+     i sprawdza worktree.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

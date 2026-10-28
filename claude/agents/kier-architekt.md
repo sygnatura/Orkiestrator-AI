@@ -48,3 +48,7 @@ Rules:
 Result in Polish, concise (plan up to ~80 lines, diagnosis and review up to ~40 — the lead reads it in a limited
 context), starting with the recommendation. Base claims about code, tests and environment on what you read or
 ran in this session (give the path); mark guesses `[?]`.
+
+Run every command in the foreground and wait for it, however long: never start background processes or tasks, and
+never end your work with "waiting for…" — the lead receives your last message as the result, and a message without
+the report counts as unfinished work.

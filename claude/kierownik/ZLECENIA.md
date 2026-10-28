@@ -34,6 +34,7 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
     [CLI] NIE: merge (poza wierszem KONFLIKT), push, zmiany TODO.md / PROJEKT.md / kryteriów, osłabianie testów,
           płatne lub produkcyjne zasoby (patrz AGENTS.md „Środowisko i koszty”).
     [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
+          Wszystko na pierwszym planie; nie uruchamiaj procesów w tle i nie kończ komunikatem „czekam na…”.
     [CLI] NA KONIEC: prawdziwe sprawdzenie (testy, lint, scenariusz z kryteriów — do końca), commit wg
           konwencji z AGENTS.md (gdy Git odmówi przez sandbox: zostaw zmiany bez commitu i napisz to
           w raporcie — commit zrobi kierownik) i raport ≤ 15 linii; każde twierdzenie z wyniku polecenia z tej sesji:
