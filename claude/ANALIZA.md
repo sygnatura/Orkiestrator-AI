@@ -233,6 +233,10 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      konflikcie scalenie się nie zaczyna i nie ma czego przerywać. Na starszym gicie abort tylko bez plików
      konfliktowych, inaczej konflikt zostaje otwarty. Ograniczenie z v13.6 zawęża się do równoległego zapisu
      przez inny proces w ułamku sekundy przed zapisem gita.
+   - **v13.8**: po jednej walidacji każde polecenie gita dostaje jawne `--git-dir` (katalog administracyjny
+     worktree, sprawdzony w `.git/worktrees/` tego repozytorium) i `--work-tree`. Git niczego już nie wykrywa
+     z plików na dysku, więc przeniesienie albo podmiana `.git` w trakcie działania (np. przez hook) nie
+     przekieruje polecenia do głównego checkoutu.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

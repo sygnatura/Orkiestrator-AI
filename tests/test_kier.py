@@ -448,6 +448,23 @@ class ReviewFindingsTest(Fixture):
         self.assertEqual(code, 4, output)
         self.assertFalse((self.repo / '.git/hook-ran').exists())
 
+    @unittest.skipIf(os.name == 'nt', 'hooki z shebangiem Pythona zależą od powłoki Git for Windows')
+    def test_moving_a_worktree_git_file_mid_run_never_redirects_to_the_main_checkout(self):
+        self.git('branch', 'feature')
+        path = self.task('T-090', 'x', 'a\n', 'A\n')
+        (self.repo / 'local.py').write_text('z main\n')
+        self.git('add', '-f', 'local.py')
+        self.git('commit', '-qm', 'local.py śledzony na main')
+        self.git('switch', '-q', 'feature')
+        (self.repo / 'local.py').write_text('właściciela\n')
+        before = self.git('rev-parse', 'HEAD')
+        self.hook(f'if os.getcwd() == {str(path)!r} and os.path.isfile(".git"):\n'
+                  '    os.rename(".git", ".git.off")\n')
+        self.kier('sync', 'T-090')
+        self.assertEqual(self.git('branch', '--show-current'), 'feature')
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        self.assertEqual((self.repo / 'local.py').read_text(), 'właściciela\n')
+
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')
         self.assertEqual(code, 0, output)

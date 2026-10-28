@@ -36,7 +36,8 @@ OUTPUT = ('build', 'dist', 'target', 'coverage', 'htmlcov', '.next', '*.log')
 NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 REPO: Path = Path.cwd()
 MAIN: str | None = None
-VERIFIED: set[Path] = set()  # directories other than REPO that passed require_worktree in this run
+REPO_GIT: Path = Path('.git')  # the main checkout's own git dir, read once at start
+VERIFIED: dict[Path, Path] = {}  # worktree directory → its git admin dir, fixed once validated in this run
 
 
 class Stop(Exception):
@@ -60,13 +61,20 @@ def log(text: str) -> None:
 
 
 def git(*args: str, cwd: Path | None = None, check: bool = True, guard: bool = True) -> subprocess.CompletedProcess:
-    """Every call on a directory other than the main checkout first proves that directory is a real worktree:
-    `git -C` on anything else would silently act on the main checkout."""
-    cwd = cwd or REPO
-    if guard and Path(cwd) != REPO and Path(cwd) not in VERIFIED:
-        require_worktree(Path(cwd))
-        VERIFIED.add(Path(cwd))
-    process = subprocess.run(['git', '-c', 'core.quotePath=false', '-C', str(cwd), *args], capture_output=True,
+    """Run git with an explicit repository: `--git-dir` and `--work-tree` fixed when the directory was validated,
+    so nothing on disk (a plain directory, a moved `.git` file, a link) can redirect a command to another checkout.
+    Only `guard=False` (the validation itself) lets git discover the repository."""
+    cwd = Path(cwd or REPO)
+    target = ['-C', str(cwd)]
+    if guard:
+        if cwd == REPO:
+            admin = REPO_GIT
+        else:
+            if cwd not in VERIFIED:
+                VERIFIED[cwd] = require_worktree(cwd)
+            admin = VERIFIED[cwd]
+        target = ['--git-dir', str(admin), '--work-tree', str(cwd), *target]
+    process = subprocess.run(['git', '-c', 'core.quotePath=false', *target, *args], capture_output=True,
                              text=True, encoding='utf-8', errors='replace')
     log(f'{datetime.now():%Y-%m-%d %H:%M:%S} [{cwd}] git {" ".join(args)} -> {process.returncode}\n'
         + (process.stdout[-2000:] + process.stderr[-2000:]).strip())
@@ -217,22 +225,28 @@ def linked(path: Path) -> bool:
     return False
 
 
-def require_worktree(path: Path) -> None:
+def require_worktree(path: Path) -> Path:
     """`git -C` on a plain directory inside the repository acts on the main checkout — refuse anything that is not
     a registered worktree rooted exactly at `path`, reached without links, and other than the main checkout."""
     plain = Path(os.path.abspath(path))
     resolved = plain.resolve()
-    top = git('rev-parse', '--show-toplevel', cwd=plain, check=False, guard=False).stdout.strip()
+    found = git('rev-parse', '--show-toplevel', '--absolute-git-dir', cwd=plain, check=False, guard=False)
+    top, admin = (found.stdout.splitlines() + ['', ''])[:2]
     registered = {tree['path'].resolve() for tree in worktrees()}
+    pointer = Path(admin) / 'gitdir'
+    own = (Path(admin).resolve().parent == (REPO_GIT / 'worktrees').resolve() and pointer.is_file()
+           and Path(pointer.read_text(encoding='utf-8').strip()).resolve() == resolved / '.git')
     if (linked(plain) or resolved == REPO.resolve() or not top or Path(top).resolve() != resolved
-            or resolved not in registered):
+            or resolved not in registered or not own):
         raise Stop(3, 'ODMOWA', f'{relative(path)} istnieje, ale nie jest worktree tego repozytorium — przenieś go '
                    'albo usuń ręcznie i powtórz')
+    return Path(admin).resolve()
 
 
 def predict_conflicts(cwd: Path, ours: str, theirs: str, base: str | None = None) -> list[str] | None:
-    """Conflicting paths of merging `theirs` into `ours`, computed without touching any file (`git merge-tree`,
-    git >= 2.38; `base` needs >= 2.40). None when this git can't tell."""
+    """Conflicting paths of merging `theirs` into `ours`, computed without writing the working tree or the index
+    (`git merge-tree` only adds objects to .git/objects; git >= 2.38, `base` needs >= 2.40). None when this git
+    can't tell."""
     extra = [f'--merge-base={base}'] if base else []
     result = git('merge-tree', '--write-tree', '--name-only', '--no-messages', '-z', *extra, ours, theirs,
                  cwd=cwd, check=False)
@@ -788,7 +802,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
-    global REPO, MAIN
+    global REPO, MAIN, REPO_GIT
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8', errors='replace')
@@ -798,6 +812,7 @@ def main(argv=None) -> int:
     try:
         REPO, MAIN = find_repo((args.repo or Path.cwd()).resolve()), args.main
         VERIFIED.clear()
+        REPO_GIT = Path(git('rev-parse', '--absolute-git-dir', guard=False).stdout.strip())
         added = ensure_exclude()
         if added:
             out('EXCLUDE', 'dopisano ' + ', '.join(added))
