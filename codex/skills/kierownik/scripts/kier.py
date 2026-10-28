@@ -1,0 +1,831 @@
+#!/usr/bin/env python3
+"""Git and test mechanics of the kierownik lead (Claude Code and Codex hosts; stdlib only, Python 3.11+).
+
+The lead calls one subcommand per step and reads only the short `KLUCZ: wartość` lines; every git call is
+logged to <repo>/.kierownik/log/kier.log. The script never forces, deletes unmerged work or rewrites pushed
+history: what it refuses, the lead decides by hand. Every git command that writes files in a working directory
+(merge, fast-forward, checkout, reset, revert, stash) runs only after the collision check has passed, because Git
+silently overwrites ignored files.
+
+Test commands come only from the `- Testy:` / `- Lint:` lines of AGENTS.md as committed on main, never from the
+command line, so a blanket permission for this script doesn't allow arbitrary commands.
+
+Exit codes: 0 OK | 1 tests red or untrustworthy (merge undone) | 2 usage/internal error | 3 refused, nothing changed |
+4 conflict, aborted | 5 merged and green, but push failed | 6 merged and pushed, cleanup incomplete |
+`test`: the command's own exit code.
+"""
+
+import argparse
+from datetime import datetime
+from fnmatch import fnmatch
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import subprocess
+import sys
+
+EXCLUDES = ('.kierownik/', '.claude/worktrees/')
+# Owned by tools — nobody writes code there, so they are recreatable wherever they appear. Keep identical to CACHE
+# in codex/skills/kierownik/scripts/run_agent.py (tests/test_spojnosc.py checks it).
+CACHE = ('node_modules', '.venv', 'venv', '__pycache__', '*.pyc', '.pytest_cache', '.mypy_cache', '.ruff_cache', '.tox',
+         '.coverage', '.coverage.*')
+# Usual build output — recreatable only when the project ignores it; an unignored build/x.py is someone's work.
+OUTPUT = ('build', 'dist', 'target', 'coverage', 'htmlcov', '.next', '*.log')
+NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
+REPO: Path = Path.cwd()
+MAIN: str | None = None
+REPO_GIT: Path = Path('.git')  # the main checkout's own git dir, read once at start
+VERIFIED: dict[Path, Path] = {}  # worktree directory → its git admin dir, fixed once validated in this run
+
+
+class Stop(Exception):
+    def __init__(self, code: int, result: str, message: str = ''):
+        super().__init__(message)
+        self.code, self.result, self.message = code, result, message
+
+
+def out(key: str, value) -> None:
+    print(f'{key}: {value}')
+
+
+def log(text: str) -> None:
+    try:
+        path = REPO / '.kierownik' / 'log' / 'kier.log'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open('a', encoding='utf-8') as handle:
+            handle.write(text.rstrip('\n') + '\n')
+    except OSError:
+        pass
+
+
+def git(*args: str, cwd: Path | None = None, check: bool = True, guard: bool = True) -> subprocess.CompletedProcess:
+    """Run git with an explicit repository: `--git-dir` and `--work-tree` fixed when the directory was validated,
+    so nothing on disk (a plain directory, a moved `.git` file, a link) can redirect a command to another checkout.
+    Only `guard=False` (the validation itself) lets git discover the repository."""
+    cwd = Path(cwd or REPO)
+    target = ['-C', str(cwd)]
+    if guard:
+        if cwd == REPO:
+            admin = REPO_GIT
+        else:
+            if cwd not in VERIFIED:
+                VERIFIED[cwd] = require_worktree(cwd)
+            admin = VERIFIED[cwd]
+        target = ['--git-dir', str(admin), '--work-tree', str(cwd), *target]
+    process = subprocess.run(['git', '-c', 'core.quotePath=false', *target, *args], capture_output=True,
+                             text=True, encoding='utf-8', errors='replace')
+    log(f'{datetime.now():%Y-%m-%d %H:%M:%S} [{cwd}] git {" ".join(args)} -> {process.returncode}\n'
+        + (process.stdout[-2000:] + process.stderr[-2000:]).strip())
+    if check and process.returncode:
+        raise Stop(2, 'BŁĄD', f'git {" ".join(args)}: {process.stderr.strip() or process.stdout.strip()}')
+    return process
+
+
+def text(*args: str, cwd: Path | None = None) -> str:
+    return git(*args, cwd=cwd).stdout.strip()
+
+
+def ok(*args: str, cwd: Path | None = None) -> bool:
+    return git(*args, cwd=cwd, check=False).returncode == 0
+
+
+def find_repo(start: Path) -> Path:
+    common = subprocess.run(['git', '-C', str(start), 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+                            capture_output=True, text=True, encoding='utf-8', errors='replace')
+    if common.returncode:
+        raise Stop(2, 'BŁĄD', f'{start} nie jest repozytorium Git')
+    path = Path(common.stdout.strip())
+    return path.parent if path.name == '.git' else path
+
+
+def branch_exists(name: str) -> bool:
+    return bool(name) and ok('rev-parse', '--verify', '--quiet', f'refs/heads/{name}')
+
+
+def main_branch() -> str:
+    if MAIN:
+        if not branch_exists(MAIN):
+            raise Stop(3, 'ODMOWA', f'gałąź główna {MAIN} (z --main) nie istnieje')
+        return MAIN
+    head = git('symbolic-ref', '--short', 'refs/remotes/origin/HEAD', check=False)
+    if head.returncode == 0 and head.stdout.strip():
+        return head.stdout.strip().removeprefix('origin/')
+    configured = git('config', 'init.defaultBranch', check=False).stdout.strip()
+    for name in ('main', 'master', configured):
+        if branch_exists(name):
+            return name
+    raise Stop(3, 'ODMOWA', 'nie ustalono gałęzi głównej (brak origin/HEAD, main, master) — podaj --main <gałąź> '
+               'i zapisz ją w TODO.md („Ustalenia”)')
+
+
+def matches(entry: str, patterns: tuple[str, ...]) -> bool:
+    return any(fnmatch(part, pattern) for part in entry.rstrip('/').split('/') for pattern in patterns)
+
+
+def status_entries(cwd: Path, *options: str) -> list[tuple[str, str]]:
+    """(XY, path) from `git status --porcelain=v1 -z` — unquoted names, rename sources skipped."""
+    fields = git('status', '--porcelain=v1', '-z', *options, cwd=cwd).stdout.split('\0')
+    entries, skip = [], False
+    for field in fields:
+        if skip or not field:
+            skip = False
+            continue
+        entries.append((field[:2], field[3:]))
+        skip = field[0] in 'RC'
+    return entries
+
+
+def untracked(cwd: Path) -> list[str]:
+    return [path for code, path in status_entries(cwd, '--untracked-files=all') if code == '??']
+
+
+def ignored(cwd: Path) -> list[str]:
+    return [path for code, path in status_entries(cwd, '--ignored=matching') if code == '!!']
+
+
+def env_copy(entry: str, root: Path) -> bool:
+    example = root / '.env.example'
+    return entry == '.env' and example.is_file() and (root / '.env').read_bytes() == example.read_bytes()
+
+
+def leftovers(cwd: Path) -> list[str]:
+    """Untracked or ignored entries that are someone's work: untracked outside CACHE, ignored outside CACHE/OUTPUT."""
+    work = [entry for entry in untracked(cwd) if not matches(entry, CACHE)]
+    return work + [entry for entry in ignored(cwd)
+                   if not matches(entry, CACHE + OUTPUT) and not env_copy(entry, cwd)]
+
+
+def remove_worktree(path: Path) -> bool:
+    """`git worktree remove` without --force, called only after leftovers() found no work; untracked caches (which
+    Git refuses on) go first."""
+    for entry in untracked(path):
+        target = path / entry
+        if matches(entry, CACHE) and (target.is_file() or target.is_symlink()):
+            target.unlink()
+    return ok('worktree', 'remove', str(path))
+
+
+def names(*args: str, cwd: Path | None = None) -> list[str]:
+    return [name for name in git(*args, '-z', cwd=cwd).stdout.split('\0') if name]
+
+
+def collisions(cwd: Path, base: str, incoming: str, since_merge_base: bool = True) -> list[str]:
+    """Files `incoming` adds over `base` that would replace something on disk — the file itself, or a parent that is a
+    file or link where a directory must go (Git silently overwrites ignored files). A merge compares from the merge
+    base (`base...incoming`); moving a checkout from `base` to `incoming` compares the two commits directly."""
+    span = f'{base}...{incoming}' if since_merge_base else f'{base}..{incoming}'
+    return [name for name in names('diff', '--name-only', '--no-renames', '--diff-filter=A', span, cwd=cwd)
+            if blocks(cwd, name)]
+
+
+def parent_blocked(cwd: Path, name: str) -> bool:
+    """A parent directory of `name` is now a file or a link."""
+    parts = name.split('/')
+    parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
+    return any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents)
+
+
+def blocks(cwd: Path, name: str) -> bool:
+    """Writing tracked file `name` would replace something on disk: the path itself, or a parent that is a file or
+    link where a directory must go."""
+    return os.path.lexists(cwd / name) or parent_blocked(cwd, name)
+
+
+def restore_blocked(cwd: Path) -> list[str]:
+    """Paths a stash would write back from HEAD where something else now stands (e.g. an ignored file in place of
+    their directory). `diff --no-renames HEAD` lists every such path — deletions, the sources of renames (`git mv`)
+    and staged removals — as D; changed files (M/T) are checked for a parent replaced by a file."""
+    fields = git('diff', '--name-status', '--no-renames', '-z', 'HEAD', cwd=cwd).stdout.split('\0')
+    blocked = []
+    for code, path in zip(fields[0::2], fields[1::2]):
+        if code == 'D' and blocks(cwd, path):
+            blocked.append(path)
+        elif code in ('M', 'T') and parent_blocked(cwd, path):
+            blocked.append(path)
+    return blocked
+
+
+def refuse_collisions(found: list[str], where: Path) -> None:
+    if found:
+        for name in found[:10]:
+            out('ISTNIEJE', name)
+        raise Stop(3, 'ODMOWA', f'zmiana nadpisałaby pliki istniejące w {relative(where)} (zwykle ignorowane, '
+                   'np. lokalna konfiguracja) — przenieś je albo zabezpiecz i powtórz')
+
+
+def linked(path: Path) -> bool:
+    """`path` or one of its parents inside the repository is a symlink or a junction."""
+    for part in [path, *path.parents]:
+        if part.is_symlink() or (hasattr(part, 'is_junction') and part.is_junction()):
+            return True
+        if part == REPO:
+            break
+    return False
+
+
+def require_worktree(path: Path) -> Path:
+    """`git -C` on a plain directory inside the repository acts on the main checkout — refuse anything that is not
+    a registered worktree rooted exactly at `path`, reached without links, and other than the main checkout."""
+    plain = Path(os.path.abspath(path))
+    resolved = plain.resolve()
+    found = git('rev-parse', '--show-toplevel', '--absolute-git-dir', cwd=plain, check=False, guard=False)
+    top, admin = (found.stdout.splitlines() + ['', ''])[:2]
+    registered = {tree['path'].resolve() for tree in worktrees()}
+    pointer = Path(admin) / 'gitdir'
+    own = (Path(admin).resolve().parent == (REPO_GIT / 'worktrees').resolve() and pointer.is_file()
+           and Path(pointer.read_text(encoding='utf-8').strip()).resolve() == resolved / '.git')
+    if (linked(plain) or resolved == REPO.resolve() or not top or Path(top).resolve() != resolved
+            or resolved not in registered or not own):
+        raise Stop(3, 'ODMOWA', f'{relative(path)} istnieje, ale nie jest worktree tego repozytorium — przenieś go '
+                   'albo usuń ręcznie i powtórz')
+    return Path(admin).resolve()
+
+
+def predict_conflicts(cwd: Path, ours: str, theirs: str, base: str | None = None) -> list[str] | None:
+    """Conflicting paths of merging `theirs` into `ours`, computed without writing the working tree or the index
+    (`git merge-tree` only adds objects to .git/objects; git >= 2.38, `base` needs >= 2.40). None when this git
+    can't tell."""
+    extra = [f'--merge-base={base}'] if base else []
+    result = git('merge-tree', '--write-tree', '--name-only', '--no-messages', '-z', *extra, ours, theirs,
+                 cwd=cwd, check=False)
+    if result.returncode not in (0, 1):
+        return None
+    return sorted({name for name in result.stdout.split('\0')[1:] if name}) if result.returncode else []
+
+
+def refuse_conflicts(found: list[str] | None, message: str) -> None:
+    if found:
+        for name in found:
+            out('KONFLIKT', name)
+        raise Stop(4, 'KONFLIKT', message)
+
+
+def abort_blocked(cwd: Path) -> list[str]:
+    """What an abort would destroy: paths it writes back from HEAD over something else, and files the interrupted
+    merge added that were changed on disk afterwards (conflicted files excluded — Git wrote their markers)."""
+    unmerged = set(names('diff', '--name-only', '--diff-filter=U', cwd=cwd))
+    changed = set(names('diff', '--name-only', cwd=cwd))
+    fields = git('diff', '--cached', '--name-status', '--no-renames', '-z', 'HEAD', cwd=cwd).stdout.split('\0')
+    added = {path for code, path in zip(fields[0::2], fields[1::2]) if code == 'A'}
+    return restore_blocked(cwd) + sorted((added & changed) - unmerged)
+
+
+def safe_abort(cwd: Path, kind: str) -> None:
+    """`git <kind> --abort` only when it overwrites nothing; otherwise the conflict stays open for the lead."""
+    blocked = abort_blocked(cwd)
+    for name in blocked[:10]:
+        out('ISTNIEJE', name)
+    unmerged = names('diff', '--name-only', '--diff-filter=U', cwd=cwd)
+    if blocked or unmerged or not ok(kind, '--abort', cwd=cwd):
+        raise Stop(4, 'KONFLIKT', f'konflikt zostawiony otwarty w {relative(cwd)} — przerwanie ({kind} --abort) '
+                   'nadpisałoby pliki albo się nie udało; zabezpiecz je, potem rozwiąż albo przerwij ręcznie')
+
+
+def move_to(cwd: Path, target: str, *command: str) -> None:
+    """Run a git command that moves the checkout in `cwd` to `target`, after the collision check."""
+    refuse_collisions(collisions(cwd, 'HEAD', target, since_merge_base=False), cwd)
+    git(*command, cwd=cwd)
+
+
+def agents_command(key: str, ref: str) -> str:
+    """The `- <key>: `command`` line of AGENTS.md as committed at `ref`."""
+    shown = git('show', f'{ref}:AGENTS.md', check=False)
+    found = re.search(rf'(?mi)^\s*[-*]\s*{re.escape(key)}\b[^:\n]*:\s*`([^`]+)`', shown.stdout) if not shown.returncode else None
+    if not found or '<' in found.group(1):
+        raise Stop(3, 'ODMOWA', f'brak polecenia „- {key}: `…`” w AGENTS.md na {ref} — uzupełnij AGENTS.md, '
+                   'scommituj na main i powtórz')
+    return found.group(1)
+
+
+def has_remote() -> bool:
+    return 'origin' in text('remote').split()
+
+
+def dirty(cwd: Path, untracked: bool = True) -> list[str]:
+    return [f'{code} {path}' for code, path in status_entries(cwd, *([] if untracked else ['--untracked-files=no']))]
+
+
+def worktrees() -> list[dict]:
+    items, current = [], {}
+    for line in text('worktree', 'list', '--porcelain').splitlines() + ['']:
+        if not line:
+            if current:
+                items.append(current)
+            current = {}
+            continue
+        key, _, value = line.partition(' ')
+        current[key] = value or True
+    for item in items:
+        path = Path(item['worktree'])
+        item['path'] = path
+        item['branch'] = item.get('branch', '').removeprefix('refs/heads/') if isinstance(item.get('branch'), str) else ''
+        if path == REPO:
+            item['typ'] = 'główny'
+        elif path.parent == REPO / '.claude' / 'worktrees':
+            item['typ'] = 'claude'
+        elif path.parent == REPO / '.kierownik' / 'wt':
+            item['typ'] = 'cli'
+        else:
+            item['typ'] = 'inny'
+    return items
+
+
+def task_branch(task: str, required: bool = True) -> str | None:
+    names = [n for n in text('for-each-ref', '--format=%(refname:short)', f'refs/heads/task/{task}',
+                             f'refs/heads/task/{task}-*').splitlines() if n]
+    if len(names) == 1:
+        return names[0]
+    if not names and not required:
+        return None
+    raise Stop(3, 'ODMOWA', f'gałąź zadania {task}: ' + (', '.join(names) if names else 'brak'))
+
+
+def ensure_exclude() -> list[str]:
+    """Keep the lead's own directories (logs, CLI worktrees, Claude worktrees) out of `git status`."""
+    exclude = Path(text('rev-parse', '--path-format=absolute', '--git-path', 'info/exclude'))
+    content = exclude.read_text(encoding='utf-8') if exclude.is_file() else ''
+    missing = [line for line in EXCLUDES if line not in content.splitlines()]
+    if missing:
+        exclude.parent.mkdir(parents=True, exist_ok=True)
+        with exclude.open('a', encoding='utf-8') as handle:
+            handle.write(('\n' if content and not content.endswith('\n') else '') + ''.join(f'{m}\n' for m in missing))
+    return missing
+
+
+def relative(path: Path) -> str:
+    try:
+        return path.relative_to(REPO).as_posix()
+    except ValueError:
+        return str(path)
+
+
+# ---------------------------------------------------------------- test runs
+
+COUNT_PATTERNS = (
+    ('pytest', re.compile(r'^=+ .*\bin [\d.]+s.*=+$', re.M)),
+    ('unittest', re.compile(r'^Ran (\d+) tests? in', re.M)),
+    ('jest', re.compile(r'^Tests:\s+(.+)$', re.M)),
+    ('cargo', re.compile(r'test result: \w+\. (\d+) passed; (\d+) failed; (\d+) ignored')),
+)
+
+
+def count_tests(output: str) -> str:
+    def number(word: str, line: str) -> int:
+        found = re.search(rf'(\d+) {word}', line)
+        return int(found.group(1)) if found else 0
+
+    lines = COUNT_PATTERNS[0][1].findall(output)
+    if lines:
+        line = lines[-1]
+        return (f'passed={number("passed", line)} failed={number("failed", line) + number("errors?", line)} '
+                f'skipped={number("skipped", line)}')
+    ran = COUNT_PATTERNS[1][1].findall(output)
+    if ran:
+        tail = output[output.rfind('Ran '):]
+        failed = sum(int(n) for n in re.findall(r'(?:failures|errors)=(\d+)', tail))
+        skipped = sum(int(n) for n in re.findall(r'skipped=(\d+)', tail))
+        return f'passed={int(ran[-1]) - failed - skipped} failed={failed} skipped={skipped}'
+    jest = COUNT_PATTERNS[2][1].findall(output)
+    if jest:
+        line = jest[-1]
+        return f'passed={number("passed", line)} failed={number("failed", line)} skipped={number("skipped", line)}'
+    cargo = COUNT_PATTERNS[3][1].findall(output)
+    if cargo:
+        return 'passed={} failed={} skipped={}'.format(*(sum(int(c[i]) for c in cargo) for i in range(3)))
+    go_ok, go_fail = len(re.findall(r'^ok\s', output, re.M)), len(re.findall(r'^(?:FAIL|--- FAIL)', output, re.M))
+    if go_ok or go_fail:
+        return f'pakiety ok={go_ok} fail={go_fail}'
+    return 'nierozpoznane'
+
+
+def run_test(name: str, command: str, cwd: Path, tail: int) -> int:
+    log_path = REPO / '.kierownik' / 'log' / f'{name}.log'
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open('w', encoding='utf-8', errors='replace') as handle:
+        code = subprocess.run(command, shell=True, cwd=cwd, stdout=handle, stderr=subprocess.STDOUT).returncode
+    output = log_path.read_text(encoding='utf-8', errors='replace')
+    counts = count_tests(output)
+    out('TEST', f'{command} (katalog: {relative(cwd)})')
+    out('LOG', relative(log_path))
+    out('exit', code)
+    out('LICZBY', counts)
+    if re.search(r'passed=0 failed=0', counts):
+        out('UWAGA', 'zero testów — wynik niczego nie dowodzi')
+    print('--- koniec logu ---')
+    print('\n'.join(output.splitlines()[-tail:]))
+    print('---')
+    return code
+
+
+# ---------------------------------------------------------------- subcommands
+
+def cmd_env(args) -> int:
+    main = main_branch()
+    current = text('branch', '--show-current')
+    out('SYSTEM', f'{platform.system()} {platform.release()}; Python {platform.python_version()}')
+    out('REPO', REPO)
+    out('MAIN', main)
+    out('GAŁĄŹ', current or '(odłączony HEAD)')
+    changes = dirty(REPO)
+    out('ZMIANY', len(changes))
+    remote = has_remote()
+    out('REMOTE', 'origin' if remote else 'brak (bez push)')
+    if remote and not args.no_fetch:
+        if not ok('fetch', '--quiet', 'origin'):
+            out('FETCH', 'nieudany — stan zdalny nieznany')
+        elif ok('rev-parse', '--verify', '--quiet', f'refs/remotes/origin/{main}'):
+            ahead, behind = map(int, text('rev-list', '--left-right', '--count', f'{main}...origin/{main}').split())
+            if ahead and behind:
+                out('ROZBIEŻNOŚĆ', f'main +{ahead}/-{behind} wobec origin/{main} — sprawdź `git log --oneline '
+                    f'{main}...origin/{main}`')
+            elif behind and current == main and not dirty(REPO, untracked=False):
+                move_to(REPO, f'origin/{main}', 'merge', '--ff-only', f'origin/{main}')
+                out('FAST-FORWARD', f'{behind} commitów, main @ {text("rev-parse", "--short", "HEAD")}')
+            elif behind:
+                out('W TYLE', f'{behind} commitów (bez fast-forward: nie na main albo zmiany lokalne)')
+            elif ahead:
+                out('NIEWYPCHNIĘTE', f'{ahead} commitów')
+    out('HEAD', text('log', '--oneline', '-1'))
+    trees = worktrees()
+    for tree in trees:
+        if tree['typ'] == 'główny':
+            continue
+        state = 'brak katalogu' if not tree['path'].is_dir() else (
+            'zmiany' if dirty(tree['path']) else 'czysty')
+        out('WORKTREE', f'{tree["typ"]} {relative(tree["path"])} '
+            f'{tree["branch"] or "odłączony @ " + tree.get("HEAD", "")[:9]} ({state})')
+    merged = set(text('branch', '--merged', main, '--format=%(refname:short)').splitlines())
+    for name in text('for-each-ref', '--format=%(refname:short)', 'refs/heads/task/').splitlines():
+        out('ZADANIE', f'{name} ({"scalona" if name in merged else "niescalona"})')
+    claude_dirs = {tree['path'].name for tree in trees if tree['typ'] == 'claude'}
+    for name in text('for-each-ref', '--format=%(refname:short)', 'refs/heads/worktree-*').splitlines():
+        if name.removeprefix('worktree-') not in claude_dirs:
+            removed = ok('branch', '-d', name)
+            out('SIEROTA', f'{name} — {"usunięta" if removed else "zostawiona (niescalona)"}')
+    return 0
+
+
+def prepare_detached(path: Path, ref: str) -> None:
+    sha = text('rev-parse', '--verify', ref + '^{commit}')
+    if path.exists():
+        require_worktree(path)
+        if dirty(path, untracked=False):
+            raise Stop(3, 'ODMOWA', f'{relative(path)} ma zmiany w plikach śledzonych')
+        move_to(path, sha, 'checkout', '--quiet', '--detach', sha)
+    else:
+        git('worktree', 'add', '--detach', str(path), sha)
+    out('KATALOG', path)
+    out('SHA', sha)
+
+
+def cmd_worktree(args) -> int:
+    base_dir = REPO / '.kierownik' / 'wt'
+    if args.ro:
+        prepare_detached(base_dir / f'{args.ro}-ro', args.at or main_branch())
+        return 0
+    if args.rec:
+        branch = task_branch(args.task)
+        prepare_detached(base_dir / f'{args.task}-rec', branch)
+        out('GAŁĄŹ', branch)
+        return 0
+    path = base_dir / args.task
+    existing = task_branch(args.task, required=False)
+    branch = existing or f'task/{args.task}-{args.nazwa}' if args.nazwa else existing
+    if not branch:
+        raise Stop(2, 'BŁĄD', 'podaj nazwę zadania (nowa gałąź task/T-NNN-nazwa)')
+    if path.exists():
+        require_worktree(path)
+        current = text('branch', '--show-current', cwd=path)
+        if current != branch:
+            raise Stop(3, 'ODMOWA', f'{relative(path)} jest na {current or "odłączonym HEAD"}, nie na {branch}')
+    elif existing:
+        git('worktree', 'add', str(path), branch)
+    else:
+        git('worktree', 'add', '-b', branch, str(path), args.base or main_branch())
+    out('KATALOG', path)
+    out('GAŁĄŹ', branch)
+    out('SHA', text('rev-parse', 'HEAD', cwd=path))
+    return 0
+
+
+def cmd_ro_check(args) -> int:
+    path = Path(args.katalog).resolve()
+    require_worktree(path)
+    head, expected = text('rev-parse', 'HEAD', cwd=path), text('rev-parse', '--verify', args.sha + '^{commit}')
+    changes = dirty(path, untracked=False)
+    new = untracked(path)
+    added = [entry for entry in new if not matches(entry, CACHE)]
+    if len(new) > len(added):
+        out('UWAGA', 'nowe pliki odtwarzalne (dozwolone): ' + ', '.join(sorted(set(new) - set(added))[:5]))
+    if head != expected or changes or added:
+        out('HEAD', f'{head[:9]} (oczekiwany {expected[:9]})')
+        for line in changes[:10]:
+            out('ZMIANA', line)
+        for name in added[:10]:
+            out('NOWY PLIK', name)
+        raise Stop(3, 'ODMOWA', 'rola odczytu/recenzji zmieniła HEAD, pliki śledzone albo dodała pliki — odrzuć '
+                   'jej wynik')
+    return 0
+
+
+def legacy_revert(main: str, task: str, branch: str) -> str | None:
+    """A previous merge of THIS task (subject `merge(T-NNN)`) reverted on main and not restored yet → the revert."""
+    earlier = []
+    for line in text('log', '--first-parent', '--merges', '--format=%H %P%x09%s', main).splitlines():
+        shas, _, subject = line.partition('\t')
+        parents = shas.split()
+        if (len(parents) > 2 and subject.startswith(f'merge({task})')
+                and ok('merge-base', '--is-ancestor', parents[2], branch)):
+            earlier.append(parents[0])
+    if not earlier:
+        return None
+    bodies = text('log', main, '--format=%H %b%x00').split('\0')
+    reverts = {}
+    for entry in bodies:
+        entry = entry.strip()
+        if entry:
+            sha, _, body = entry.partition(' ')
+            for target in re.findall(r'This reverts commit ([0-9a-f]{40})', body):
+                reverts[target] = sha
+    for merge in earlier:
+        revert = reverts.get(merge)
+        if revert and revert not in reverts:
+            return revert
+    return None
+
+
+def undo(before: str, task: str) -> None:
+    """Undo this run's own, unpushed commits on main; changes the tests made to tracked files go to a stash.
+    Everything is checked first; if any write could replace something on disk, nothing is touched."""
+    merged = text('rev-parse', '--short', 'HEAD')
+    blocked = restore_blocked(REPO) + collisions(REPO, 'HEAD', before, since_merge_base=False)
+    for name in blocked[:10]:
+        out('ISTNIEJE', name)
+    if blocked:
+        raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — testy zmieniły katalog tak, że '
+                   'cofnięcie nadpisałoby pliki; nic nie ruszono: sprawdź `git status`, zabezpiecz pliki i cofnij '
+                   f'ręcznie (`git stash`, `git reset --keep {before[:9]}`)')
+    if dirty(REPO, untracked=False):
+        git('stash', 'push', '-m', f'kier: zmiany testów {task}')
+        out('STASH', text('stash', 'list', '-1') + ' (zmiany zrobione przez testy w plikach śledzonych)')
+    late = collisions(REPO, 'HEAD', before, since_merge_base=False)
+    for name in late[:10]:
+        out('ISTNIEJE', name)
+    if late:
+        raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push; zmiany testów w stashu) — po stashu '
+                   'pojawiły się pliki, które cofnięcie by nadpisało; zabezpiecz je i cofnij ręcznie '
+                   f'(`git reset --keep {before[:9]}`)')
+    if not ok('reset', '--keep', before):
+        raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — nie udało się cofnąć do '
+                   f'{before[:9]}; sprawdź `git status` i cofnij ręcznie')
+
+
+def cmd_merge(args) -> int:
+    main = main_branch()
+    if text('branch', '--show-current') != main:
+        raise Stop(3, 'ODMOWA', f'główny katalog nie jest na {main}')
+    changes = dirty(REPO)
+    if changes:
+        raise Stop(3, 'ODMOWA', f'{main} ma niezacommitowane zmiany ({len(changes)}) — najpierw commit')
+    branch = task_branch(args.task)
+    before = text('rev-parse', 'HEAD')
+    command = agents_command('Testy', before)
+    refuse_collisions(collisions(REPO, before, branch), REPO)
+    revert = legacy_revert(main, args.task, branch)
+    if revert:
+        refuse_collisions(collisions(REPO, revert, f'{revert}^', since_merge_base=False), REPO)
+        refuse_conflicts(predict_conflicts(REPO, 'HEAD', f'{revert}^', base=revert),
+                         f'przywrócenie wcześniejszego rewertu {revert[:9]} dałoby konflikt; {main} bez zmian')
+        restore = git('revert', '--no-edit', revert, check=False)
+        if restore.returncode:
+            safe_abort(REPO, 'revert')
+            raise Stop(4, 'KONFLIKT', f'przywrócenie wcześniejszego rewertu {revert[:9]} daje konflikt')
+        out('COFNIĘTO REWERT', f'{revert[:9]} (inaczej poprzednie zmiany gałęzi by nie wróciły)')
+    message = f'merge({args.task}): {args.opis or branch}'
+    predicted = predict_conflicts(REPO, 'HEAD', branch)
+    if predicted:
+        if revert:
+            undo(before, args.task)
+        out('DALEJ', f'kier.py sync {args.task}')
+        refuse_conflicts(predicted, f'{main} bez zmian (konflikt wykryty bez scalania)')
+    if git('merge', '--no-ff', '-m', message, branch, check=False).returncode:
+        files = names('diff', '--name-only', '--diff-filter=U')
+        for name in files:
+            out('KONFLIKT', name)
+        safe_abort(REPO, 'merge')
+        if revert:
+            undo(before, args.task)
+        out('DALEJ', f'kier.py sync {args.task}')
+        raise Stop(4, 'KONFLIKT', f'{main} bez zmian')
+    merge_sha = text('rev-parse', 'HEAD')
+    out('MERGE', f'{merge_sha[:9]} {message}')
+    code = run_test(f'{args.task}-main', command, REPO, args.tail)
+    touched = dirty(REPO, untracked=False)
+    if code or touched:
+        undo(before, args.task)
+        out('COFNIĘTO', f'{main} @ {before[:9]} (bez push — gałąź {branch} zostaje)')
+        reason = ('testy zmieniły pliki śledzone — wynik niewiarygodny' if touched else
+                  'testy czerwone') + '; zadanie wraca do W TOKU z obserwacjami z logu'
+        raise Stop(1, 'CZERWONE', reason)
+    if args.push and has_remote():
+        if not ok('push', 'origin', main):
+            raise Stop(5, 'BŁĄD', f'scalone i zielone, ale `git push origin {main}` się nie udał')
+        out('PUSH', f'origin {main}')
+    elif args.push:
+        out('PUSH', 'pominięty — brak remote')
+    if not args.no_cleanup:
+        try:
+            return cleanup(args.task, branch)
+        except Stop as stop:
+            if stop.code == 3:
+                raise Stop(6, 'SPRZĄTANIE NIEPEŁNE', 'scalone i wypchnięte; ' + stop.message) from None
+            raise
+    return 0
+
+
+def cleanup(task: str, branch: str | None) -> int:
+    refused = False
+    rec = REPO / '.kierownik' / 'wt' / f'{task}-rec'
+    for tree in worktrees():
+        if tree['typ'] == 'główny' or not (tree['branch'] == branch and branch or tree['path'] == rec):
+            continue
+        work = leftovers(tree['path']) if tree['path'].is_dir() else []
+        if work:
+            refused = True
+            out('ZOSTAWIONO', f'{relative(tree["path"])} — pliki poza commitami, które nie są odtwarzalne:')
+            for entry in work[:10]:
+                print('   ' + entry)
+            continue
+        if dirty(tree['path'], untracked=False) or not remove_worktree(tree['path']):
+            refused = True
+            out('ZOSTAWIONO', f'{relative(tree["path"])} — pliki poza commitami:')
+            for line in dirty(tree['path'])[:10]:
+                print('   ' + line)
+        else:
+            out('USUNIĘTO', relative(tree['path']))
+        if tree['typ'] == 'claude':
+            helper = f'worktree-{tree["path"].name}'
+            if ok('rev-parse', '--verify', '--quiet', f'refs/heads/{helper}') and ok('branch', '-d', helper):
+                out('USUNIĘTO', helper)
+    if branch and not refused:
+        if ok('branch', '-d', branch):
+            out('USUNIĘTO', branch)
+        else:
+            refused = True
+            out('ZOSTAWIONO', f'{branch} — niescalona z bieżącą gałęzią')
+    git('worktree', 'prune', check=False)
+    if refused:
+        raise Stop(3, 'ODMOWA', 'część sprzątania odmówiona — sprawdź wyżej; --force tylko po wykluczeniu zapomnianej pracy')
+    return 0
+
+
+def cmd_cleanup(args) -> int:
+    return cleanup(args.task, task_branch(args.task, required=False))
+
+
+def cmd_fix_round(args) -> int:
+    branch = task_branch(args.task)
+    for tree in worktrees():
+        if tree['branch'] != branch:
+            continue
+        if tree['typ'] == 'cli':
+            out('KATALOG', f'{tree["path"]} (wykonawca CLI pracuje dalej w tym samym katalogu)')
+            continue
+        if tree['typ'] != 'claude':
+            raise Stop(3, 'ODMOWA', f'{branch} jest wyewidencjonowana w {tree["path"]}')
+        changes = dirty(tree['path'], untracked=False) + leftovers(tree['path'])
+        if changes:
+            raise Stop(3, 'ODMOWA', f'{relative(tree["path"])} ma niezapisaną pracę ({len(changes)} zmian) — '
+                       'zabezpiecz ją commitem na gałęzi zadania')
+        if not remove_worktree(tree['path']):
+            raise Stop(3, 'ODMOWA', f'git nie usunął {relative(tree["path"])} — sprawdź `git -C <katalog> status`')
+        out('USUNIĘTO', relative(tree['path']))
+        helper = f'worktree-{tree["path"].name}'
+        if ok('rev-parse', '--verify', '--quiet', f'refs/heads/{helper}') and ok('branch', '-d', helper):
+            out('USUNIĘTO', helper)
+    sha = text('rev-parse', '--short', branch)
+    out('GAŁĄŹ', f'{branch} (istnieje, @ {sha}) — przełącz się na nią, nie twórz nowej')
+    return 0
+
+
+def cmd_sync(args) -> int:
+    main, branch = main_branch(), task_branch(args.task)
+    path = next((t['path'] for t in worktrees() if t['branch'] == branch), None)
+    if path is None:
+        path = REPO / '.kierownik' / 'wt' / args.task
+        git('worktree', 'add', str(path), branch)
+    if dirty(path, untracked=False):
+        raise Stop(3, 'ODMOWA', f'{relative(path)} ma niezacommitowane zmiany')
+    refuse_collisions(collisions(path, branch, main), path)
+    out('KATALOG', path)
+    if not args.keep_conflict:
+        found = predict_conflicts(path, 'HEAD', main)
+        if found:
+            out('DALEJ', 'trywialny → `sync --keep-conflict`; inaczej `fix-round` i zlecenie A z linią KONFLIKT')
+            refuse_conflicts(found, 'gałąź bez zmian (konflikt wykryty bez scalania)')
+    merge = git('merge', '--no-ff', '-m', f'merge({args.task}): {main} do gałęzi zadania', main, cwd=path, check=False)
+    if merge.returncode:
+        files = text('diff', '--name-only', '--diff-filter=U', cwd=path).splitlines()
+        for name in files:
+            out('KONFLIKT', name)
+        if args.keep_conflict:
+            out('DALEJ', f'rozwiąż w {path}, `git add` + `git commit`, potem testy i `kier.py merge {args.task}`')
+            raise Stop(4, 'KONFLIKT', 'konflikt zostawiony do rozwiązania')
+        safe_abort(path, 'merge')
+        out('DALEJ', 'trywialny → `sync --keep-conflict`; inaczej `fix-round` i zlecenie A z linią KONFLIKT')
+        raise Stop(4, 'KONFLIKT', 'przerwano, gałąź bez zmian')
+    sha = text('rev-parse', 'HEAD', cwd=path)
+    remerge = git('show', '--remerge-diff', '--format=', 'HEAD', cwd=path, check=False)
+    size = 'n/d' if remerge.returncode else f'{len(remerge.stdout.splitlines())} linii'
+    out('SHA', sha)
+    out('ROZWIĄZANIE', f'git -C {path} show --remerge-diff HEAD ({size}; 0 = bez ręcznych zmian)')
+    return 0
+
+
+def cmd_test(args) -> int:
+    command = agents_command(args.klucz, main_branch())
+    return run_test(args.name, command, Path(args.cwd).resolve() if args.cwd else REPO, args.tail)
+
+
+def name(value: str) -> str:
+    if not NAME.fullmatch(value) or '..' in value:
+        raise argparse.ArgumentTypeError(f'niedozwolona nazwa: {value!r} (litery, cyfry, . _ -)')
+    return value
+
+
+def parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    root.add_argument('--repo', type=Path, help='katalog repozytorium (domyślnie: główny worktree bieżącego)')
+    root.add_argument('--main', type=name, help='gałąź główna, gdy nie wynika z origin/HEAD ani main/master')
+    sub = root.add_subparsers(dest='cmd', required=True)
+    env = sub.add_parser('env', help='fakty startu sesji, fetch/fast-forward, worktree, gałęzie zadań, exclude')
+    env.add_argument('--no-fetch', action='store_true')
+    env.set_defaults(func=cmd_env)
+    tree = sub.add_parser('worktree', help='katalog CLI w .kierownik/wt/: wykonawca, --rec, --ro')
+    tree.add_argument('task', nargs='?', type=name)
+    tree.add_argument('nazwa', nargs='?', type=name)
+    tree.add_argument('--base')
+    tree.add_argument('--rec', action='store_true', help='odłączony katalog recenzenta T-NNN-rec')
+    tree.add_argument('--ro', metavar='ID', type=name, help='odłączony katalog odczytu <ID>-ro')
+    tree.add_argument('--at', help='commit dla --ro (domyślnie main)')
+    tree.set_defaults(func=cmd_worktree)
+    check = sub.add_parser('ro-check', help='czy rola odczytu/recenzji niczego nie zmieniła')
+    check.add_argument('katalog')
+    check.add_argument('--sha', required=True)
+    check.set_defaults(func=cmd_ro_check)
+    merge = sub.add_parser('merge', help='scalenie --no-ff, testy z AGENTS.md na main, push, sprzątanie')
+    merge.add_argument('task', type=name)
+    merge.add_argument('--push', action='store_true')
+    merge.add_argument('--opis')
+    merge.add_argument('--no-cleanup', action='store_true')
+    merge.add_argument('--tail', type=int, default=30)
+    merge.set_defaults(func=cmd_merge)
+    clean = sub.add_parser('cleanup', help='usuń worktree i gałęzie scalonego zadania (bez --force)')
+    clean.add_argument('task', type=name)
+    clean.set_defaults(func=cmd_cleanup)
+    fix = sub.add_parser('fix-round', help='przygotuj rundę poprawek i podaj linię GAŁĄŹ')
+    fix.add_argument('task', type=name)
+    fix.set_defaults(func=cmd_fix_round)
+    sync = sub.add_parser('sync', help='scal main do gałęzi zadania (po konflikcie)')
+    sync.add_argument('task', type=name)
+    sync.add_argument('--keep-conflict', action='store_true')
+    sync.set_defaults(func=cmd_sync)
+    test = sub.add_parser('test', help='polecenie z AGENTS.md na main (Testy albo Lint) z logiem i liczbami')
+    test.add_argument('--name', required=True, type=name)
+    test.add_argument('--klucz', default='Testy', choices=('Testy', 'Lint'))
+    test.add_argument('--cwd')
+    test.add_argument('--tail', type=int, default=30)
+    test.set_defaults(func=cmd_test)
+    return root
+
+
+def main(argv=None) -> int:
+    global REPO, MAIN, REPO_GIT
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8', errors='replace')
+    args = parser().parse_args(argv)
+    if args.cmd == 'worktree' and not args.ro and not args.task:
+        parser().error('worktree: podaj T-NNN (albo --ro ID)')
+    try:
+        REPO, MAIN = find_repo((args.repo or Path.cwd()).resolve()), args.main
+        VERIFIED.clear()
+        REPO_GIT = Path(git('rev-parse', '--absolute-git-dir', guard=False).stdout.strip())
+        added = ensure_exclude()
+        if added:
+            out('EXCLUDE', 'dopisano ' + ', '.join(added))
+        code = args.func(args)
+    except Stop as stop:
+        if stop.message:
+            out('POWÓD', stop.message)
+        out('WYNIK', stop.result)
+        return stop.code
+    if args.cmd != 'test':
+        out('WYNIK', 'OK')
+    return code
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

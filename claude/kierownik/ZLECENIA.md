@@ -11,7 +11,7 @@ To a `kier-*` subagent give only the order content — role, rules and output fo
 gets AGENTS.md automatically (through the project's CLAUDE.md). Lines prefixed `[CLI]` are added only to orders
 for external CLI runners (Codex, `agy`, `claude -p` or any other in the registry), which have no role definition; a `[CLI zamiast …]` line REPLACES the named line of the Claude
 version, it doesn't add to it. `[CLI: AGENTS.md]` in PRZECZYTAJ is needed by runners that don't load AGENTS.md themselves (Codex
-does; for others the smoke test decides). `general-purpose` (when there are no `kier-*` subagents — SKILL.md, section 1, step 5) gets the `[CLI]`
+does; for others the smoke test decides). `general-purpose` (when there are no `kier-*` subagents — SKILL.md, section 1, step 4) gets the `[CLI]`
 lines except AGENTS.md (it gets CLAUDE.md), but GAŁĄŹ and KATALOG as a Claude subagent, because it works in a
 Claude Code worktree; add the "On start" steps from the package's `agents/kier-wykonawca.md`.
 
@@ -29,9 +29,13 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
     ZAKRES: zmieniaj tylko <ścieżki / obszar>. [CLI] Najprostsze rozwiązanie spełniające kryteria;
             bez funkcji spoza zadania i bez kodu „na przyszłość”.
     KRYTERIA: <obserwowalne zachowanie + polecenie testu; scenariusz użycia>
-    [CLI] NIE: merge, push, zmiany TODO.md / PROJEKT.md / kryteriów, osłabianie testów,
+    [KONFLIKT: <pliki>; gałąź koliduje z main @ <sha> — wykonaj `git merge <sha main>`, rozwiąż konflikt tak,
+              żeby zostało zachowanie obu stron, uruchom testy i scommituj scalenie]   (tylko po `kier.py merge` → 4)
+    [CLI] NIE: merge (poza wierszem KONFLIKT), push, zmiany TODO.md / PROJEKT.md / kryteriów, osłabianie testów,
           płatne lub produkcyjne zasoby (patrz AGENTS.md „Środowisko i koszty”).
     [CLI] LOGI: długie wyjście (instalacja, testy, build) kieruj do pliku w katalogu tymczasowym systemu, czytaj kod wyjścia i końcówkę.
+          Wszystko na pierwszym planie, długie polecenia z maksymalnym limitem czasu narzędzia (gdy nie wystarczy →
+          NIE SPRAWDZONO z powodem); nie uruchamiaj procesów w tle i nie kończ komunikatem „czekam na…”.
     [CLI] NA KONIEC: prawdziwe sprawdzenie (testy, lint, scenariusz z kryteriów — do końca), commit wg
           konwencji z AGENTS.md (gdy Git odmówi przez sandbox: zostaw zmiany bez commitu i napisz to
           w raporcie — commit zrobi kierownik) i raport ≤ 15 linii; każde twierdzenie z wyniku polecenia z tej sesji:

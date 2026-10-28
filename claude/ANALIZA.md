@@ -1,4 +1,4 @@
-# ANALIZA I DECYZJE (v10–v12)
+# ANALIZA I DECYZJE (v10–v13)
 
 Do czytania, gdy chcesz zmieniać system. Do codziennej pracy niepotrzebne.
 
@@ -24,7 +24,7 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
 | Oszczędzanie kontekstu przez niewiedzę | „Czytaj tylko `git --stat`” | (v8) Oszczędzanie przez delegowanie: ciężkie czytanie robią subagenci, do kierownika wracają streszczenia |
 | Po wyjściu nowego modelu trzeba poprawiać pięć plików; recenzent „inny model niż autor” przestaje być jednoznaczny | Nazwy i wersje modeli (Opus 5.5, Fable 5.1) wpisane w SKILL.md, README, ZESPOL.md, ANALIZA | (v10) Klasy modeli; mapowanie klasa → alias tylko w ZESPOL.md (decyzja 9) |
 | Pętla poprawek i recenzja nie działają z worktree subagentów | Instrukcje zakładały, że subagent wraca do tego samego worktree, odgałęzia się od lokalnego main i że jedną gałąź da się wyewidencjonować w dwóch worktree | (v10) Przepływ Git napisany pod faktyczną mechanikę `isolation: worktree` (decyzja 10) |
-| Kierownik „ustawia effort” subagentowi, którego ustawić nie może | Założenie, że effort jest parametrem wywołania | (v10) Effort tylko we frontmatter agentów; przy wywołaniu zmienia się wyłącznie klasę modelu |
+| Kierownik „ustawia effort” subagentowi, którego ustawić nie może | Założenie, że effort jest parametrem wywołania | (v10) Effort tylko we frontmatter agentów; przy wywołaniu zmienia się wyłącznie klasę modelu. (v13) Claude Code ≥ 2.1.292 przyjmuje `effort` przy wywołaniu — kierownik go podaje (decyzja 14) |
 
 
 ## 3. Kluczowe decyzje (v8–v10)
@@ -161,6 +161,96 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    Ograniczenia: kierownik zawsze działa w jednym hoście i zatrzymuje się razem z jego dostawcą; stanu limitu
    nie da się sprawdzić z góry, tylko zapisać po komunikacie; recenzja przez CLI kosztuje więcej pracy
    kierownika (worktree `-rec`, zależności, plik zlecenia) i jest wolniejsza; `agy` działa bez sandboxa.
+14. **(v13) Mocniejszy wykonawca, effort przy wywołaniu, zgoda na `agy` na maszynie.** Przegląd v12
+   (2026-10-27) wskazał:
+   - **Wykonawca domyślnie w MOCNY (Opus, effort medium).** Opus 5.5 kosztuje dziś tylko 2× Sonnet 5.5
+     ($4/$20 wobec $2/$10 za 1M tokenów), a nieudana runda poprawek kosztuje znacznie więcej niż różnica
+     ceny: drugie zlecenie, ponowną recenzję innej rodziny, worktree i kontekst kierownika. Anthropic
+     zaleca liczyć koszt ukończonego zadania, nie pojedynczego wywołania. STANDARDOWY (Sonnet) zostaje dla
+     prostych zadań: ryzyko NISKIE, typowa trudność, kryteria sprawdzalne jednym poleceniem. Każda poprawka
+     po nieudanej rundzie → MOCNY. „Zrobione” zapisuje klasę wykonawcy i liczbę rund — po kilku etapach
+     decyzję da się zweryfikować liczbami.
+   - **Recenzja pracy klasy MOCNY**: inna rodzina; bez niej NAJMOCNIEJSZY (Fable) tylko przy
+     bezpieczeństwie, danych, pieniądzach i kontraktach zewnętrznych, w pozostałych przypadkach wyjątek
+     „recenzja tą samą klasą” z testami kierownika — tak, żeby mocniejszy wykonawca nie zużywał limitu Fable.
+   - **Effort przy wywołaniu** (Claude Code ≥ 2.1.292): trudniejsze zadanie najpierw dostaje wyższy effort,
+     klasa rośnie, gdy potrzeba większych możliwości. Linia „przydział” może podać `effort <poziom>`.
+   - **Zgoda na `agy` bez sandboxa** nie jest już we wzorze rejestru: kierownik pyta o nią raz na maszynie
+     i zapisuje odpowiedź z dopiskiem „(potwierdzona na tej maszynie)”; zgoda skopiowana ze starszego wzoru
+     się nie liczy. Wzór `settings.json`: `agy` i destrukcyjne formy `git checkout`/`git restore` w `ask`.
+   - `/autocompact` jest udokumentowane (Claude Code ≥ 2.1.221) i zapisuje się w ustawieniach użytkownika,
+     więc obowiązuje we wszystkich projektach; opis w README i SZABLONY to mówi.
+   - **Mechanika gita w skrypcie `scripts/kier.py`** (wspólny, bajtowo identyczny w obu pakietach). Anthropic
+     zaleca, żeby przewidywalne kroki wykonywał kod, a model podejmował decyzje; skrypt skilla działa bez
+     wczytywania do kontekstu. `env`, `worktree`, `ro-check`, `merge`, `cleanup`, `fix-round`, `sync`, `test`
+     zastąpiły ~60 linii poleceń w SKILL.md (443 → ~375 linii) i są pokryte testami (`tests/test_kier.py`).
+     Czerwone testy po scaleniu: lokalne, niewypchnięte scalenie jest cofane (`reset --keep`) zamiast
+     `revert -m 1` — bez rewertów w historii i bez „rewertu rewertu” przy ponownym scaleniu; rewert z v12
+     w historii `merge` przywraca sam.
+   - **Konflikt przy scalaniu** (do 4 równoległych wykonawców) ma procedurę: `merge` przerywa z kodem 4,
+     `sync` scala main do gałęzi zadania, trywialny konflikt rozwiązuje kierownik, inny — wykonawca (wiersz
+     KONFLIKT w zleceniu A); ponowna recenzja tylko, gdy rozwiązanie dotyka logiki.
+   - **Ścieżka szybka**: prostą pracę klasy STANDARDOWY (ryzyko NISKIE, typowa) recenzuje host o klasę wyżej
+     plus testy kierownika, bez obowiązkowej innej rodziny — tańsza pętla tam, gdzie niezależność rodziny
+     niewiele daje. Nie dotyczy bezpieczeństwa, danych, pieniędzy, kontraktów, rund poprawek i sprzecznych
+     sygnałów.
+   - **Recenzja CLI nie jest odrzucana przez cache testów**: liczą się HEAD, pliki śledzone i wcześniejsze
+     pliki nieśledzone; nowe nieśledzone są zgłaszane jako UWAGA.
+   - **Straż spójności** `tests/test_spojnosc.py`: wspólne pliki identyczne, słowa protokołu, pola zleceń
+     i skróty w obu pakietach, każde wspomniane podpolecenie `kier.py` istnieje, limit długości SKILL.md.
+   - **v13.1 — po recenzji Codex (Windows)**: `kier.py` nie nadpisuje plików ignorowanych (scalenie odmawia,
+     gdy gałąź dodaje plik istniejący lokalnie) i nie kasuje pracy przy sprzątaniu (usuwa tylko wyjście
+     odtwarzalne: cache, build, zależności); polecenia testów wyłącznie z AGENTS.md na main — reguła allow
+     dla skryptu nie otwiera już dowolnych poleceń; wcześniejsze scalenie rozpoznawane po temacie
+     `merge(T-NNN)`, więc cudzy rewert nie wraca; testy zmieniające pliki śledzone → wynik niewiarygodny,
+     zmiany w stashu, scalenie cofnięte; recenzent dopisujący pliki źródłowe traci werdykt; bez ustalonej
+     gałęzi głównej odmowa zamiast zgadywania (`--main`); poprawne dopisywanie do `info/exclude`; sumy
+     instalatora niezależne od CRLF i `.gitattributes` z LF; zgoda na `agy` powiązana z nazwą hosta.
+   - **v13.2 — druga recenzja Codex**: „odtwarzalne” nie wynika już z dowolnego katalogu w ścieżce. `CACHE`
+     (node_modules, .venv, __pycache__, .pytest_cache…) jest odtwarzalne zawsze, `OUTPUT` (build, dist,
+     target, coverage…) tylko wtedy, gdy projekt je ignoruje — nieignorowany `build/x.py` to praca: sprzątanie
+     go nie usuwa, a recenzent, który go dopisze, traci werdykt. Kontrola kolizji sprawdza też rodziców
+     ścieżki (ignorowany plik tam, gdzie gałąź dodaje katalog) i czyta nazwy z `-z`, więc polskie znaki
+     nie omijają ochrony.
+   - **v13.3 — trzecia recenzja Codex**: kontrola kolizji obejmuje każde polecenie, które przesuwa katalog
+     roboczy na inny commit (`move_to`): fast-forward w `env`, odświeżenie katalogu recenzenta i cofnięcie
+     scalenia (`reset --keep`), a nie tylko scalanie. Reguła zapisana w nagłówku `kier.py`.
+   - **v13.4 — czwarta recenzja Codex**: przywracanie rewertu używa tej samej kontroli kolizji (z rodzicami
+     ścieżki), a cofanie po testach najpierw sprawdza, czy stash i reset nie nadpiszą czegoś, co testy zostawiły
+     w katalogu — jeśli tak, nic nie rusza i kończy kodem 2 z opisem stanu. (v13.5) Lista ścieżek do sprawdzenia
+     pochodzi z `git diff --no-renames HEAD`, więc obejmuje też źródła `git mv` i usunięcia z indeksu.
+   - **v13.6 — systematyczny przegląd Codex**: każde `git -C` na katalogu z `.kierownik/wt/` albo z argumentu
+     wymaga zarejestrowanego worktree (zwykły katalog trafiałby w główne repozytorium i odłączał jego HEAD);
+     `merge/revert --abort` wykonywany tylko wtedy, gdy niczego nie nadpisze — inaczej konflikt zostaje
+     otwarty (exit 4) i skrypt już nie twierdzi, że main jest bez zmian; po stashu druga kontrola przed
+     `reset --keep`. **Ograniczenie:** kontrole biegną tuż przed zapisem, ale proces działający równolegle
+     (hook gita, edytor, drugi agent) może zapisać plik w tej samej chwili — ten wyścig jest zawężony, nie
+     wykluczony. Nie uruchamiaj hooków ani narzędzi, które piszą do katalogu repozytorium, w trakcie `kier.py`.
+   - **v13.7 — kolejna recenzja Codex**: weryfikacja katalogu przeniesiona do samego `git()` — każde
+     wywołanie na katalogu innym niż główny checkout najpierw sprawdza, że to zarejestrowany worktree, bez
+     dowiązań i junction po drodze i nie główny checkout (dotąd było dopisywane punktowo i `sync`/`cleanup` je
+     omijały). Konflikty wykrywa `git merge-tree --write-tree` bez zapisu na dysk (git ≥ 2.38), więc przy
+     konflikcie scalenie się nie zaczyna i nie ma czego przerywać. Na starszym gicie abort tylko bez plików
+     konfliktowych, inaczej konflikt zostaje otwarty. Ograniczenie z v13.6 zawęża się do równoległego zapisu
+     przez inny proces w ułamku sekundy przed zapisem gita.
+   - **v13.8**: po jednej walidacji każde polecenie gita dostaje jawne `--git-dir` (katalog administracyjny
+     worktree, sprawdzony w `.git/worktrees/` tego repozytorium) i `--work-tree`. Git niczego już nie wykrywa
+     z plików na dysku, więc przeniesienie albo podmiana `.git` w trakcie działania (np. przez hook) nie
+     przekieruje polecenia do głównego checkoutu.
+   - **v13.9 — pilot**: kierownik odpowiedział na pytanie właściciela w trakcie etapu, zakończył turę z
+     wykonawcą w tle i nie podjął jego wyniku. Przyczyna w prompcie: „czekaj na powiadomienie” bez zasady na
+     koniec tury i bez odzyskiwania. Teraz: nie kończ tury, gdy działają Twoje zlecenia (poza zatrzymaniem z §13),
+     pytanie właściciela to nie zatrzymanie, a każda tura zaczyna się od zebrania zakończonych zleceń
+     (`dalej` robi to samo). Druga przyczyna z tego samego pilota: wykonawca uruchomił testy w tle i skończył
+     komunikatem „czekam na zadania w tle” zamiast raportu (commity już były). Role dostały zasadę: wszystko na
+     pierwszym planie, koniec tylko raportem; kierownik wynik bez raportu traktuje jako niedokończony
+     i sprawdza worktree. Trzecia przyczyna (dokumentacja Claude Code, sub-agents: „Let Claude wait for a
+     subagent”): w sesji interaktywnej fork mode jest domyślnie włączony i każdy subagent startuje w tle, a jego
+     wynik przychodzi w późniejszej turze. Wzór `settings.json` (SZABLONY §8) wyłącza go przez
+     `CLAUDE_CODE_FORK_SUBAGENT=0`. `status` i `stop` mają pierwszeństwo przed zbieraniem wyników.
+   Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
+   repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
+   Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).
 
 ## 4. Czy to ma sens — uczciwa ocena
 
@@ -182,13 +272,13 @@ Ograniczenia, o których trzeba wiedzieć:
   w ZESPOL.md).
 - Dla małego projektu lub jednorazowej zmiany wystarczy zwykła sesja Claude Code z trybem planu; kierownik
   zaczyna się opłacać, gdy ciągłość między sesjami staje się problemem.
-- Effortu subagenta nie da się zmienić przy wywołaniu — tylko w pliku agenta. Eskalacja trudnego
-  zadania to zmiana klasy modelu, nie effortu; to świadomy kompromis, żeby nie mnożyć definicji agentów.
+- Effort subagenta przy wywołaniu działa od Claude Code 2.1.292; starsza wersja go ignoruje i obowiązuje
+  wartość z pliku agenta (wtedy eskalacja to zmiana klasy).
 - Zapasowe `codex exec` i `agy` wymagają zalogowania i działania bez interakcji na tej maszynie —
   kierownik sprawdza to testem dymnym przy pierwszym uruchomieniu.
 - `agy --dangerously-skip-permissions` to agent bez żadnych pytań o zgodę i bez sandboxa. Worktree
   porządkuje zmiany w repozytorium, ale nie ogranicza dostępu do maszyny. Producent zaleca kontener
-  lub sandbox — właściciel może wyłączyć `agy` jednym wpisem w ZESPOL.md. Bez flagi `agy -p` po cichu
+  lub sandbox — kierownik używa tego trybu tylko po zgodzie właściciela zapisanej na tej maszynie. Bez flagi `agy -p` po cichu
   pomija polecenia powłoki (kod 0, komunikat tylko na stderr) — stąd obowiązek czytania stderr.
 - v10 działała u właściciela na prawdziwym projekcie poprawnie, ale kosztownie — to był powód v11.
   v11 nie przeszła jeszcze pilota. Zalecany: jeden etap na projekcie prowadzonym wcześniej na v10;
@@ -209,5 +299,5 @@ elementów można dodać, gdy pojawi się konkretny problem, którego obecny uk�
 
 ## 6. Źródła
 Lista w kierownik/SZABLONY.md (sekcja „Źródła”). Fakty o mechanice Claude Code (frontmatter subagentów
-i skilli, worktree, aliasy modeli, effort, uprawnienia) sprawdzone w dokumentacji 2026-10-06.
+i skilli, worktree, aliasy modeli, effort, uprawnienia) sprawdzone w dokumentacji 2026-10-06; effort przy wywołaniu subagenta i `/autocompact` — 2026-10-27.
 Poprzednia analiza (v7) z oceną materiałów wejściowych: archiwum/ANALIZA_v7.md.

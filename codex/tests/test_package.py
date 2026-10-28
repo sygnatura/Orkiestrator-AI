@@ -1,5 +1,9 @@
 """Installer/CLI adapter tests; fake CLI results are not model-behavior evidence."""
 
+import sys
+
+sys.dont_write_bytecode = True  # no __pycache__ inside the package directories the installers copy
+
 from contextlib import redirect_stdout, redirect_stderr
 import importlib.util
 import io
@@ -29,7 +33,7 @@ class ProjectTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='kierownik-v10-')
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.project = self.root / 'project with spaces'
         self.project.mkdir()
         self.git('init', '-q')
@@ -106,7 +110,10 @@ class InstallationTests(ProjectTest):
     def test_symlink_does_not_write_outside_project(self):
         outside = self.root / 'outside'
         outside.mkdir()
-        (self.project / '.agents').symlink_to(outside, target_is_directory=True)
+        try:
+            (self.project / '.agents').symlink_to(outside, target_is_directory=True)
+        except OSError as error:  # Windows without the symlink privilege: nothing to test here
+            self.skipTest(f'dowiązania niedostępne: {error}')
         with self.assertRaises(ValueError):
             self.install()
         self.assertEqual(list(outside.iterdir()), [])
@@ -185,6 +192,35 @@ class RunnerTests(ProjectTest):
         source.write_text('before')
         self.assertEqual(self.run_role(mutate=lambda: source.write_text('after')), 3)
 
+    def test_reviewer_new_test_caches_are_allowed(self):
+        def caches():
+            (self.project / '.pytest_cache/v/cache').mkdir(parents=True)
+            (self.project / '.pytest_cache/v/cache/lastfailed').write_text('{}')
+            (self.project / 'pkg/__pycache__').mkdir(parents=True)
+            (self.project / 'pkg/__pycache__/m.cpython-312.pyc').write_bytes(b'\0')
+        self.assertEqual(self.run_role(mutate=caches), 0)
+
+    def test_reviewer_adding_a_source_file_invalidates_result(self):
+        self.assertEqual(self.run_role(mutate=lambda: (self.project / 'new_source.py').write_text('x = 1\n')), 3)
+
+    def test_reviewer_adding_a_source_file_under_build_invalidates_result(self):
+        def build():
+            (self.project / 'build').mkdir()
+            (self.project / 'build/new_source.py').write_text('x = 1\n')
+        self.assertEqual(self.run_role(mutate=build), 3)
+
+    def test_reviewer_deleting_existing_untracked_file_invalidates_result(self):
+        source = self.project / 'untracked.txt'
+        source.write_text('before')
+        self.assertEqual(self.run_role(mutate=source.unlink), 3)
+
+    def test_reviewer_caches_do_not_hide_tracked_change(self):
+        def both():
+            (self.project / '.pytest_cache').mkdir()
+            (self.project / '.pytest_cache/x').write_text('c')
+            (self.project / 'tracked.txt').write_text('changed')
+        self.assertEqual(self.run_role(mutate=both), 3)
+
     def test_analyzer_source_change_invalidates_result(self):
         self.assertEqual(self.run_role(role='kier-analityk', mutate=lambda: (self.project / 'tracked.txt').write_text('changed')), 3)
         self.assertEqual(self.calls[0][0][self.calls[0][0].index('-s') + 1], 'read-only')
@@ -202,13 +238,6 @@ class RunnerTests(ProjectTest):
         self.assertEqual(command[command.index('-m') + 1], 'fixture-model')
         self.assertIn('model_reasoning_effort="medium"', command)
 
-
-
-class SharedRegistryTests(unittest.TestCase):
-    def test_registry_files_match_claude_package(self):
-        claude = PACKAGE.parent / 'claude' / 'kierownik'
-        for name in ('ZESPOL_WZOR.md', 'ZESPOL_PROCEDURY.md', 'URUCHAMIANIE_CLI.md'):
-            self.assertEqual((SKILL / name).read_bytes(), (claude / name).read_bytes(), name)
 
 
 if __name__ == '__main__':

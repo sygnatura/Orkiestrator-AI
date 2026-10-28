@@ -8,9 +8,12 @@ in (Claude Code or Codex); "runner" = a row of the registry.
 ## A. Registry setup (once per machine; afterwards only updates)
 
 LOCAL DECISIONS WIN: whatever the owner decided on this machine — a `wyłączony przez właściciela` state, a revoked or
-never-given consent (e.g. to a no-sandbox mode), a priority — always overrides the template. A consent that exists
-only in the template is never copied in silently into an existing registry: ask the owner once
-(„Wzór zawiera Twoją zgodę z <data> na <co>. Zastosować ją na tej maszynie?”) and record the answer either way.
+never-given consent (e.g. to a no-sandbox mode), a priority — always overrides the template. A consent counts only
+when the live registry records it with „(potwierdzona na tej maszynie: <hostname>)”; any other consent (copied from an older
+template, e.g. „2026-10-18”, or without that note) counts as not given — ask once, before the next use of that mode,
+and record the answer either way (TAK/NIE <data> „(potwierdzona na tej maszynie: <hostname>)” + „Historia zmian”).
+A consent whose <hostname> differs from this machine's `hostname` (a registry copied from another computer) counts
+as not given either.
 
 0. A registry that says „Registry v12” without „schemat 2” (an early v12 draft) is updated in place before use: every
    `niedostępny od <czas>` becomes `niedostępny do <czas + 5 h> (szacunek)`; „Modele” gets the „Rodzina” column (the
@@ -34,13 +37,19 @@ only in the template is never copied in silently into an existing registry: ask 
    installed → its runner stays `NIEZNANY` with the note „brak CLI”. For each installed one check `--help` of its
    non-interactive mode: order from a file or stdin, working directory, model and effort, result output, sandbox and
    permission flags — never assume flags from memory. A subscription `wyłączony przez właściciela` is skipped.
-4. Smoke test every installed CLI (URUCHAMIANIE_CLI.md; for a CLI whose non-interactive mode needs a no-sandbox /
-   skip-permissions flag, only after the owner's recorded consent — see there) and, on a Codex host, its own roles (`run_agent.py` with
+4. Smoke test every installed CLI (URUCHAMIANIE_CLI.md) and, on a Codex host, its own roles (`run_agent.py` with
    `--role kier-analityk`): in a temporary directory with a git repository, with exactly the command you will use
    later — „utwórz plik ok.txt z treścią OK i uruchom `git status`” (read-only roles: „podaj wynik `git status`”).
    Success = the expected file/answer, exit code and stderr checked; a "soft-denied"-type message on stderr (seen with
    `agy`) means shell commands were skipped despite exit 0. The test uses up limit — a tool reporting an exhausted
-   limit gets that state and no test. Record the verified command and „Test dymny: OK <data>”.
+   limit gets that state and no test. Record the verified command and „Test dymny: OK <data>”. In the same temporary
+   repository run the skill's `scripts/kier.py env` and `kier.py worktree T-000 test` from the host: refused writes
+   to `.git` (a sandbox) → note „kier.py: ręcznie” in the host table and do those steps by hand.
+   A CLI whose non-interactive mode needs a no-sandbox / skip-permissions flag (today `agy`): before its first test or
+   use, ask the owner one question — „<CLI> działa bez pytań tylko bez sandboxa: dostęp do całej maszyny, także do
+   plików poza repozytorium. Zgadzasz się? Bezpieczniej: kontener albo VM.” — and record TAK/NIE <data>
+   „(potwierdzona na tej maszynie: <hostname>)” in its runner row. NIE → no flag, no test; the runner stays `NIEZNANY` with the
+   note „bez zgody na tryb bez sandboxa”. Bundle this question with step 5 when both are open.
 5. Ask the owner one combined question (with proposed answers): models of each subscription and their class (your
    proposal from capability and cost), priorities, current limits, what `/model` shows. Record; set „Stan wypełnienia”.
 

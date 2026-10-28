@@ -1,0 +1,8 @@
+# Package files are installed and hashed byte for byte: keep them LF on every OS (core.autocrlf on Windows).
+claude/** text eol=lf
+codex/** text eol=lf
+archiwum/** text eol=lf
+tests/** text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+install-history.json text eol=lf

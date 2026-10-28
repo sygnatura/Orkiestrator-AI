@@ -2,7 +2,7 @@
 name: kier-wykonawca
 description: Wykonawca kierownika projektu — implementuje jedno zadanie T-NNN w izolowanym worktree, na gałęzi task/T-NNN, z testami i krótkim raportem. Używany przez /kierownik.
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 effort: medium
 isolation: worktree
 ---
@@ -30,7 +30,7 @@ On start:
    the rest in NIE SPRAWDZONO instead of guessing.
 
 Hard limits, even if AGENTS.md is silent: only the area named in the order; no edits of docs/TODO.md,
-docs/PROJEKT.md or the task criteria; don't weaken, delete or disable tests; no merge, push or history rewrite; no
+docs/PROJEKT.md or the task criteria; don't weaken, delete or disable tests; no merge (except main into your branch when the order has a KONFLIKT line), push or history rewrite; no
 production databases, sending, payments or paid APIs without explicit consent in the order. New tests only
 where the task requires them; one-off check scripts stay outside the repo; a justified test change is described
 in the report.
@@ -63,3 +63,8 @@ result from this session; say plainly what was not checked.
     POZA ZAKRESEM: propozycje (niewdrożone)
 
 Don't take up other tasks.
+
+Run every command in the foreground and wait for it; give long ones (installs, test suites) the tool's maximum
+timeout. Never start background processes or tasks, and never end your work with "waiting for…": the lead receives
+your last message as the result, and a message without the report counts as unfinished work. A command that can't
+finish even then → stop it and report it as NIE SPRAWDZONO with the reason.

@@ -43,8 +43,15 @@ class Action:
         return self.kind in ('zmieniony', 'usun-zmieniony')
 
 
+TEXT = {'.md', '.py', '.json', '.toml', '.yaml', '.yml', '.txt'}
+
+
 def sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """Content hash with line endings normalised for text files, so a CRLF checkout (Windows) matches history."""
+    data = path.read_bytes()
+    if path.suffix in TEXT:
+        data = data.replace(b'\r\n', b'\n')
+    return hashlib.sha256(data).hexdigest()
 
 
 def load_history() -> dict[str, set[str]]:
@@ -52,10 +59,14 @@ def load_history() -> dict[str, set[str]]:
     return {key: set(values) for key, values in data['pliki'].items()}
 
 
+def packaged(path: Path) -> bool:
+    return path.is_file() and '__pycache__' not in path.parts and path.suffix != '.pyc'
+
+
 def package_files() -> dict[str, Path]:
     managed: dict[str, Path] = {}
     for src in sorted(CLAUDE_SKILL_SRC.rglob('*')):
-        if src.is_file():
+        if packaged(src):
             managed['skill/' + src.relative_to(CLAUDE_SKILL_SRC).as_posix()] = src
     for src in sorted(CLAUDE_AGENTS_SRC.glob('*.md')):
         managed['agents/' + src.name] = src
@@ -173,11 +184,32 @@ def apply(actions: list[Action], home: Path, manifest: dict[str, str] | None) ->
             shutil.rmtree(action.target)
         else:
             action.target.unlink()
+            prune_empty(action.target.parent, home)
     if manifest is not None:
         skill_dir, _ = claude_targets(home)
         skill_dir.mkdir(parents=True, exist_ok=True)
         (skill_dir / MANIFEST).write_text(json.dumps(manifest, indent=1, sort_keys=True) + '\n', encoding='utf-8')
     return backup_root
+
+
+def prune_empty(directory: Path, home: Path) -> None:
+    """Remove directories emptied by a deletion (e.g. a dropped scripts/), never the skill or agents directory."""
+    stops = set(claude_targets(home))
+    while directory not in stops and directory.is_relative_to(claude_targets(home)[0]) and directory.is_dir() \
+            and not any(directory.iterdir()):
+        directory.rmdir()
+        directory = directory.parent
+
+
+def verify(home: Path) -> list[str]:
+    """After installing: every package file is in place byte for byte."""
+    skill_dir, agents_dir = claude_targets(home)
+    wrong = []
+    for key, src in package_files().items():
+        dst = target_for(key, skill_dir, agents_dir)
+        if not dst.is_file() or sha(dst) != sha(src):
+            wrong.append(key)
+    return wrong
 
 
 def run_codex(home: Path, projects: list[Path]) -> None:
@@ -251,6 +283,12 @@ def main(argv=None) -> int:
     backup_root = apply(actions, home, manifest)
     if backup_root:
         print(f'Kopia zapasowa poprzednich plików: {backup_root}')
+    if do_claude:
+        wrong = verify(home)
+        if wrong:
+            print('Instalacja niepełna — pliki niezgodne z pakietem: ' + ', '.join(wrong), file=sys.stderr)
+            return 2
+        print(f'Sprawdzono: {len(package_files())} plików Claude Code zgodnych z pakietem.')
     if do_codex:
         try:
             run_codex(home, projects)
@@ -259,10 +297,11 @@ def main(argv=None) -> int:
             return 2
     changed = [a for a in actions if a.kind == 'zmieniony' and a.note]
     if changed:
-        print('Zmieniałeś ustawienia agentów (wyżej). Od v12 model wybiera kierownik z rejestru przy każdym '
-              'zleceniu, więc zwykle nie trzeba ich przywracać.')
-    print('Gotowe. W projekcie uruchom /kierownik (Claude Code) albo $kierownik (Codex): przy pierwszym starcie '
-          'kierownik przeniesie stary ZESPOL.md do rejestru ~/.kierownik/ZESPOL.md.')
+        print('Zmieniałeś ustawienia agentów (wyżej). Model i effort wybiera kierownik z rejestru przy każdym '
+              'zleceniu, więc zwykle nie trzeba ich przywracać. Od v13 wykonawca domyślnie pracuje na opus.')
+    print('Gotowe. W projekcie uruchom /kierownik (Claude Code) albo $kierownik (Codex). Przy pierwszym starcie '
+          'kierownik przeniesie stary ZESPOL.md do rejestru ~/.kierownik/ZESPOL.md i zapyta raz o zgodę na agy '
+          'bez sandboxa. Aktualizacja w przyszłości: to samo polecenie (Windows: py install.py).')
     return 0
 
 
