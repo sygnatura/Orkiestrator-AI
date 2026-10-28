@@ -226,6 +226,13 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      `reset --keep`. **Ograniczenie:** kontrole biegną tuż przed zapisem, ale proces działający równolegle
      (hook gita, edytor, drugi agent) może zapisać plik w tej samej chwili — ten wyścig jest zawężony, nie
      wykluczony. Nie uruchamiaj hooków ani narzędzi, które piszą do katalogu repozytorium, w trakcie `kier.py`.
+   - **v13.7 — kolejna recenzja Codex**: weryfikacja katalogu przeniesiona do samego `git()` — każde
+     wywołanie na katalogu innym niż główny checkout najpierw sprawdza, że to zarejestrowany worktree, bez
+     dowiązań i junction po drodze i nie główny checkout (dotąd było dopisywane punktowo i `sync`/`cleanup` je
+     omijały). Konflikty wykrywa `git merge-tree --write-tree` bez zapisu na dysk (git ≥ 2.38), więc przy
+     konflikcie scalenie się nie zaczyna i nie ma czego przerywać. Na starszym gicie abort tylko bez plików
+     konfliktowych, inaczej konflikt zostaje otwarty. Ograniczenie z v13.6 zawęża się do równoległego zapisu
+     przez inny proces w ułamku sekundy przed zapisem gita.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

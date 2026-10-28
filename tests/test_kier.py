@@ -385,8 +385,8 @@ class ReviewFindingsTest(Fixture):
                   '    open("local.py", "w").write("właściciel\\n")\n')
         code, output = self.kier('merge', 'T-072', '--no-cleanup')
         self.assertEqual(code, 4, output)
-        self.assertNotIn('bez zmian', output)
-        self.assertEqual((self.repo / 'local.py').read_text(), 'właściciel\n')
+        self.assertFalse((self.repo / '.git/MERGE_HEAD').exists())
+        self.assertFalse((self.repo / 'local.py').exists())
 
     @unittest.skipIf(os.name == 'nt', 'hooki z shebangiem Pythona zależą od powłoki Git for Windows')
     def test_undo_rechecks_after_the_stash(self):
@@ -406,6 +406,47 @@ class ReviewFindingsTest(Fixture):
         code, output = self.kier('merge', 'T-073', '--no-cleanup')
         self.assertEqual(code, 2, output)
         self.assertEqual((self.repo / 'old.txt').read_text(), 'właściciel\n')
+
+    def test_registered_worktree_without_git_is_never_used_as_the_main_checkout(self):
+        self.git('branch', 'feature')
+        (self.repo / 'local.py').write_text('z main\n')
+        self.git('add', '-f', 'local.py')
+        self.git('commit', '-qm', 'local.py śledzony na main')
+        path = self.task('T-082', 'x', 'a\n', 'A\n')
+        (path / '.git').unlink()
+        self.git('switch', '-q', 'feature')
+        (self.repo / 'local.py').write_text('właściciela\n')
+        before = self.git('rev-parse', 'HEAD')
+        for command in (('sync', 'T-082'), ('cleanup', 'T-082')):
+            code, output = self.kier(*command)
+            self.assertEqual(code, 3, (command, output))
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        self.assertEqual(self.git('branch', '--show-current'), 'feature')
+        self.assertEqual((self.repo / 'local.py').read_text(), 'właściciela\n')
+
+    @unittest.skipIf(os.name == 'nt', 'dowiązanie katalogu wymaga uprawnień na Windows (junction: mklink /J)')
+    def test_link_to_the_main_checkout_is_not_a_review_directory(self):
+        self.task('T-084', 'r', 'a\n', 'A\n')
+        link = self.repo / '.kierownik/wt/T-084-rec'
+        link.symlink_to(self.repo, target_is_directory=True)
+        code, output = self.kier('worktree', '--rec', 'T-084')
+        self.assertEqual(code, 3, output)
+        self.assertEqual(self.git('branch', '--show-current'), 'main')
+
+    @unittest.skipIf(os.name == 'nt', 'hooki z shebangiem Pythona zależą od powłoki Git for Windows')
+    def test_conflict_is_detected_before_anything_is_written(self):
+        self.task('T-085', 'a', 'a\n', 'A1\n')
+        self.task('T-086', 'b', 'a\n', 'A2\n')
+        self.assertEqual(self.kier('merge', 'T-085')[0], 0)
+        self.hook('if os.path.exists(".git/MERGE_HEAD"):\n    open(".git/hook-ran", "w").write("1")\n')
+        code, output = self.kier('merge', 'T-086', '--no-cleanup')
+        self.assertEqual(code, 4, output)
+        self.assertIn('KONFLIKT: f.txt', output)
+        self.assertFalse((self.repo / '.git/hook-ran').exists())
+        self.assertFalse((self.repo / '.git/MERGE_HEAD').exists())
+        code, output = self.kier('sync', 'T-086')
+        self.assertEqual(code, 4, output)
+        self.assertFalse((self.repo / '.git/hook-ran').exists())
 
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')

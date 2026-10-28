@@ -36,6 +36,7 @@ OUTPUT = ('build', 'dist', 'target', 'coverage', 'htmlcov', '.next', '*.log')
 NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*')
 REPO: Path = Path.cwd()
 MAIN: str | None = None
+VERIFIED: set[Path] = set()  # directories other than REPO that passed require_worktree in this run
 
 
 class Stop(Exception):
@@ -58,8 +59,13 @@ def log(text: str) -> None:
         pass
 
 
-def git(*args: str, cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess:
+def git(*args: str, cwd: Path | None = None, check: bool = True, guard: bool = True) -> subprocess.CompletedProcess:
+    """Every call on a directory other than the main checkout first proves that directory is a real worktree:
+    `git -C` on anything else would silently act on the main checkout."""
     cwd = cwd or REPO
+    if guard and Path(cwd) != REPO and Path(cwd) not in VERIFIED:
+        require_worktree(Path(cwd))
+        VERIFIED.add(Path(cwd))
     process = subprocess.run(['git', '-c', 'core.quotePath=false', '-C', str(cwd), *args], capture_output=True,
                              text=True, encoding='utf-8', errors='replace')
     log(f'{datetime.now():%Y-%m-%d %H:%M:%S} [{cwd}] git {" ".join(args)} -> {process.returncode}\n'
@@ -201,15 +207,45 @@ def refuse_collisions(found: list[str], where: Path) -> None:
                    'np. lokalna konfiguracja) — przenieś je albo zabezpiecz i powtórz')
 
 
+def linked(path: Path) -> bool:
+    """`path` or one of its parents inside the repository is a symlink or a junction."""
+    for part in [path, *path.parents]:
+        if part.is_symlink() or (hasattr(part, 'is_junction') and part.is_junction()):
+            return True
+        if part == REPO:
+            break
+    return False
+
+
 def require_worktree(path: Path) -> None:
     """`git -C` on a plain directory inside the repository acts on the main checkout — refuse anything that is not
-    a registered worktree rooted exactly at `path`."""
-    path = path.resolve()
-    top = git('rev-parse', '--show-toplevel', cwd=path, check=False).stdout.strip()
+    a registered worktree rooted exactly at `path`, reached without links, and other than the main checkout."""
+    plain = Path(os.path.abspath(path))
+    resolved = plain.resolve()
+    top = git('rev-parse', '--show-toplevel', cwd=plain, check=False, guard=False).stdout.strip()
     registered = {tree['path'].resolve() for tree in worktrees()}
-    if not top or Path(top).resolve() != path or path not in registered:
+    if (linked(plain) or resolved == REPO.resolve() or not top or Path(top).resolve() != resolved
+            or resolved not in registered):
         raise Stop(3, 'ODMOWA', f'{relative(path)} istnieje, ale nie jest worktree tego repozytorium — przenieś go '
                    'albo usuń ręcznie i powtórz')
+
+
+def predict_conflicts(cwd: Path, ours: str, theirs: str, base: str | None = None) -> list[str] | None:
+    """Conflicting paths of merging `theirs` into `ours`, computed without touching any file (`git merge-tree`,
+    git >= 2.38; `base` needs >= 2.40). None when this git can't tell."""
+    extra = [f'--merge-base={base}'] if base else []
+    result = git('merge-tree', '--write-tree', '--name-only', '--no-messages', '-z', *extra, ours, theirs,
+                 cwd=cwd, check=False)
+    if result.returncode not in (0, 1):
+        return None
+    return sorted({name for name in result.stdout.split('\0')[1:] if name}) if result.returncode else []
+
+
+def refuse_conflicts(found: list[str] | None, message: str) -> None:
+    if found:
+        for name in found:
+            out('KONFLIKT', name)
+        raise Stop(4, 'KONFLIKT', message)
 
 
 def abort_blocked(cwd: Path) -> list[str]:
@@ -227,7 +263,8 @@ def safe_abort(cwd: Path, kind: str) -> None:
     blocked = abort_blocked(cwd)
     for name in blocked[:10]:
         out('ISTNIEJE', name)
-    if blocked or not ok(kind, '--abort', cwd=cwd):
+    unmerged = names('diff', '--name-only', '--diff-filter=U', cwd=cwd)
+    if blocked or unmerged or not ok(kind, '--abort', cwd=cwd):
         raise Stop(4, 'KONFLIKT', f'konflikt zostawiony otwarty w {relative(cwd)} — przerwanie ({kind} --abort) '
                    'nadpisałoby pliki albo się nie udało; zabezpiecz je, potem rozwiąż albo przerwij ręcznie')
 
@@ -545,12 +582,20 @@ def cmd_merge(args) -> int:
     revert = legacy_revert(main, args.task, branch)
     if revert:
         refuse_collisions(collisions(REPO, revert, f'{revert}^', since_merge_base=False), REPO)
+        refuse_conflicts(predict_conflicts(REPO, 'HEAD', f'{revert}^', base=revert),
+                         f'przywrócenie wcześniejszego rewertu {revert[:9]} dałoby konflikt; {main} bez zmian')
         restore = git('revert', '--no-edit', revert, check=False)
         if restore.returncode:
             safe_abort(REPO, 'revert')
             raise Stop(4, 'KONFLIKT', f'przywrócenie wcześniejszego rewertu {revert[:9]} daje konflikt')
         out('COFNIĘTO REWERT', f'{revert[:9]} (inaczej poprzednie zmiany gałęzi by nie wróciły)')
     message = f'merge({args.task}): {args.opis or branch}'
+    predicted = predict_conflicts(REPO, 'HEAD', branch)
+    if predicted:
+        if revert:
+            undo(before, args.task)
+        out('DALEJ', f'kier.py sync {args.task}')
+        refuse_conflicts(predicted, f'{main} bez zmian (konflikt wykryty bez scalania)')
     if git('merge', '--no-ff', '-m', message, branch, check=False).returncode:
         files = names('diff', '--name-only', '--diff-filter=U')
         for name in files:
@@ -661,6 +706,11 @@ def cmd_sync(args) -> int:
         raise Stop(3, 'ODMOWA', f'{relative(path)} ma niezacommitowane zmiany')
     refuse_collisions(collisions(path, branch, main), path)
     out('KATALOG', path)
+    if not args.keep_conflict:
+        found = predict_conflicts(path, 'HEAD', main)
+        if found:
+            out('DALEJ', 'trywialny → `sync --keep-conflict`; inaczej `fix-round` i zlecenie A z linią KONFLIKT')
+            refuse_conflicts(found, 'gałąź bez zmian (konflikt wykryty bez scalania)')
     merge = git('merge', '--no-ff', '-m', f'merge({args.task}): {main} do gałęzi zadania', main, cwd=path, check=False)
     if merge.returncode:
         files = text('diff', '--name-only', '--diff-filter=U', cwd=path).splitlines()
@@ -747,6 +797,7 @@ def main(argv=None) -> int:
         parser().error('worktree: podaj T-NNN (albo --ro ID)')
     try:
         REPO, MAIN = find_repo((args.repo or Path.cwd()).resolve()), args.main
+        VERIFIED.clear()
         added = ensure_exclude()
         if added:
             out('EXCLUDE', 'dopisano ' + ', '.join(added))
