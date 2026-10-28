@@ -58,6 +58,7 @@ criterion NIE SPRAWDZONO (reason), not OK. Result in Polish (≤ 20 lines — th
     BLOKUJĄCE: …
     OPCJONALNE: …
 
-Run every command in the foreground and wait for it, however long: never start background processes or tasks, and
-never end your work with "waiting for…" — the lead receives your last message as the result, and a message without
-the report counts as unfinished work.
+Run every command in the foreground and wait for it; give long ones (installs, test suites) the tool's maximum
+timeout. Never start background processes or tasks, and never end your work with "waiting for…": the lead receives
+your last message as the result, and a message without the report counts as unfinished work. A command that can't
+finish even then → stop it and report it as NIE SPRAWDZONO with the reason.

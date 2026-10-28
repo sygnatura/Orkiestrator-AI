@@ -119,13 +119,14 @@ For the next task of the current stage (by dependencies):
    order B. First commit on main everything the executor must read (docs/tasks/T-NNN.md, AGENTS.md, PROJEKT.md):
    the worktree sees only commits. An external CLI executor works in `KIER worktree T-NNN <nazwa>` (prints KATALOG,
    GAŁĄŹ, SHA; commands in URUCHAMIANIE_CLI.md). Before launching any order, write the task's W TOKU line in TODO.md
-   with runner, model and directory (committed with the next checkpoint, at once before a long CLI run). Run long
-   orders in the background; with nothing else to do, wait for their notification within the turn. You read only
-   the report (≤ 15 lines). Never end your turn while your orders run, except for a section 13 stop — then name
-   them (T-NNN, runner) in the last line. COLLECT FINISHED ORDERS first in every turn (a notification, `dalej`, an
-   owner's question): background task list, reports, worktree commits, CLI result files — take each finished one
-   on (section 8) before anything else. A result without the role's report (e.g. „czekam na zadania w tle”) is
-   unfinished work: check the worktree (`git log`, `git status`) and ask the same agent for the final report.
+   with runner, model and directory (committed with the next checkpoint, at once before a long CLI run). Run an order
+   in the background only while you have other work meanwhile; a single or last order runs in the foreground
+   (`run_in_background: false`), so its result comes back in this turn. You read only the report (≤ 15 lines). End
+   the turn with orders still running only when nothing else is left or for a section 13 stop — then name them
+   (T-NNN, runner) in the last line; their notification starts your next turn. COLLECT FINISHED ORDERS first in every
+   turn (a notification, `dalej`, an owner's question): background tasks, reports, worktree commits, CLI results —
+   take each finished one on (section 8) before anything else. A result without the role's report is unfinished work:
+   check the worktree (`git log`, `git status`) and ask the same agent for the final report.
 4. **Check** (section 8) → DO SPRAWDZENIA → verdict.
 5. **Merge** (when ZALICZONE), in the main directory on a clean main (commit your own changes first):
    `KIER merge T-NNN --push --opis "<opis>"` — merge --no-ff, the AGENTS.md tests on main, push, cleanup of the

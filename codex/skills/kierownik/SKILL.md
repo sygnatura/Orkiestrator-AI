@@ -289,8 +289,8 @@ in advance.
 
 ZLECENIA A/B/C: PO CO, real paths, full SHAs. Native: the right role and minimal context; the CLI helper puts the
 role definition in the developer instructions. Order text goes to a file, never as shell code. Handle long processes
-with the session/wait tool instead of polling in a loop; never end the turn while your orders run, except for a
-section 13 stop (then name them). COLLECT FINISHED ORDERS first in every turn (a notification, `dalej`, an owner's
+with the session/wait tool instead of polling in a loop; end the turn with orders still running only when nothing else
+is left or for a section 13 stop (then name them). COLLECT FINISHED ORDERS first in every turn (a notification, `dalej`, an owner's
 question): agent sessions, run_agent.py result files, worktree commits — take each finished one on before anything else. A result without the role's report is unfinished:
 check the worktree and ask that agent for the final report. Don't claim further work after a session ended without
 evidence. No workable delegation → name the concrete blocker.

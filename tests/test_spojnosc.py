@@ -82,7 +82,7 @@ class SharedFilesTest(unittest.TestCase):
         roles = list((REPO / 'claude' / 'agents').glob('kier-*.md')) + list((CODEX / 'roles').glob('kier-*.toml'))
         self.assertEqual(len(roles), 8)
         for role in roles:
-            self.assertIn('never start background processes', ' '.join(read(role).split()), role.name)
+            self.assertIn('never start background processes', ' '.join(read(role).split()).lower(), role.name)
 
     def test_template_carries_no_pre_given_consent(self):
         self.assertNotIn('2026-10-18', read(CLAUDE / 'ZESPOL_WZOR.md'))
