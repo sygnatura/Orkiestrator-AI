@@ -84,6 +84,13 @@ class SharedFilesTest(unittest.TestCase):
         for role in roles:
             self.assertIn('never start background processes', ' '.join(read(role).split()).lower(), role.name)
 
+    def test_lead_can_wait_for_its_subagents(self):
+        self.assertIn('"CLAUDE_CODE_FORK_SUBAGENT": "0"', read(CLAUDE / 'SZABLONY.md'))
+        for skill in (CLAUDE / 'SKILL.md', CODEX / 'SKILL.md'):
+            text = ' '.join(read(skill).split())
+            self.assertIn('under `status` only list', text, skill.relative_to(REPO))
+            self.assertIn('under `stop` only record', text, skill.relative_to(REPO))
+
     def test_template_carries_no_pre_given_consent(self):
         self.assertNotIn('2026-10-18', read(CLAUDE / 'ZESPOL_WZOR.md'))
         self.assertIn('BRAK', read(CLAUDE / 'ZESPOL_WZOR.md'))

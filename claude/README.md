@@ -61,7 +61,9 @@ Jeśli w `~/.claude/agents/kier-*.md` zmieniałeś `model:`, po skopiowaniu agen
    „plan pod znakiem zapytania”, trudną diagnozę albo gdy we wpisach „przydział” widzisz powtarzające się błędy. Opcjonalnie bezpiecznik kontekstu: `/autocompact` z progiem poniżej
    pełnego okna modelu (dziś `/autocompact 200k`; wartość prowadzi rejestr `~/.kierownik/ZESPOL.md`). Wymaga
    Claude Code ≥ 2.1.221 i zapisuje się w Twoich ustawieniach użytkownika, więc działa we wszystkich projektach.
-   Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8).
+   Wszystko to możesz zapisać raz w `settings.json` (wzór: `kierownik/SZABLONY.md`, sekcja 8). Ważne: wpis
+   `"env": { "CLAUDE_CODE_FORK_SUBAGENT": "0" }` z tego wzoru pozwala kierownikowi czekać na raport subagenta
+   (domyślnie każdy subagent startuje w tle); po dodaniu uruchom Claude Code od nowa.
 2. Wpisz `/kierownik`.
 3. Pierwszy raz na maszynie: kierownik wykryje narzędzia innych dostawców (`codex`, `agy` i inne, które
    wskażesz; są opcjonalne — bez nich cała pętla działa na Claude), każde obecne sprawdzi `--help`

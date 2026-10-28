@@ -244,7 +244,10 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      (`dalej` robi to samo). Druga przyczyna z tego samego pilota: wykonawca uruchomił testy w tle i skończył
      komunikatem „czekam na zadania w tle” zamiast raportu (commity już były). Role dostały zasadę: wszystko na
      pierwszym planie, koniec tylko raportem; kierownik wynik bez raportu traktuje jako niedokończony
-     i sprawdza worktree.
+     i sprawdza worktree. Trzecia przyczyna (dokumentacja Claude Code, sub-agents: „Let Claude wait for a
+     subagent”): w sesji interaktywnej fork mode jest domyślnie włączony i każdy subagent startuje w tle, a jego
+     wynik przychodzi w późniejszej turze. Wzór `settings.json` (SZABLONY §8) wyłącza go przez
+     `CLAUDE_CODE_FORK_SUBAGENT=0`. `status` i `stop` mają pierwszeństwo przed zbieraniem wyników.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

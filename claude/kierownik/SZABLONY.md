@@ -289,6 +289,10 @@ wpisz go w `~/.claude/settings.json`). Próg kompaktowania: `/autocompact 200k` 
 zapisuje go w ustawieniach użytkownika i działa we wszystkich projektach; ten sam klucz to
 `"autoCompactWindow": 200000` — opcjonalnie tutaj, gdy ma dotyczyć tylko tego projektu.
 
+`CLAUDE_CODE_FORK_SUBAGENT: "0"` — wyłącza fork mode, który w sesji interaktywnej jest domyślnie włączony
+i każdego subagenta uruchamia w tle. Bez tego kierownik nie może poczekać na raport ostatniego zlecenia, a wynik
+przychodzi dopiero jako powiadomienie w późniejszej turze. Działa po ponownym uruchomieniu Claude Code.
+
 `worktree.baseRef: head` — worktree subagenta (`isolation: worktree`) odgałęzia się od bieżącego HEAD
 sesji, nie od `origin/HEAD`; bez tego klucza baza może nie zawierać niewypchniętych commitów kierownika.
 Wykonawca i tak ustawia bazę jawnie przez sha ze zlecenia, więc ten klucz jest pasem bezpieczeństwa,
@@ -298,6 +302,7 @@ nie warunkiem działania.
 {
   "model": "opus",
   "worktree": { "baseRef": "head" },
+  "env": { "CLAUDE_CODE_FORK_SUBAGENT": "0" },
   "permissions": {
     "allow": [
       "Bash(<polecenie testów> *)",

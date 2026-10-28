@@ -68,4 +68,6 @@ Run every command in the foreground and wait for it; give long ones (installs, t
 timeout. Never start background processes or tasks, and never end your work with "waiting for…": the lead receives
 your last message as the result, and a message without the report counts as unfinished work. A command that can't
 finish even then → stop it and report it as NIE SPRAWDZONO with the reason.
+If the shell tool hands control back before a command finished (a yield), keep waiting on that same session: it is
+not a timeout and no reason to stop the command.
 '''

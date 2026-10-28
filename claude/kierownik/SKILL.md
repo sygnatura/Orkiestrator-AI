@@ -120,13 +120,13 @@ For the next task of the current stage (by dependencies):
    the worktree sees only commits. An external CLI executor works in `KIER worktree T-NNN <nazwa>` (prints KATALOG,
    GAŁĄŹ, SHA; commands in URUCHAMIANIE_CLI.md). Before launching any order, write the task's W TOKU line in TODO.md
    with runner, model and directory (committed with the next checkpoint, at once before a long CLI run). Run an order
-   in the background only while you have other work meanwhile; a single or last order runs in the foreground
-   (`run_in_background: false`), so its result comes back in this turn. You read only the report (≤ 15 lines). End
-   the turn with orders still running only when nothing else is left or for a section 13 stop — then name them
-   (T-NNN, runner) in the last line; their notification starts your next turn. COLLECT FINISHED ORDERS first in every
-   turn (a notification, `dalej`, an owner's question): background tasks, reports, worktree commits, CLI results —
-   take each finished one on (section 8) before anything else. A result without the role's report is unfinished work:
-   check the worktree (`git log`, `git status`) and ask the same agent for the final report.
+   in the background only while you have other work meanwhile; ask to wait for a single or last one
+   (`run_in_background: false` — works with fork mode off, SZABLONY.md section 8). You read only the report (≤ 15
+   lines). Orders left in the background with nothing else to do, or a section 13 stop → end the turn naming them
+   (T-NNN, runner); their notification or `dalej` starts the next turn. COLLECT FINISHED ORDERS first in every turn
+   (background tasks, reports, worktree commits, CLI results) and take each on (section 8) — under `status` only list
+   them, under `stop` only record them in TODO.md. A result without the role's report is unfinished: check the
+   worktree (`git log`, `git status`) and ask the same agent for the report.
 4. **Check** (section 8) → DO SPRAWDZENIA → verdict.
 5. **Merge** (when ZALICZONE), in the main directory on a clean main (commit your own changes first):
    `KIER merge T-NNN --push --opis "<opis>"` — merge --no-ff, the AGENTS.md tests on main, push, cleanup of the
@@ -196,8 +196,8 @@ Before asking, check that the risk is real. Example: tests call an LLM → check
 whether it is a local model. Local = you do it. The work of the agents themselves (Claude Code, Codex,
 Antigravity or any registered runner) is not a "paid API" — the registry and limits govern it, not consent.
 Collect questions: a blocking one → stop and ask; non-blocking → TODO.md („Pytania do właściciela”) and continue.
-Claude Code asks for consent to safe, repeated commands from the YOU DO list → propose `.claude/settings.json` to
-the owner once, per SZABLONY.md, section 8 (also in RESUME when the file is missing).
+Claude Code asks for consent to safe, repeated commands, or subagents never wait (fork mode) → propose
+`.claude/settings.json` to the owner once, per SZABLONY.md, section 8 (also in RESUME when the file is missing).
 
 ## 7. TEAM, ROUTING AND LIMITS
 
