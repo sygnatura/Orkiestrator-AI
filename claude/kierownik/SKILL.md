@@ -127,7 +127,7 @@ For the next task of the current stage (by dependencies):
    task's worktrees and branches. Exit 1 → main is back where it was (changes the tests made to tracked files are in
    a stash it names), the branch stays: the task returns to W TOKU with the log's observations (a fix round).
    Exit 3 → nothing changed (e.g. the merge would overwrite an ignored local file — it lists them). Exit 4 →
-   CONFLICT below. Exit 6 → merged and pushed, but a worktree holds work that is not recreatable output: compare
+   CONFLICT below (rarely the conflict stays open, when aborting would overwrite files — it says so). Exit 6 → merged and pushed, but a worktree holds work that is not recreatable output: compare
    it with the report, secure or delete it by hand, then `KIER cleanup T-NNN`. Exit 5 → fix the push (never force),
    then `KIER cleanup T-NNN`. Exit 2 after the tests → main still holds the unpushed merge and nothing was touched
    (undoing would overwrite files the tests left): secure them, then `git stash` and `git reset --keep <before>`.

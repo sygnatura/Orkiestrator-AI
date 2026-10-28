@@ -7,6 +7,7 @@ sys.dont_write_bytecode = True  # keep __pycache__ out of the package directory 
 from contextlib import redirect_stdout
 import importlib.util
 import io
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -355,6 +356,56 @@ class ReviewFindingsTest(Fixture):
         self.assertEqual(code, 1, output)
         self.assertIn('kier: zmiany testów T-043', self.git('stash', 'list'))
         self.assertEqual((self.repo / 'src/m.py').read_text(), 'x = 1\n')
+
+    def hook(self, body):
+        hook = self.repo / '.git/hooks/post-index-change'
+        hook.write_text(f'#!{sys.executable}\nimport os, subprocess\n{body}')
+        hook.chmod(0o755)
+
+    def test_plain_directory_in_place_of_a_review_worktree_is_refused(self):
+        self.task('T-070', 'r', 'a\n', 'A\n')
+        plain = self.repo / '.kierownik/wt/T-070-rec'
+        plain.mkdir(parents=True)
+        (plain / 'notatki.txt').write_text('moje\n')
+        code, output = self.kier('worktree', '--rec', 'T-070')
+        self.assertEqual(code, 3, output)
+        self.assertEqual(self.git('branch', '--show-current'), 'main')
+        self.assertEqual((plain / 'notatki.txt').read_text(), 'moje\n')
+        code, output = self.kier('ro-check', str(plain), '--sha', self.git('rev-parse', 'HEAD'))
+        self.assertEqual(code, 3, output)
+
+    @unittest.skipIf(os.name == 'nt', 'hooki z shebangiem Pythona zależą od powłoki Git for Windows')
+    def test_merge_conflict_is_left_open_when_abort_would_overwrite_a_changed_file(self):
+        self.task('T-071', 'a', 'a\n', 'A1\n')
+        path = self.add_file('T-072', 'b', 'local.py', 'z gałęzi\n')
+        (path / 'f.txt').write_text('A2\nb\nc\n')
+        self.git('commit', '-qam', 'feat(T-072): f', cwd=path)
+        self.assertEqual(self.kier('merge', 'T-071')[0], 0)
+        self.hook('if os.path.exists("local.py") and open("local.py").read() != "właściciel\\n":\n'
+                  '    open("local.py", "w").write("właściciel\\n")\n')
+        code, output = self.kier('merge', 'T-072', '--no-cleanup')
+        self.assertEqual(code, 4, output)
+        self.assertNotIn('bez zmian', output)
+        self.assertEqual((self.repo / 'local.py').read_text(), 'właściciel\n')
+
+    @unittest.skipIf(os.name == 'nt', 'hooki z shebangiem Pythona zależą od powłoki Git for Windows')
+    def test_undo_rechecks_after_the_stash(self):
+        (self.repo / 'old.txt').write_text('śledzony\n')
+        with (self.repo / '.gitignore').open('a') as ignore:
+            ignore.write('old.txt\n')
+        (self.repo / 't73.py').write_text('import sys\nopen("f.txt", "a").write("x\\n")\nsys.exit(1)\n')
+        (self.repo / 'AGENTS.md').write_text(AGENTS.replace(TEST, f'"{sys.executable}" t73.py'))
+        self.git('add', '-f', '.')
+        self.git('commit', '-qm', 'test: t73')
+        path = self.task('T-073', 'd', 'a\n', 'A\n')
+        self.git('rm', '-q', 'old.txt', cwd=path)
+        self.git('commit', '-qm', 'feat(T-073): bez old.txt', cwd=path)
+        self.hook('stashes = subprocess.run(["git", "stash", "list"], capture_output=True, text=True).stdout\n'
+                  'if stashes and not os.path.exists("old.txt"):\n'
+                  '    open("old.txt", "w").write("właściciel\\n")\n')
+        code, output = self.kier('merge', 'T-073', '--no-cleanup')
+        self.assertEqual(code, 2, output)
+        self.assertEqual((self.repo / 'old.txt').read_text(), 'właściciel\n')
 
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')

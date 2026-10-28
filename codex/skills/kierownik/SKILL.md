@@ -134,7 +134,8 @@ verdict; the task returns to W TOKU. Don't impose statuses or artefacts of the o
    unsecured work. Don't delete other people's `worktree-*`.
 6. **Red after merge (exit 1):** main is back where it was (test changes to tracked files in a named stash), nothing pushed
    (exit 2 instead: undoing would overwrite files the tests left — nothing touched, undo by hand), the branch and its directory stay; the
-   task returns to W TOKU with the log's observations. Conflict (exit 4): `KIER sync T-NNN`; clean → merge again;
+   task returns to W TOKU with the log's observations. Conflict (exit 4; it may stay open when aborting would
+   overwrite files — it says so): `KIER sync T-NNN`; clean → merge again;
    trivial → `sync --keep-conflict`, resolve, commit, `KIER test`, merge; otherwise an order A with the KONFLIKT line
    (ZLECENIA). New review only when the resolution (`git show --remerge-diff`) touches logic or the criteria's area;
    else „konflikt rozwiązany: <pliki>” in „Zrobione”. A pushed merge that turned out wrong: `git revert -m 1` and

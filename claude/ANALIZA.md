@@ -219,6 +219,13 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      ścieżki), a cofanie po testach najpierw sprawdza, czy stash i reset nie nadpiszą czegoś, co testy zostawiły
      w katalogu — jeśli tak, nic nie rusza i kończy kodem 2 z opisem stanu. (v13.5) Lista ścieżek do sprawdzenia
      pochodzi z `git diff --no-renames HEAD`, więc obejmuje też źródła `git mv` i usunięcia z indeksu.
+   - **v13.6 — systematyczny przegląd Codex**: każde `git -C` na katalogu z `.kierownik/wt/` albo z argumentu
+     wymaga zarejestrowanego worktree (zwykły katalog trafiałby w główne repozytorium i odłączał jego HEAD);
+     `merge/revert --abort` wykonywany tylko wtedy, gdy niczego nie nadpisze — inaczej konflikt zostaje
+     otwarty (exit 4) i skrypt już nie twierdzi, że main jest bez zmian; po stashu druga kontrola przed
+     `reset --keep`. **Ograniczenie:** kontrole biegną tuż przed zapisem, ale proces działający równolegle
+     (hook gita, edytor, drugi agent) może zapisać plik w tej samej chwili — ten wyścig jest zawężony, nie
+     wykluczony. Nie uruchamiaj hooków ani narzędzi, które piszą do katalogu repozytorium, w trakcie `kier.py`.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

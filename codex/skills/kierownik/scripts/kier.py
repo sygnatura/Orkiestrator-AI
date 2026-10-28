@@ -201,6 +201,37 @@ def refuse_collisions(found: list[str], where: Path) -> None:
                    'np. lokalna konfiguracja) — przenieś je albo zabezpiecz i powtórz')
 
 
+def require_worktree(path: Path) -> None:
+    """`git -C` on a plain directory inside the repository acts on the main checkout — refuse anything that is not
+    a registered worktree rooted exactly at `path`."""
+    path = path.resolve()
+    top = git('rev-parse', '--show-toplevel', cwd=path, check=False).stdout.strip()
+    registered = {tree['path'].resolve() for tree in worktrees()}
+    if not top or Path(top).resolve() != path or path not in registered:
+        raise Stop(3, 'ODMOWA', f'{relative(path)} istnieje, ale nie jest worktree tego repozytorium — przenieś go '
+                   'albo usuń ręcznie i powtórz')
+
+
+def abort_blocked(cwd: Path) -> list[str]:
+    """What an abort would destroy: paths it writes back from HEAD over something else, and files the interrupted
+    merge added that were changed on disk afterwards (conflicted files excluded — Git wrote their markers)."""
+    unmerged = set(names('diff', '--name-only', '--diff-filter=U', cwd=cwd))
+    changed = set(names('diff', '--name-only', cwd=cwd))
+    fields = git('diff', '--cached', '--name-status', '--no-renames', '-z', 'HEAD', cwd=cwd).stdout.split('\0')
+    added = {path for code, path in zip(fields[0::2], fields[1::2]) if code == 'A'}
+    return restore_blocked(cwd) + sorted((added & changed) - unmerged)
+
+
+def safe_abort(cwd: Path, kind: str) -> None:
+    """`git <kind> --abort` only when it overwrites nothing; otherwise the conflict stays open for the lead."""
+    blocked = abort_blocked(cwd)
+    for name in blocked[:10]:
+        out('ISTNIEJE', name)
+    if blocked or not ok(kind, '--abort', cwd=cwd):
+        raise Stop(4, 'KONFLIKT', f'konflikt zostawiony otwarty w {relative(cwd)} — przerwanie ({kind} --abort) '
+                   'nadpisałoby pliki albo się nie udało; zabezpiecz je, potem rozwiąż albo przerwij ręcznie')
+
+
 def move_to(cwd: Path, target: str, *command: str) -> None:
     """Run a git command that moves the checkout in `cwd` to `target`, after the collision check."""
     refuse_collisions(collisions(cwd, 'HEAD', target, since_merge_base=False), cwd)
@@ -388,6 +419,7 @@ def cmd_env(args) -> int:
 def prepare_detached(path: Path, ref: str) -> None:
     sha = text('rev-parse', '--verify', ref + '^{commit}')
     if path.exists():
+        require_worktree(path)
         if dirty(path, untracked=False):
             raise Stop(3, 'ODMOWA', f'{relative(path)} ma zmiany w plikach śledzonych')
         move_to(path, sha, 'checkout', '--quiet', '--detach', sha)
@@ -413,6 +445,7 @@ def cmd_worktree(args) -> int:
     if not branch:
         raise Stop(2, 'BŁĄD', 'podaj nazwę zadania (nowa gałąź task/T-NNN-nazwa)')
     if path.exists():
+        require_worktree(path)
         current = text('branch', '--show-current', cwd=path)
         if current != branch:
             raise Stop(3, 'ODMOWA', f'{relative(path)} jest na {current or "odłączonym HEAD"}, nie na {branch}')
@@ -428,6 +461,7 @@ def cmd_worktree(args) -> int:
 
 def cmd_ro_check(args) -> int:
     path = Path(args.katalog).resolve()
+    require_worktree(path)
     head, expected = text('rev-parse', 'HEAD', cwd=path), text('rev-parse', '--verify', args.sha + '^{commit}')
     changes = dirty(path, untracked=False)
     new = untracked(path)
@@ -485,6 +519,13 @@ def undo(before: str, task: str) -> None:
     if dirty(REPO, untracked=False):
         git('stash', 'push', '-m', f'kier: zmiany testów {task}')
         out('STASH', text('stash', 'list', '-1') + ' (zmiany zrobione przez testy w plikach śledzonych)')
+    late = collisions(REPO, 'HEAD', before, since_merge_base=False)
+    for name in late[:10]:
+        out('ISTNIEJE', name)
+    if late:
+        raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push; zmiany testów w stashu) — po stashu '
+                   'pojawiły się pliki, które cofnięcie by nadpisało; zabezpiecz je i cofnij ręcznie '
+                   f'(`git reset --keep {before[:9]}`)')
     if not ok('reset', '--keep', before):
         raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — nie udało się cofnąć do '
                    f'{before[:9]}; sprawdź `git status` i cofnij ręcznie')
@@ -506,17 +547,17 @@ def cmd_merge(args) -> int:
         refuse_collisions(collisions(REPO, revert, f'{revert}^', since_merge_base=False), REPO)
         restore = git('revert', '--no-edit', revert, check=False)
         if restore.returncode:
-            git('revert', '--abort', check=False)
+            safe_abort(REPO, 'revert')
             raise Stop(4, 'KONFLIKT', f'przywrócenie wcześniejszego rewertu {revert[:9]} daje konflikt')
         out('COFNIĘTO REWERT', f'{revert[:9]} (inaczej poprzednie zmiany gałęzi by nie wróciły)')
     message = f'merge({args.task}): {args.opis or branch}'
     if git('merge', '--no-ff', '-m', message, branch, check=False).returncode:
-        files = text('diff', '--name-only', '--diff-filter=U').splitlines()
-        git('merge', '--abort', check=False)
-        if revert:
-            undo(before, args.task)
+        files = names('diff', '--name-only', '--diff-filter=U')
         for name in files:
             out('KONFLIKT', name)
+        safe_abort(REPO, 'merge')
+        if revert:
+            undo(before, args.task)
         out('DALEJ', f'kier.py sync {args.task}')
         raise Stop(4, 'KONFLIKT', f'{main} bez zmian')
     merge_sha = text('rev-parse', 'HEAD')
@@ -628,7 +669,7 @@ def cmd_sync(args) -> int:
         if args.keep_conflict:
             out('DALEJ', f'rozwiąż w {path}, `git add` + `git commit`, potem testy i `kier.py merge {args.task}`')
             raise Stop(4, 'KONFLIKT', 'konflikt zostawiony do rozwiązania')
-        git('merge', '--abort', cwd=path, check=False)
+        safe_abort(path, 'merge')
         out('DALEJ', 'trywialny → `sync --keep-conflict`; inaczej `fix-round` i zlecenie A z linią KONFLIKT')
         raise Stop(4, 'KONFLIKT', 'przerwano, gałąź bez zmian')
     sha = text('rev-parse', 'HEAD', cwd=path)
