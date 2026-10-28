@@ -3,7 +3,9 @@
 
 The lead calls one subcommand per step and reads only the short `KLUCZ: wartość` lines; every git call is
 logged to <repo>/.kierownik/log/kier.log. The script never forces, deletes unmerged work or rewrites pushed
-history: what it refuses, the lead decides by hand.
+history: what it refuses, the lead decides by hand. Every command that moves a working directory to another commit
+(merge, fast-forward, checkout, reset, revert) first runs the collision check, because Git silently overwrites
+ignored files.
 
 Test commands come only from the `- Testy:` / `- Lint:` lines of AGENTS.md as committed on main, never from the
 command line, so a blanket permission for this script doesn't allow arbitrary commands.
@@ -155,11 +157,13 @@ def names(*args: str, cwd: Path | None = None) -> list[str]:
     return [name for name in git(*args, '-z', cwd=cwd).stdout.split('\0') if name]
 
 
-def collisions(cwd: Path, base: str, incoming: str) -> list[str]:
+def collisions(cwd: Path, base: str, incoming: str, since_merge_base: bool = True) -> list[str]:
     """Files `incoming` adds over `base` that would replace something on disk — the file itself, or a parent that is a
-    file or link where a directory must go (Git silently overwrites ignored files)."""
+    file or link where a directory must go (Git silently overwrites ignored files). A merge compares from the merge
+    base (`base...incoming`); moving a checkout from `base` to `incoming` compares the two commits directly."""
     found = []
-    for name in names('diff', '--name-only', '--no-renames', '--diff-filter=A', f'{base}...{incoming}', cwd=cwd):
+    span = f'{base}...{incoming}' if since_merge_base else f'{base}..{incoming}'
+    for name in names('diff', '--name-only', '--no-renames', '--diff-filter=A', span, cwd=cwd):
         parts = name.split('/')
         parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
         if os.path.lexists(cwd / name) or any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents):
@@ -167,12 +171,18 @@ def collisions(cwd: Path, base: str, incoming: str) -> list[str]:
     return found
 
 
-def refuse_collisions(names: list[str], where: Path) -> None:
-    if names:
-        for name in names[:10]:
+def refuse_collisions(found: list[str], where: Path) -> None:
+    if found:
+        for name in found[:10]:
             out('ISTNIEJE', name)
-        raise Stop(3, 'ODMOWA', f'scalenie nadpisałoby pliki istniejące w {relative(where)} (zwykle ignorowane, '
+        raise Stop(3, 'ODMOWA', f'zmiana nadpisałaby pliki istniejące w {relative(where)} (zwykle ignorowane, '
                    'np. lokalna konfiguracja) — przenieś je albo zabezpiecz i powtórz')
+
+
+def move_to(cwd: Path, target: str, *command: str) -> None:
+    """Run a git command that moves the checkout in `cwd` to `target`, after the collision check."""
+    refuse_collisions(collisions(cwd, 'HEAD', target, since_merge_base=False), cwd)
+    git(*command, cwd=cwd)
 
 
 def agents_command(key: str, ref: str) -> str:
@@ -327,7 +337,7 @@ def cmd_env(args) -> int:
                 out('ROZBIEŻNOŚĆ', f'main +{ahead}/-{behind} wobec origin/{main} — sprawdź `git log --oneline '
                     f'{main}...origin/{main}`')
             elif behind and current == main and not dirty(REPO, untracked=False):
-                git('merge', '--ff-only', f'origin/{main}')
+                move_to(REPO, f'origin/{main}', 'merge', '--ff-only', f'origin/{main}')
                 out('FAST-FORWARD', f'{behind} commitów, main @ {text("rev-parse", "--short", "HEAD")}')
             elif behind:
                 out('W TYLE', f'{behind} commitów (bez fast-forward: nie na main albo zmiany lokalne)')
@@ -358,7 +368,7 @@ def prepare_detached(path: Path, ref: str) -> None:
     if path.exists():
         if dirty(path, untracked=False):
             raise Stop(3, 'ODMOWA', f'{relative(path)} ma zmiany w plikach śledzonych')
-        git('checkout', '--quiet', '--detach', sha, cwd=path)
+        move_to(path, sha, 'checkout', '--quiet', '--detach', sha)
     else:
         git('worktree', 'add', '--detach', str(path), sha)
     out('KATALOG', path)
@@ -444,8 +454,11 @@ def undo(before: str, task: str) -> None:
     if dirty(REPO, untracked=False):
         git('stash', 'push', '-m', f'kier: zmiany testów {task}')
         out('STASH', text('stash', 'list', '-1') + ' (zmiany zrobione przez testy w plikach śledzonych)')
-    if not ok('reset', '--keep', before):
-        merged = text('rev-parse', '--short', 'HEAD')
+    merged = text('rev-parse', '--short', 'HEAD')
+    blocked = collisions(REPO, 'HEAD', before, since_merge_base=False)
+    for name in blocked[:10]:
+        out('ISTNIEJE', name)
+    if blocked or not ok('reset', '--keep', before):
         raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — nie udało się cofnąć do '
                    f'{before[:9]}; sprawdź `git status` i cofnij ręcznie')
 

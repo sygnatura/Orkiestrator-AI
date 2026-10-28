@@ -212,6 +212,9 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      go nie usuwa, a recenzent, który go dopisze, traci werdykt. Kontrola kolizji sprawdza też rodziców
      ścieżki (ignorowany plik tam, gdzie gałąź dodaje katalog) i czyta nazwy z `-z`, więc polskie znaki
      nie omijają ochrony.
+   - **v13.3 — trzecia recenzja Codex**: kontrola kolizji obejmuje każde polecenie, które przesuwa katalog
+     roboczy na inny commit (`move_to`): fast-forward w `env`, odświeżenie katalogu recenzenta i cofnięcie
+     scalenia (`reset --keep`), a nie tylko scalanie. Reguła zapisana w nagłówku `kier.py`.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

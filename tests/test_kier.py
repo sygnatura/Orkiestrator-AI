@@ -255,6 +255,43 @@ class ReviewFindingsTest(Fixture):
         code, output = self.kier('ro-check', str(rec), '--sha', self.git('rev-parse', 'task/T-024-r'))
         self.assertEqual(code, 3, output)
 
+    def test_env_does_not_fast_forward_over_an_ignored_local_file(self):
+        other = self.repo.parent / 'other'
+        subprocess.run(['git', 'clone', '-q', str(self.remote), str(other)], check=True)
+        self.git('config', 'user.name', 'Fixture', cwd=other)
+        self.git('config', 'user.email', 'fixture@example.invalid', cwd=other)
+        (other / 'local.py').write_text('z remote\n')
+        self.git('add', '-f', 'local.py', cwd=other)
+        self.git('commit', '-qm', 'zdalnie śledzony local.py', cwd=other)
+        self.git('push', '-q', 'origin', 'main', cwd=other)
+        (self.repo / 'local.py').write_text('właściciela\n')
+        before = self.git('rev-parse', 'HEAD')
+        code, output = self.kier('env')
+        self.assertEqual(code, 3, output)
+        self.assertIn('local.py', output)
+        self.assertEqual((self.repo / 'local.py').read_text(), 'właściciela\n')
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        (self.repo / 'local.py').unlink()
+        code, output = self.kier('env')
+        self.assertEqual(code, 0, output)
+        self.assertIn('FAST-FORWARD', output)
+
+    def test_refreshing_the_review_directory_keeps_an_ignored_local_file(self):
+        path = self.task('T-031', 'r', 'a\n', 'A\n')
+        self.assertEqual(self.kier('worktree', '--rec', 'T-031')[0], 0)
+        rec = self.repo / '.kierownik/wt/T-031-rec'
+        (rec / 'local.py').write_text('właściciela\n')
+        (path / 'local.py').write_text('z zadania\n')
+        self.git('add', '-f', 'local.py', cwd=path)
+        self.git('commit', '-qm', 'feat(T-031): local.py', cwd=path)
+        code, output = self.kier('worktree', '--rec', 'T-031')
+        self.assertEqual(code, 3, output)
+        self.assertEqual((rec / 'local.py').read_text(), 'właściciela\n')
+        (rec / 'local.py').unlink()
+        code, output = self.kier('worktree', '--rec', 'T-031')
+        self.assertEqual(code, 0, output)
+        self.assertEqual((rec / 'local.py').read_text(), 'z zadania\n')
+
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')
         self.assertEqual(code, 0, output)
