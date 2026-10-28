@@ -323,6 +323,39 @@ class ReviewFindingsTest(Fixture):
         self.assertEqual((self.repo / 'private').read_text(), 'praca właściciela\n')
         self.assertEqual(self.git('stash', 'list'), stashes)
 
+    def test_undo_after_tests_checks_the_source_of_a_rename(self):
+        script = ('import shutil, subprocess, sys\n'
+                  'subprocess.run(["git", "mv", "private/tracked.py", "moved.py"], check=True)\n'
+                  'owner = open("private/owner.txt").read()\n'
+                  'shutil.rmtree("private")\n'
+                  'open("private", "w").write(owner)\n'
+                  'sys.exit(1)\n')
+        (self.repo / 't42.py').write_text(script)
+        (self.repo / 'AGENTS.md').write_text(AGENTS.replace(TEST, f'"{sys.executable}" t42.py'))
+        self.git('add', 't42.py', 'AGENTS.md')
+        self.git('commit', '-qm', 'test: t42')
+        self.add_file('T-042', 't', 'private/tracked.py', 'śledzony\n')
+        (self.repo / 'private').mkdir()
+        (self.repo / 'private/owner.txt').write_text('praca właściciela\n')
+        stashes = self.git('stash', 'list')
+        code, output = self.kier('merge', 'T-042', '--no-cleanup')
+        self.assertEqual(code, 2, output)
+        self.assertEqual((self.repo / 'private').read_text(), 'praca właściciela\n')
+        self.assertEqual(self.git('stash', 'list'), stashes)
+
+    def test_tests_changing_a_file_in_a_subdirectory_are_stashed_not_blocked(self):
+        (self.repo / 'src').mkdir()
+        (self.repo / 'src/m.py').write_text('x = 1\n')
+        (self.repo / 't43.py').write_text('import sys\nopen("src/m.py", "w").write("x = 2\\n")\nsys.exit(1)\n')
+        (self.repo / 'AGENTS.md').write_text(AGENTS.replace(TEST, f'"{sys.executable}" t43.py'))
+        self.git('add', '.')
+        self.git('commit', '-qm', 'test: t43')
+        self.task('T-043', 's', 'a\n', 'A\n')
+        code, output = self.kier('merge', 'T-043', '--no-cleanup')
+        self.assertEqual(code, 1, output)
+        self.assertIn('kier: zmiany testów T-043', self.git('stash', 'list'))
+        self.assertEqual((self.repo / 'src/m.py').read_text(), 'x = 1\n')
+
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')
         self.assertEqual(code, 0, output)

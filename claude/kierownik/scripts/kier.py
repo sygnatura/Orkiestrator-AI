@@ -166,18 +166,31 @@ def collisions(cwd: Path, base: str, incoming: str, since_merge_base: bool = Tru
             if blocks(cwd, name)]
 
 
+def parent_blocked(cwd: Path, name: str) -> bool:
+    """A parent directory of `name` is now a file or a link."""
+    parts = name.split('/')
+    parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
+    return any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents)
+
+
 def blocks(cwd: Path, name: str) -> bool:
     """Writing tracked file `name` would replace something on disk: the path itself, or a parent that is a file or
     link where a directory must go."""
-    parts = name.split('/')
-    parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
-    return os.path.lexists(cwd / name) or any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents)
+    return os.path.lexists(cwd / name) or parent_blocked(cwd, name)
 
 
 def restore_blocked(cwd: Path) -> list[str]:
-    """Deleted tracked files a stash would write back where something else now stands (e.g. an ignored file in
-    place of their directory)."""
-    return [path for code, path in status_entries(cwd, '--untracked-files=no') if 'D' in code and blocks(cwd, path)]
+    """Paths a stash would write back from HEAD where something else now stands (e.g. an ignored file in place of
+    their directory). `diff --no-renames HEAD` lists every such path — deletions, the sources of renames (`git mv`)
+    and staged removals — as D; changed files (M/T) are checked for a parent replaced by a file."""
+    fields = git('diff', '--name-status', '--no-renames', '-z', 'HEAD', cwd=cwd).stdout.split('\0')
+    blocked = []
+    for code, path in zip(fields[0::2], fields[1::2]):
+        if code == 'D' and blocks(cwd, path):
+            blocked.append(path)
+        elif code in ('M', 'T') and parent_blocked(cwd, path):
+            blocked.append(path)
+    return blocked
 
 
 def refuse_collisions(found: list[str], where: Path) -> None:

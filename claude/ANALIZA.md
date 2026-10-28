@@ -217,7 +217,8 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      scalenia (`reset --keep`), a nie tylko scalanie. Reguła zapisana w nagłówku `kier.py`.
    - **v13.4 — czwarta recenzja Codex**: przywracanie rewertu używa tej samej kontroli kolizji (z rodzicami
      ścieżki), a cofanie po testach najpierw sprawdza, czy stash i reset nie nadpiszą czegoś, co testy zostawiły
-     w katalogu — jeśli tak, nic nie rusza i kończy kodem 2 z opisem stanu.
+     w katalogu — jeśli tak, nic nie rusza i kończy kodem 2 z opisem stanu. (v13.5) Lista ścieżek do sprawdzenia
+     pochodzi z `git diff --no-renames HEAD`, więc obejmuje też źródła `git mv` i usunięcia z indeksu.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).
