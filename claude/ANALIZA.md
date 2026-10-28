@@ -215,6 +215,9 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - **v13.3 — trzecia recenzja Codex**: kontrola kolizji obejmuje każde polecenie, które przesuwa katalog
      roboczy na inny commit (`move_to`): fast-forward w `env`, odświeżenie katalogu recenzenta i cofnięcie
      scalenia (`reset --keep`), a nie tylko scalanie. Reguła zapisana w nagłówku `kier.py`.
+   - **v13.4 — czwarta recenzja Codex**: przywracanie rewertu używa tej samej kontroli kolizji (z rodzicami
+     ścieżki), a cofanie po testach najpierw sprawdza, czy stash i reset nie nadpiszą czegoś, co testy zostawiły
+     w katalogu — jeśli tak, nic nie rusza i kończy kodem 2 z opisem stanu.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
    repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
    Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).

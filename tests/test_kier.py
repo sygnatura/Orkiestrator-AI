@@ -292,6 +292,37 @@ class ReviewFindingsTest(Fixture):
         self.assertEqual(code, 0, output)
         self.assertEqual((rec / 'local.py').read_text(), 'z zadania\n')
 
+    def test_restoring_a_revert_keeps_an_ignored_file_standing_in_a_parent_path(self):
+        path = self.add_file('T-040', 'r', 'private/new_source.py', 'z gałęzi\n')
+        self.assertEqual(self.kier('merge', 'T-040', '--no-cleanup')[0], 0)
+        self.git('revert', '--no-edit', '-m', '1', 'HEAD')
+        (self.repo / 'private').write_text('plik właściciela\n')
+        (path / 'f.txt').write_text('poprawka\n')
+        self.git('commit', '-qam', 'fix(T-040)', cwd=path)
+        code, output = self.kier('merge', 'T-040', '--no-cleanup')
+        self.assertEqual(code, 3, output)
+        self.assertNotIn('COFNIĘTO REWERT', output)
+        self.assertEqual((self.repo / 'private').read_text(), 'plik właściciela\n')
+
+    def test_undo_after_tests_never_overwrites_what_the_tests_left(self):
+        script = ('import os, shutil, sys\n'
+                  'owner = open("private/owner.txt").read()\n'
+                  'shutil.rmtree("private")\n'
+                  'open("private", "w").write(owner)\n'
+                  'sys.exit(1)\n')
+        (self.repo / 't41.py').write_text(script)
+        (self.repo / 'AGENTS.md').write_text(AGENTS.replace(TEST, f'"{sys.executable}" t41.py'))
+        self.git('add', 't41.py', 'AGENTS.md')
+        self.git('commit', '-qm', 'test: t41')
+        self.add_file('T-041', 't', 'private/tracked.py', 'śledzony\n')
+        (self.repo / 'private').mkdir()
+        (self.repo / 'private/owner.txt').write_text('praca właściciela\n')
+        stashes = self.git('stash', 'list')
+        code, output = self.kier('merge', 'T-041', '--no-cleanup')
+        self.assertEqual(code, 2, output)
+        self.assertEqual((self.repo / 'private').read_text(), 'praca właściciela\n')
+        self.assertEqual(self.git('stash', 'list'), stashes)
+
     def test_lint_line_of_the_agents_template_is_found(self):
         code, output = self.kier('test', '--name', 'lint', '--klucz', 'Lint')
         self.assertEqual(code, 0, output)

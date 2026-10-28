@@ -132,7 +132,8 @@ verdict; the task returns to W TOKU. Don't impose statuses or artefacts of the o
    worktrees and merged branches. Exit 3 → nothing changed (e.g. it would overwrite ignored local files). Exit 6 →
    pushed, but a worktree holds work that isn't recreatable output: compare with the report, never delete
    unsecured work. Don't delete other people's `worktree-*`.
-6. **Red after merge (exit 1):** main is back where it was (test changes to tracked files in a named stash), nothing pushed, the branch and its directory stay; the
+6. **Red after merge (exit 1):** main is back where it was (test changes to tracked files in a named stash), nothing pushed
+   (exit 2 instead: undoing would overwrite files the tests left — nothing touched, undo by hand), the branch and its directory stay; the
    task returns to W TOKU with the log's observations. Conflict (exit 4): `KIER sync T-NNN`; clean → merge again;
    trivial → `sync --keep-conflict`, resolve, commit, `KIER test`, merge; otherwise an order A with the KONFLIKT line
    (ZLECENIA). New review only when the resolution (`git show --remerge-diff`) touches logic or the criteria's area;

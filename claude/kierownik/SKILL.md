@@ -129,7 +129,8 @@ For the next task of the current stage (by dependencies):
    Exit 3 → nothing changed (e.g. the merge would overwrite an ignored local file — it lists them). Exit 4 →
    CONFLICT below. Exit 6 → merged and pushed, but a worktree holds work that is not recreatable output: compare
    it with the report, secure or delete it by hand, then `KIER cleanup T-NNN`. Exit 5 → fix the push (never force),
-   then `KIER cleanup T-NNN`.
+   then `KIER cleanup T-NNN`. Exit 2 after the tests → main still holds the unpushed merge and nothing was touched
+   (undoing would overwrite files the tests left): secure them, then `git stash` and `git reset --keep <before>`.
 6. **Record**: GOTOWE + an entry in „Zrobione” (sha, executor class/model, number of fix rounds, who verified,
    command → result, scenario, tokens of the executor and reviewer sessions as reported in their completion
    result/notification — „—” when not reported), update the TODO.md header, commit `docs(kierownik): …`. This is

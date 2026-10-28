@@ -3,9 +3,9 @@
 
 The lead calls one subcommand per step and reads only the short `KLUCZ: wartość` lines; every git call is
 logged to <repo>/.kierownik/log/kier.log. The script never forces, deletes unmerged work or rewrites pushed
-history: what it refuses, the lead decides by hand. Every command that moves a working directory to another commit
-(merge, fast-forward, checkout, reset, revert) first runs the collision check, because Git silently overwrites
-ignored files.
+history: what it refuses, the lead decides by hand. Every git command that writes files in a working directory
+(merge, fast-forward, checkout, reset, revert, stash) runs only after the collision check has passed, because Git
+silently overwrites ignored files.
 
 Test commands come only from the `- Testy:` / `- Lint:` lines of AGENTS.md as committed on main, never from the
 command line, so a blanket permission for this script doesn't allow arbitrary commands.
@@ -161,14 +161,23 @@ def collisions(cwd: Path, base: str, incoming: str, since_merge_base: bool = Tru
     """Files `incoming` adds over `base` that would replace something on disk — the file itself, or a parent that is a
     file or link where a directory must go (Git silently overwrites ignored files). A merge compares from the merge
     base (`base...incoming`); moving a checkout from `base` to `incoming` compares the two commits directly."""
-    found = []
     span = f'{base}...{incoming}' if since_merge_base else f'{base}..{incoming}'
-    for name in names('diff', '--name-only', '--no-renames', '--diff-filter=A', span, cwd=cwd):
-        parts = name.split('/')
-        parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
-        if os.path.lexists(cwd / name) or any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents):
-            found.append(name)
-    return found
+    return [name for name in names('diff', '--name-only', '--no-renames', '--diff-filter=A', span, cwd=cwd)
+            if blocks(cwd, name)]
+
+
+def blocks(cwd: Path, name: str) -> bool:
+    """Writing tracked file `name` would replace something on disk: the path itself, or a parent that is a file or
+    link where a directory must go."""
+    parts = name.split('/')
+    parents = [cwd.joinpath(*parts[:i]) for i in range(1, len(parts))]
+    return os.path.lexists(cwd / name) or any(p.is_symlink() or (p.exists() and not p.is_dir()) for p in parents)
+
+
+def restore_blocked(cwd: Path) -> list[str]:
+    """Deleted tracked files a stash would write back where something else now stands (e.g. an ignored file in
+    place of their directory)."""
+    return [path for code, path in status_entries(cwd, '--untracked-files=no') if 'D' in code and blocks(cwd, path)]
 
 
 def refuse_collisions(found: list[str], where: Path) -> None:
@@ -450,15 +459,20 @@ def legacy_revert(main: str, task: str, branch: str) -> str | None:
 
 
 def undo(before: str, task: str) -> None:
-    """Undo this run's own, unpushed commits on main; changes the tests made to tracked files go to a stash."""
+    """Undo this run's own, unpushed commits on main; changes the tests made to tracked files go to a stash.
+    Everything is checked first; if any write could replace something on disk, nothing is touched."""
+    merged = text('rev-parse', '--short', 'HEAD')
+    blocked = restore_blocked(REPO) + collisions(REPO, 'HEAD', before, since_merge_base=False)
+    for name in blocked[:10]:
+        out('ISTNIEJE', name)
+    if blocked:
+        raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — testy zmieniły katalog tak, że '
+                   'cofnięcie nadpisałoby pliki; nic nie ruszono: sprawdź `git status`, zabezpiecz pliki i cofnij '
+                   f'ręcznie (`git stash`, `git reset --keep {before[:9]}`)')
     if dirty(REPO, untracked=False):
         git('stash', 'push', '-m', f'kier: zmiany testów {task}')
         out('STASH', text('stash', 'list', '-1') + ' (zmiany zrobione przez testy w plikach śledzonych)')
-    merged = text('rev-parse', '--short', 'HEAD')
-    blocked = collisions(REPO, 'HEAD', before, since_merge_base=False)
-    for name in blocked[:10]:
-        out('ISTNIEJE', name)
-    if blocked or not ok('reset', '--keep', before):
+    if not ok('reset', '--keep', before):
         raise Stop(2, 'BŁĄD', f'main zostaje na {merged} (ze scaleniem, bez push) — nie udało się cofnąć do '
                    f'{before[:9]}; sprawdź `git status` i cofnij ręcznie')
 
@@ -476,8 +490,7 @@ def cmd_merge(args) -> int:
     refuse_collisions(collisions(REPO, before, branch), REPO)
     revert = legacy_revert(main, args.task, branch)
     if revert:
-        refuse_collisions([n for n in names('diff', '--name-only', '--no-renames', '--diff-filter=D',
-                                            f'{revert}^', revert) if os.path.lexists(REPO / n)], REPO)
+        refuse_collisions(collisions(REPO, revert, f'{revert}^', since_merge_base=False), REPO)
         restore = git('revert', '--no-edit', revert, check=False)
         if restore.returncode:
             git('revert', '--abort', check=False)
