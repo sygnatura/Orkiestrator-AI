@@ -248,9 +248,11 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      subagent”): w sesji interaktywnej fork mode jest domyślnie włączony i każdy subagent startuje w tle, a jego
      wynik przychodzi w późniejszej turze. Wzór `settings.json` (SZABLONY §8) wyłącza go przez
      `CLAUDE_CODE_FORK_SUBAGENT=0`. `status` i `stop` mają pierwszeństwo przed zbieraniem wyników.
-   Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`) oraz evale na
-   repozytorium-fixture — porównanie pojedynczej sesji, kierownika na Claude i wielu dostawców, a także
-   Sonnet kontra Opus jako wykonawca (odsetek ZALICZONE za pierwszym podejściem).
+   - **Evale** (`evals/`, opis w `evals/README.md`): projekt testowy z 7 zadaniami (w tym bezpieczeństwo
+     i para kolidująca), ukryte testy akceptacyjne, rozwiązanie wzorcowe sprawdzane w CI oraz skrypty
+     przygotowania, oceny i zestawienia. Konfiguracje A (sesja bez kierownika), B (kierownik, Claude),
+     C (kierownik + Codex), D (wykonawca Sonnet). Przebiegi wykonuje właściciel; wyniki w `evals/WYNIKI.md`.
+   Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`); tryb PR z CI.
 
 ## 4. Czy to ma sens — uczciwa ocena
 

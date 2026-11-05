@@ -93,6 +93,7 @@ codex/              zestaw Codex v13
   tests/            testy instalatora i adaptera CLI
 archiwum/           poprzednie wersje
 .github/workflows/  CI: oba zestawy testów na Linuksie, Windows i macOS (Python 3.11 i 3.13)
+evals/              evale: projekt testowy, ukryte testy, ocena przebiegów (evals/README.md)
 ```
 
 Testy lokalnie: `python3 -m unittest discover -s tests` oraz `python3 -m unittest discover -s codex/tests`.
