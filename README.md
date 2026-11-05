@@ -92,7 +92,11 @@ codex/              zestaw Codex v13
   docs/             analiza portu, wyniki walidacji i źródła
   tests/            testy instalatora i adaptera CLI
 archiwum/           poprzednie wersje
+.github/workflows/  CI: oba zestawy testów na Linuksie, Windows i macOS (Python 3.11 i 3.13)
 ```
+
+Testy lokalnie: `python3 -m unittest discover -s tests` oraz `python3 -m unittest discover -s codex/tests`.
+To samo uruchamia CI przy każdym PR i pushu do main.
 
 Do zwykłego użycia wystarczy instrukcja wybranego narzędzia. Informacje
 o architekturze i granicach sprawdzenia portu są w

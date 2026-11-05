@@ -1,0 +1,35 @@
+# Both test suites (installer, kier.py, consistency; Codex package) on every OS the owner and agents use.
+name: testy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  testy:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      # Full history: installer tests read earlier releases with `git show <sha>:<path>`.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Wersje
+        run: |
+          git --version
+          python --version
+      - name: Testy (instalator, kier.py, spójność)
+        run: python -m unittest discover -s tests -v
+      - name: Testy pakietu Codex
+        run: python -m unittest discover -s codex/tests -v
