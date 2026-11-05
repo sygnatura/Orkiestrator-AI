@@ -4,12 +4,17 @@ from _wspolne import TestCli
 
 
 class T108(TestCli):
+    def potwierdzenie(self, linie, oczekiwana):
+        """Kryterium: potwierdzenie linią formatuj() — dopuszczalny przedrostek, np. „Wypożyczono: ”."""
+        self.assertEqual(len(linie), 1, linie)
+        self.assertTrue(linie[0].endswith(oczekiwana), linie)
+
     def test_wypozycz_i_zwroc(self):
-        self.assertEqual(self.linie('wypozycz', '3', '--osoba', '  Jan Kowalski ', '--data', '2026-10-01'),
-                         ['[3] Ludzie bezdomni — Stefan Żeromski (1900) [wypożyczona]'])
+        self.potwierdzenie(self.linie('wypozycz', '3', '--osoba', '  Jan Kowalski ', '--data', '2026-10-01'),
+                           '[3] Ludzie bezdomni — Stefan Żeromski (1900) [wypożyczona]')
         k = self.ksiazki()[2]
         self.assertEqual((k['wypozyczona_przez'], k['data_wypozyczenia']), ('Jan Kowalski', '2026-10-01'))
-        self.assertEqual(self.linie('zwroc', '3'), ['[3] Ludzie bezdomni — Stefan Żeromski (1900)'])
+        self.potwierdzenie(self.linie('zwroc', '3'), '[3] Ludzie bezdomni — Stefan Żeromski (1900)')
         k = self.ksiazki()[2]
         self.assertEqual((k['wypozyczona_przez'], k['data_wypozyczenia']), (None, None))
 
