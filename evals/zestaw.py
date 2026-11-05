@@ -17,16 +17,21 @@ def srednia(wartosci: list) -> str:
     return f'{sum(liczby) / len(liczby):.1f}' if liczby else '—'
 
 
+def tak_nie(wartosc) -> str:
+    return '—' if wartosc is None else ('tak' if wartosc else 'nie')
+
+
 def tabela(wyniki: list[dict]) -> str:
     wiersze = ['# Wyniki evali orkiestratora', '',
-               '| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Widoczne | Osłabione | Rewerty | Commity | Minuty | '
-               'Tokeny | Koszt USD | Rundy | Wersja |',
-               '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+               '| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Widoczne | Osłabione | Zmienione | Założenie | '
+               'Rewerty | Commity | Minuty | Tokeny | Koszt USD | Rundy | Wersja |',
+               '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     for w in sorted(wyniki, key=lambda w: (w.get('zestaw', 1), w['konfiguracja'], w['przebieg'], w['data'])):
         wiersze.append(
             f"| {w.get('zestaw', 1)} | {w['konfiguracja']} | {w['przebieg']} | {w['data']} | {w['zadania_zaliczone']}/{w['zadania_wszystkie']} | "
-            f"{'tak' if w['kolizja_zaliczona'] else 'nie'} | {'tak' if w['widoczne']['zaliczone'] else 'nie'} | "
-            f"{len(w['oslabione_testy'])} | {w['historia']['rewerty']} | {w['historia']['commity_main']} | "
+            f"{tak_nie(w['kolizja_zaliczona'])} | {tak_nie(w['widoczne']['zaliczone'])} | "
+            f"{len(w['oslabione_testy'])} | {len(w['zmienione_testy']) if 'zmienione_testy' in w else '—'} | {tak_nie(w.get('zalozenie_zgloszone'))} | "
+            f"{w['historia']['rewerty']} | {w['historia']['commity_main']} | "
             f"{w['minuty'] if w['minuty'] is not None else '—'} | {w['tokeny'] if w['tokeny'] is not None else '—'} | "
             f"{w.get('koszt_usd') if w.get('koszt_usd') is not None else '—'} | "
             f"{w['rundy'] if w['rundy'] is not None else '—'} | {w['wersje']['orkiestrator']} |")

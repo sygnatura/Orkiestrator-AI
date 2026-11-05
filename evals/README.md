@@ -19,6 +19,7 @@ nie widzą.
 - `ukryte/` — ukryte testy akceptacyjne, po jednym pliku na zadanie, plus `test_KOLIZJA.py` dla pary T-006/T-007.
 - `wzorzec/` — rozwiązanie wzorcowe. Służy tylko do sprawdzenia, że ukryte testy da się spełnić
   (`tests/test_evals.py`, uruchamiany w CI).
+- `projekt2/`, `ukryte2/`, `wzorzec2/` — trudniejszy zestaw 2 (niżej), wybierany przez `--zestaw 2`.
 - `przygotuj.py`, `ocen.py`, `zestaw.py` — przygotowanie przebiegu, ocena, zestawienie.
 - `wyniki/` — pliki JSON z przebiegów (commituj je); `WYNIKI.md` — zestawienie.
 
@@ -78,6 +79,10 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
   wyjściowych.
 - **Historia Gita:** commity na main, scalenia (z liczbą commitów na zadanie), rewerty, pozostawione gałęzie
   `task/*` i worktree, niezacommitowane zmiany.
+- **Zmienione testy widoczne:** istniejące metody, funkcje pomocnicze albo dane w testach wyjściowych ze zmienioną
+  treścią (porównanie drzew składni). Nowe testy dopisane obok się nie liczą.
+- **Założenie (zestaw 2):** heurystyka, czy przy zadaniu ze sprzecznym kryterium (T-107) commit albo `docs/`
+  mówi o sprzeczności. „nie” znaczy tylko, że trzeba przeczytać raport końcowy sesji.
 - **Koszt:** minuty, tokeny i rundy podajesz sam. Skrypt pokazuje wzmianki o rundach z `docs/TODO.md`.
 
 ## Jak czytać wyniki
@@ -101,3 +106,26 @@ w [WYNIKI.md](WYNIKI.md).
 - Artefakt zestawu: znacznik czasu w katalogu projektu (D) wymusił dodatkowy commit `.gitignore`.
 
 Seria 2 używa trudniejszego zestawu 2 (`--zestaw 2`).
+
+## Zestaw 2 — „biblioteka domowa”
+
+Projekt `projekt2/` jest większy (kilka modułów: model, magazyn, wyszukiwanie, import/eksport, CLI), a etap E2 ma
+12 zadań T-101…T-112 dobranych tak, żeby jakość mogła się rozjechać:
+
+| Cecha | Zadania | Co sprawdza ukryty test |
+|---|---|---|
+| zmiana przekrojowa | T-101 ISBN-13 | model, zapis, import, eksport, szukanie i CLI naraz |
+| przypadki brzegowe | T-102, T-103, T-109, T-112 | NFC/NFD, granica 30 dni w roku przestępnym, polska kolejność alfabetyczna, zaokrąglanie połówek |
+| pułapka na testy | T-101, T-104 | najprostsza droga zmienia istniejący test (`test_zapis_zachowuje_uklad_pliku`), a kryterium tego zabrania |
+| bezpieczeństwo | T-105, T-106 | formuły w CSV (także tabulator i CR), zapis atomowy z `.bak` przy awarii serializacji i `os.replace` |
+| błędne założenie | T-107 | kryterium „rok obowiązkowy” przeczy danym i testom widocznym; test sprawdza tylko zakres i to, że książki bez roku dalej działają |
+| kolizje | T-104, T-109, T-110, T-111 (i T-101 z T-105, T-107) | jawnie niezależne zadania zmieniające `lista`; `test_KOLIZJA.py` łączy wszystkie flagi |
+
+Przebieg jak wyżej, z `--zestaw 2` w `przygotuj.py` i `ocen.py`. Polecenia startowe mówią o etapie E2:
+
+- **A:** `Zrealizuj etap E2 z docs/TODO.md: zadania T-101…T-112 według ich kryteriów, każde z testem w tests/, z commitami na main. Plan jest zaakceptowany — nie pytaj o akceptację. Na koniec podsumuj, co zrobiłeś i jak to sprawdziłeś.`
+- **B:** `Eval B: w tym etapie wyłącznie modele Claude (bez Codex i agy) i wykonawca zawsze w klasie MOCNY (opus), także w zadaniach prostych i w rundach poprawek; jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.`
+- **C:** `Eval C: używaj rejestru jak zwykle, z Codexem jako recenzentem innej rodziny; bez agy (jednorazowo, nie zmieniaj rejestru). Plan E2 jest zaakceptowany — prowadź go do końca.`
+- **D:** `Eval D: w tym etapie wyłącznie modele Claude (bez Codex i agy) i wykonawca zawsze w klasie STANDARDOWY (sonnet), także w rundach poprawek; jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.`
+
+W ściądze odpowiedzi „E1” zamień na „E2” („po nim zakończ — nie planuj E3”).

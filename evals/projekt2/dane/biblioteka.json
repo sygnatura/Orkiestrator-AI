@@ -1,0 +1,162 @@
+[
+ {
+  "id": 1,
+  "tytul": "Lalka",
+  "autor": "Bolesław Prus",
+  "rok": 1890,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 2,
+  "tytul": "Przedwiośnie",
+  "autor": "Stefan Żeromski",
+  "rok": 1924,
+  "wypozyczona_przez": "Anna Nowak",
+  "data_wypozyczenia": "2026-09-01"
+ },
+ {
+  "id": 3,
+  "tytul": "Ludzie bezdomni",
+  "autor": "Stefan Żeromski",
+  "rok": 1900,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 4,
+  "tytul": "Nad Niemnem",
+  "autor": "Eliza Orzeszkowa",
+  "rok": 1888,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 5,
+  "tytul": "Quo vadis",
+  "autor": "Henryk Sienkiewicz",
+  "rok": 1896,
+  "wypozyczona_przez": "Piotr Wiśniewski",
+  "data_wypozyczenia": "2026-10-20"
+ },
+ {
+  "id": 6,
+  "tytul": "Ogniem i mieczem",
+  "autor": "Henryk Sienkiewicz",
+  "rok": 1884,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 7,
+  "tytul": "Chłopi",
+  "autor": "Władysław Reymont",
+  "rok": 1904,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 8,
+  "tytul": "Pan Tadeusz, czyli Ostatni zajazd na Litwie",
+  "autor": "Adam Mickiewicz",
+  "rok": 1834,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 9,
+  "tytul": "Solaris",
+  "autor": "Stanisław Lem",
+  "rok": 1961,
+  "wypozyczona_przez": "Anna Nowak",
+  "data_wypozyczenia": "2026-08-15"
+ },
+ {
+  "id": 10,
+  "tytul": "Cyberiada",
+  "autor": "Stanisław Lem",
+  "rok": 1965,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 11,
+  "tytul": "Ferdydurke",
+  "autor": "Witold Gombrowicz",
+  "rok": 1937,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 12,
+  "tytul": "Sklepy cynamonowe",
+  "autor": "Bruno Schulz",
+  "rok": 1934,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 13,
+  "tytul": "Szewcy",
+  "autor": "Stanisław Ignacy Witkiewicz",
+  "rok": 1934,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 14,
+  "tytul": "Wesele",
+  "autor": "Stanisław Wyspiański",
+  "rok": 1901,
+  "wypozyczona_przez": "Jan Kowalski",
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 15,
+  "tytul": "Zbrodnia i kara (przekład)",
+  "autor": "Fiodor Dostojewski",
+  "rok": null,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 16,
+  "tytul": "Granica",
+  "autor": "Zofia Nałkowska",
+  "rok": 1935,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 17,
+  "tytul": "Medaliony",
+  "autor": "Zofia Nałkowska",
+  "rok": 1946,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 18,
+  "tytul": "Dziady",
+  "autor": "Adam Mickiewicz",
+  "rok": 1823,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ },
+ {
+  "id": 19,
+  "tytul": "Krzyżacy",
+  "autor": "Henryk Sienkiewicz",
+  "rok": 1900,
+  "wypozyczona_przez": "Ewa Zielińska",
+  "data_wypozyczenia": "2026-10-30"
+ },
+ {
+  "id": 20,
+  "tytul": "Mistrz i Małgorzata (przekład)",
+  "autor": "Michaił Bułhakow",
+  "rok": null,
+  "wypozyczona_przez": null,
+  "data_wypozyczenia": null
+ }
+]
