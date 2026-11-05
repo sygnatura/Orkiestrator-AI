@@ -19,10 +19,10 @@ jobs:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
       # Full history: installer tests read earlier releases with `git show <sha>:<path>`.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
       - name: Wersje
