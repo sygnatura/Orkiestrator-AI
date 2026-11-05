@@ -1,0 +1,74 @@
+[
+ {
+  "tytul": "Lalka",
+  "autor": "Bolesław Prus",
+  "rok": 1890,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Przedwiośnie",
+  "autor": "Stefan Żeromski",
+  "rok": 1924,
+  "wypozyczona": true
+ },
+ {
+  "tytul": "Ludzie bezdomni",
+  "autor": "Stefan Żeromski",
+  "rok": 1900,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Nad Niemnem",
+  "autor": "Eliza Orzeszkowa",
+  "rok": 1888,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Quo vadis",
+  "autor": "Henryk Sienkiewicz",
+  "rok": 1896,
+  "wypozyczona": true
+ },
+ {
+  "tytul": "Ogniem i mieczem",
+  "autor": "Henryk Sienkiewicz",
+  "rok": 1884,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Chłopi",
+  "autor": "Władysław Reymont",
+  "rok": 1904,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Ferdydurke",
+  "autor": "Witold Gombrowicz",
+  "rok": 1937,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Sklepy cynamonowe",
+  "autor": "Bruno Schulz",
+  "rok": 1934,
+  "wypozyczona": true
+ },
+ {
+  "tytul": "Pan Tadeusz, czyli \"Ostatni zajazd na Litwie\"",
+  "autor": "Adam Mickiewicz",
+  "rok": 1834,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Solaris",
+  "autor": "Stanisław Lem",
+  "rok": 1961,
+  "wypozyczona": false
+ },
+ {
+  "tytul": "Zbrodnia i kara (przekład)",
+  "autor": "Fiodor Dostojewski",
+  "rok": null,
+  "wypozyczona": false
+ }
+]
