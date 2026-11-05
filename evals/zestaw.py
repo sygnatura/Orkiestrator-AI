@@ -19,28 +19,31 @@ def srednia(wartosci: list) -> str:
 
 def tabela(wyniki: list[dict]) -> str:
     wiersze = ['# Wyniki evali orkiestratora', '',
-               '| Konf. | Przebieg | Data | Zadania | Kolizja | Widoczne | Osłabione | Rewerty | Commity | Minuty | '
-               'Tokeny | Rundy | Wersja |',
-               '|---|---|---|---|---|---|---|---|---|---|---|---|---|']
-    for w in sorted(wyniki, key=lambda w: (w['konfiguracja'], w['przebieg'], w['data'])):
+               '| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Widoczne | Osłabione | Rewerty | Commity | Minuty | '
+               'Tokeny | Koszt USD | Rundy | Wersja |',
+               '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+    for w in sorted(wyniki, key=lambda w: (w.get('zestaw', 1), w['konfiguracja'], w['przebieg'], w['data'])):
         wiersze.append(
-            f"| {w['konfiguracja']} | {w['przebieg']} | {w['data']} | {w['zadania_zaliczone']}/{w['zadania_wszystkie']} | "
+            f"| {w.get('zestaw', 1)} | {w['konfiguracja']} | {w['przebieg']} | {w['data']} | {w['zadania_zaliczone']}/{w['zadania_wszystkie']} | "
             f"{'tak' if w['kolizja_zaliczona'] else 'nie'} | {'tak' if w['widoczne']['zaliczone'] else 'nie'} | "
             f"{len(w['oslabione_testy'])} | {w['historia']['rewerty']} | {w['historia']['commity_main']} | "
             f"{w['minuty'] if w['minuty'] is not None else '—'} | {w['tokeny'] if w['tokeny'] is not None else '—'} | "
+            f"{w.get('koszt_usd') if w.get('koszt_usd') is not None else '—'} | "
             f"{w['rundy'] if w['rundy'] is not None else '—'} | {w['wersje']['orkiestrator']} |")
     wiersze += ['', '## Średnie na konfigurację', '',
-                '| Konfiguracja | Przebiegów | Zadania | Kolizja (%) | Minuty | Tokeny | Rundy |', '|---|---|---|---|---|---|---|']
-    for konf in sorted({w['konfiguracja'] for w in wyniki}):
-        grupa = [w for w in wyniki if w['konfiguracja'] == konf]
+                '| Zestaw | Konfiguracja | Przebiegów | Zadania | Kolizja (%) | Minuty | Tokeny | Koszt USD | Rundy |',
+                '|---|---|---|---|---|---|---|---|---|']
+    for numer, konf in sorted({(w.get('zestaw', 1), w['konfiguracja']) for w in wyniki}):
+        grupa = [w for w in wyniki if w['konfiguracja'] == konf and w.get('zestaw', 1) == numer]
         kolizja = 100 * sum(w['kolizja_zaliczona'] for w in grupa) / len(grupa)
-        wiersze.append(f"| {konf} — {OPISY.get(konf, '')} | {len(grupa)} | {srednia([w['zadania_zaliczone'] for w in grupa])} | "
+        wiersze.append(f"| {numer} | {konf} — {OPISY.get(konf, '')} | {len(grupa)} | {srednia([w['zadania_zaliczone'] for w in grupa])} | "
                        f"{kolizja:.0f} | {srednia([w['minuty'] for w in grupa])} | {srednia([w['tokeny'] for w in grupa])} | "
+                       f"{srednia([w.get('koszt_usd') for w in grupa])} | "
                        f"{srednia([w['rundy'] for w in grupa])} |")
     uwagi = [w for w in wyniki if w.get('uwagi')]
     if uwagi:
         wiersze += ['', '## Uwagi z przebiegów', '']
-        wiersze += [f"- {w['konfiguracja']}-{w['przebieg']}: {w['uwagi']}" for w in uwagi]
+        wiersze += [f"- z{w.get('zestaw', 1)} {w['konfiguracja']}-{w['przebieg']}: {w['uwagi']}" for w in uwagi]
     return '\n'.join(wiersze) + '\n'
 
 

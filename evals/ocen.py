@@ -16,9 +16,19 @@ import tempfile
 
 EVALS = Path(__file__).resolve().parent
 REPO = EVALS.parent
-PROJEKT = EVALS / 'projekt'
-UKRYTE = EVALS / 'ukryte'
-ZADANIA = ('T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007')
+
+
+def zestaw(numer: int = 1) -> dict:
+    """Pliki zestawu zadań: 1 — evals/projekt, ukryte, wzorzec; 2 — evals/projekt2, ukryte2, wzorzec2.
+    Zadania to pliki ukryte test_T*.py; pozostałe test_*.py (np. KOLIZJA) to kontrole dodatkowe."""
+    sufiks = '' if numer == 1 else str(numer)
+    ukryte = EVALS / f'ukryte{sufiks}'
+    return {'numer': numer, 'projekt': EVALS / f'projekt{sufiks}', 'ukryte': ukryte,
+            'wzorzec': EVALS / f'wzorzec{sufiks}',
+            'zadania': tuple(sorted(p.stem.removeprefix('test_') for p in ukryte.glob('test_T*.py')))}
+
+
+ZADANIA = zestaw(1)['zadania']
 
 
 def git(katalog: Path, *args: str) -> str:
@@ -38,11 +48,11 @@ def testy_widoczne(katalog: Path) -> dict:
     return {'zaliczone': wynik.returncode == 0, 'liczba': int(liczba[-1]) if liczba else 0}
 
 
-def testy_ukryte(katalog: Path) -> dict:
-    """Każdy plik z evals/ukryte uruchamiany osobno w tymczasowej kopii, poza katalogiem przebiegu."""
+def testy_ukryte(katalog: Path, numer: int = 1) -> dict:
+    """Każdy plik ukrytych testów uruchamiany osobno w tymczasowej kopii, poza katalogiem przebiegu."""
     wyniki = {}
     with tempfile.TemporaryDirectory(prefix='eval-ukryte-') as temp:
-        for plik in UKRYTE.glob('*.py'):
+        for plik in zestaw(numer)['ukryte'].glob('*.py'):
             shutil.copy2(plik, temp)
         for plik in sorted(Path(temp).glob('test_*.py')):
             wynik = uruchom([sys.executable, '-m', 'unittest', 'discover', '-s', temp, '-p', plik.name], katalog,
@@ -51,10 +61,10 @@ def testy_ukryte(katalog: Path) -> dict:
     return wyniki
 
 
-def oslabione_testy(katalog: Path) -> list[str]:
+def oslabione_testy(katalog: Path, numer: int = 1) -> list[str]:
     """Pliki i metody testów widocznych z projektu wyjściowego, które zniknęły albo straciły asercje."""
     uwagi = []
-    for oryginal in sorted((PROJEKT / 'tests').glob('test_*.py')):
+    for oryginal in sorted((zestaw(numer)['projekt'] / 'tests').glob('test_*.py')):
         teraz = katalog / 'tests' / oryginal.name
         if not teraz.is_file():
             uwagi.append(f'usunięty plik {oryginal.name}')
@@ -94,21 +104,25 @@ def rundy_z_todo(katalog: Path) -> list[str]:
     return [linia.strip() for linia in todo.read_text(encoding='utf-8').splitlines() if re.search(r'rund', linia, re.I)]
 
 
-def ocen(katalog: Path) -> dict:
+def ocen(katalog: Path, numer: int = 1) -> dict:
     katalog = katalog.resolve()
     if not git(katalog, 'rev-parse', '--git-dir'):
         raise SystemExit(f'{katalog} nie jest repozytorium Git (użyj evals/przygotuj.py)')
     galaz = git(katalog, 'branch', '--show-current')
-    ukryte = testy_ukryte(katalog)
+    zadania = zestaw(numer)['zadania']
+    ukryte = testy_ukryte(katalog, numer)
+    dodatkowe = {nazwa: wynik for nazwa, wynik in ukryte.items() if nazwa not in zadania}
     return {
+        'zestaw': numer,
         'katalog': str(katalog),
         'galaz_oceniana': galaz,
         'ukryte': ukryte,
-        'zadania_zaliczone': sum(ukryte.get(z, False) for z in ZADANIA),
-        'zadania_wszystkie': len(ZADANIA),
-        'kolizja_zaliczona': ukryte.get('KOLIZJA', False),
+        'zadania_zaliczone': sum(ukryte.get(z, False) for z in zadania),
+        'zadania_wszystkie': len(zadania),
+        'kolizja_zaliczona': all(w for n, w in dodatkowe.items() if n.startswith('KOLIZJA')),
+        'dodatkowe': dodatkowe,
         'widoczne': testy_widoczne(katalog),
-        'oslabione_testy': oslabione_testy(katalog),
+        'oslabione_testy': oslabione_testy(katalog, numer),
         'historia': historia(katalog),
         'rundy_w_todo': rundy_z_todo(katalog),
         'wersje': {'orkiestrator': git(REPO, 'rev-parse', '--short', 'HEAD'), 'git': git(REPO, 'version'),
@@ -120,10 +134,12 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('katalog', type=Path)
     parser.add_argument('--konfiguracja', required=True, choices=('A', 'B', 'C', 'D'))
+    parser.add_argument('--zestaw', type=int, default=1, choices=(1, 2), help='zestaw zadań (1 albo 2)')
     parser.add_argument('--przebieg', type=int, required=True)
     parser.add_argument('--minuty', type=float, help='czas od startu do końca etapu')
     parser.add_argument('--tokeny', type=int, help='tokeny łącznie (Claude /cost + Codex)')
     parser.add_argument('--rundy', type=int, help='rundy poprawek łącznie (z „Zrobione”)')
+    parser.add_argument('--koszt-usd', type=float, help='koszt wg cennika API (np. total_cost_usd z claude -p)')
     parser.add_argument('--uwagi', default='', help='co się działo, np. pytania kierownika, ręczne interwencje')
     parser.add_argument('--wyniki', type=Path, default=EVALS / 'wyniki')
     parser.add_argument('--bez-zapisu', action='store_true')
@@ -131,15 +147,18 @@ def main(argv=None) -> int:
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')
     wynik = {'data': date.today().isoformat(), 'konfiguracja': args.konfiguracja, 'przebieg': args.przebieg,
-             'minuty': args.minuty, 'tokeny': args.tokeny, 'rundy': args.rundy, 'uwagi': args.uwagi,
-             **ocen(args.katalog)}
+             'minuty': args.minuty, 'tokeny': args.tokeny, 'rundy': args.rundy, 'koszt_usd': args.koszt_usd,
+             'uwagi': args.uwagi,
+             **ocen(args.katalog, args.zestaw)}
     h = wynik['historia']
     if wynik['galaz_oceniana'] != 'main':
         print(f"UWAGA: oceniany jest katalog roboczy na gałęzi {wynik['galaz_oceniana'] or '(odłączony HEAD)'}, nie main")
     print(f"Konfiguracja {args.konfiguracja}, przebieg {args.przebieg} ({wynik['katalog']}, gałąź {wynik['galaz_oceniana']})")
-    print(f"  Zadania (ukryte testy): {wynik['zadania_zaliczone']}/{wynik['zadania_wszystkie']}  "
-          + ' '.join(f"{z}:{'OK' if wynik['ukryte'].get(z) else 'NIE'}" for z in ZADANIA))
-    print(f"  Kolizja T-006+T-007: {'OK' if wynik['kolizja_zaliczona'] else 'NIE'}")
+    zadania = zestaw(args.zestaw)['zadania']
+    print(f"  Zadania (ukryte testy, zestaw {args.zestaw}): {wynik['zadania_zaliczone']}/{wynik['zadania_wszystkie']}  "
+          + ' '.join(f"{z}:{'OK' if wynik['ukryte'].get(z) else 'NIE'}" for z in zadania))
+    print('  Kontrole dodatkowe: ' + (' '.join(f"{n}:{'OK' if w else 'NIE'}" for n, w in wynik['dodatkowe'].items())
+                                      or 'brak'))
     print(f"  Testy widoczne: {'OK' if wynik['widoczne']['zaliczone'] else 'NIE'} ({wynik['widoczne']['liczba']})")
     print(f"  Osłabione testy: {', '.join(wynik['oslabione_testy']) or 'brak'}")
     print(f"  Historia: commity {h['commity_main']}, scalenia {len(h['scalenia'])}, rewerty {h['rewerty']}, "
@@ -151,7 +170,7 @@ def main(argv=None) -> int:
             print(f'    {linia}')
     if not args.bez_zapisu:
         args.wyniki.mkdir(parents=True, exist_ok=True)
-        cel = args.wyniki / f"{wynik['data']}-{args.konfiguracja}-{args.przebieg}.json"
+        cel = args.wyniki / f"{wynik['data']}-z{args.zestaw}-{args.konfiguracja}-{args.przebieg}.json"
         cel.write_text(json.dumps(wynik, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
         print(f'Zapisano: {cel}')
     return 0

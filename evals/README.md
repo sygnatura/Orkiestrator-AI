@@ -85,3 +85,19 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
 Przy jednym przebiegu na konfigurację różnice o 1 zadanie albo kilkanaście procent czasu są w granicach przypadku.
 Wnioski wyciągamy z dużych różnic. Tam, gdzie wyniki są bliskie, robimy drugi przebieg. Jakość (zadania, kolizja,
 brak osłabionych testów) liczy się przed kosztem. Tańsza konfiguracja wygrywa tylko przy równej jakości.
+
+## Wyniki serii 1 (zestaw 1, 2026-11-05)
+
+Przebiegi A, B i D, po jednym, w kontenerze w chmurze przez `claude -p` (Opus jako główny model). Tabela
+w [WYNIKI.md](WYNIKI.md).
+
+- **Jakość:** wszystkie trzy 7/7, para kolidująca przeszła, bez osłabionych testów i rewertów.
+- **Koszt:** zwykła sesja (A) 3,4 min i ~1 USD wg cennika API, kierownik (B, D) ~8,5 min i ~4 USD.
+- **Wniosek:** zestaw 1 jest za łatwy. Siedem małych zadań w ~150 liniach mieści się w jednej sesji, więc
+  kierownik może najwyżej zremisować w jakości. Na takich zadaniach płaci się tylko za narzut.
+- B ≈ D, bo kierownik w B sam dał Sonnetowi 6/7 prostych zadań. Pytanie „Opus czy Sonnet” zostało bez
+  odpowiedzi.
+- Para T-006/T-007 poszła sekwencyjnie u obu kierowników, więc procedura konfliktu nie została sprawdzona.
+- Artefakt zestawu: znacznik czasu w katalogu projektu (D) wymusił dodatkowy commit `.gitignore`.
+
+Seria 2 używa trudniejszego zestawu 2 (`--zestaw 2`).

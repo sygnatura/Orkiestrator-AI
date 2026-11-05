@@ -1,0 +1,86 @@
+{
+ "data": "2026-11-05",
+ "konfiguracja": "D",
+ "przebieg": 1,
+ "minuty": 8.4,
+ "tokeny": 5397211,
+ "rundy": 0,
+ "koszt_usd": 3.95,
+ "uwagi": "claude -p w kontenerze; wykonawca Sonnet 7/7; T-006/T-007 sekwencyjnie; artefakt zestawu: znacznik .eval-start w katalogu projektu wymusił commit .gitignore",
+ "zestaw": 1,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale/D-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T001": true,
+  "T002": true,
+  "T003": true,
+  "T004": true,
+  "T005": true,
+  "T006": true,
+  "T007": true
+ },
+ "zadania_zaliczone": 7,
+ "zadania_wszystkie": 7,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 25
+ },
+ "oslabione_testy": [],
+ "historia": {
+  "commity_main": 24,
+  "scalenia": [
+   {
+    "temat": "merge(T-007): feat(T-007): znacznik wypożyczenia w linii książki",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-005): feat(T-005): bezpieczna nazwa pliku eksportu",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-006): feat(T-006): rok w linii książki",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-002): fix(T-002): stronicowanie listy od strony 1",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-004): feat(T-004): eksport do CSV",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-003): feat(T-003): szukanie po fragmencie autora bez wielkości liter",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-001): feat(T-001): opcja --version",
+    "commity": 1
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "- T-001 `--version` — e59df67 — wykonawca STANDARDOWY sonnet, 0 rund poprawek, recenzja kier-recenzent opus (ZALICZONE) + moje testy; `python -m katalog --version` → `katalog 1.0.0`, exit 0; testy na main 4/4; tokeny: wyk. 14.8k, rec. 11.2k",
+  "- T-003 szukanie po fragmencie — adcbed3 — sonnet, 0 rund, rec. opus ZALICZONE; `szukaj --autor żerom`/`ŻEROM` → 2 książki Żeromskiego, `xyz` → pusto, exit 0; main 7/7; tokeny: wyk. 16.0k, rec. 13.3k",
+  "- T-004 eksport CSV — 3e3b6cf — sonnet, 0 rund, rec. opus ZALICZONE; eksport → nagłówek + 12 wierszy, cytowanie „Pan Tadeusz, czyli \"\"…\"\"” poprawne; main 8/8; tokeny: wyk. 18.1k, rec. 14.2k",
+  "- T-002 stronicowanie — 52f32cf — sonnet, 0 rund, rec. opus ZALICZONE; 12 pozycji: strony 1..3 (ostatnia 2 pozycje), `--strona 0/4` → stderr, exit 2; `lista` bez zmian (diff z bazą pusty); main 16/16; tokeny: wyk. 14.9k, rec. 17.1k",
+  "- T-006 rok w linii — 8af5625 — sonnet, 0 rund, rec. opus ZALICZONE; `lista` → `Lalka — Bolesław Prus (1890)`, Dostojewski (null) bez nawiasu; main 18/18; tokeny: wyk. 17.0k, rec. 14.9k",
+  "- T-005 bezpieczna nazwa eksportu — 158f177 — sonnet, 0 rund, rec. opus ZALICZONE; `../x.csv`, ścieżka bezwzględna, `a/b.csv`, `a\\b.csv`, dowiązanie (też wiszące) → stderr, exit 2, nic nie zapisane; `k.csv` działa; main 22/22; tokeny: wyk. 23.2k, rec. 20.5k",
+  "- T-007 znacznik wypożyczenia — 10a8ee6 — sonnet, 0 rund, rec. opus ZALICZONE; `lista` → 3 linie z ` [wypożyczona]` (zgodne z danymi); main 25/25; tokeny: wyk. 15.2k, rec. 14.1k"
+ ],
+ "wersje": {
+  "orkiestrator": "c28ae3a",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}
