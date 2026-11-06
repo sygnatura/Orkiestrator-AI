@@ -15,7 +15,7 @@ def wczytaj(sciezka: Path) -> list[Ksiazka]:
 
 
 def zapisz(sciezka: Path, ksiazki: list[Ksiazka]) -> None:
-    sciezka = Path(sciezka)
+    sciezka = Path(os.path.realpath(sciezka))  # zapis przez dowiązanie zmienia cel, dowiązanie zostaje
     tekst = json.dumps([k.do_slownika() for k in ksiazki], ensure_ascii=False, indent=1) + '\n'
     deskryptor, tymczasowy = tempfile.mkstemp(prefix=f'.{sciezka.name}.', suffix='.tmp', dir=sciezka.parent)
     try:

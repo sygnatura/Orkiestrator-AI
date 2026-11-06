@@ -1,27 +1,27 @@
 # Wyniki evali orkiestratora
 
-| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Widoczne | Osłabione | Zmienione | Założenie | Rewerty | Commity | Minuty | Tokeny | Koszt USD | Rundy | Wersja |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | A | 1 | 2026-11-05 | 7/7 | tak | tak | 0 | — | — | 0 | 8 | 3.4 | 1237943 | 1.01 | 0 | c28ae3a |
-| 1 | B | 1 | 2026-11-05 | 7/7 | tak | tak | 0 | — | — | 0 | 20 | 8.7 | 3522898 | 4.24 | 0 | c28ae3a |
-| 1 | D | 1 | 2026-11-05 | 7/7 | tak | tak | 0 | — | — | 0 | 24 | 8.4 | 5397211 | 3.95 | 0 | c28ae3a |
-| 2 | A | 1 | 2026-11-06 | 12/12 | tak | tak | 0 | 0 | tak | 0 | 13 | 6.7 | 2657461 | 2.1 | 0 | c16b091 |
-| 2 | A | 2 | 2026-11-06 | 12/12 | tak | tak | 0 | 0 | tak | 0 | 14 | 7.1 | 2450836 | 2.05 | 0 | c16b091 |
-| 2 | B | 1 | 2026-11-06 | 12/12 | tak | tak | 0 | 0 | tak | 0 | 39 | 20.1 | 18533806 | 15.52 | 2 | c16b091 |
-| 2 | B | 2 | 2026-11-06 | 12/12 | tak | tak | 0 | 0 | tak | 0 | 48 | 18.1 | 18173600 | 12.94 | 1 | c16b091 |
-| 2 | D | 1 | 2026-11-06 | 12/12 | tak | tak | 0 | 0 | tak | 0 | 48 | 20.7 | 22549626 | 15.8 | 5 | c16b091 |
-| 2 | D | 2 | 2026-11-06 | 12/12 | tak | tak | 0 | 0 | tak | 0 | 35 | 15.0 | 12084021 | 8.25 | 0 | c16b091 |
+| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Sondy | Widoczne | Osłabione | Zmienione | Założenie | Rewerty | Commity | Minuty | Tokeny | Koszt USD | Rundy | Wersja |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | A | 1 | 2026-11-05 | 7/7 | tak | — | tak | 0 | — | — | 0 | 8 | 3.4 | 1237943 | 1.01 | 0 | c28ae3a |
+| 1 | B | 1 | 2026-11-05 | 7/7 | tak | — | tak | 0 | — | — | 0 | 20 | 8.7 | 3522898 | 4.24 | 0 | c28ae3a |
+| 1 | D | 1 | 2026-11-05 | 7/7 | tak | — | tak | 0 | — | — | 0 | 24 | 8.4 | 5397211 | 3.95 | 0 | c28ae3a |
+| 2 | A | 1 | 2026-11-06 | 12/12 | tak | 3/4 | tak | 0 | 0 | tak | 0 | 13 | 6.7 | 2657461 | 2.1 | 0 | c16b091 |
+| 2 | A | 2 | 2026-11-06 | 12/12 | tak | 2/4 | tak | 0 | 0 | tak | 0 | 14 | 7.1 | 2450836 | 2.05 | 0 | c16b091 |
+| 2 | B | 1 | 2026-11-06 | 12/12 | tak | 4/4 | tak | 0 | 0 | tak | 0 | 39 | 20.1 | 18533806 | 15.52 | 2 | c16b091 |
+| 2 | B | 2 | 2026-11-06 | 12/12 | tak | 3/4 | tak | 0 | 0 | tak | 0 | 48 | 18.1 | 18173600 | 12.94 | 1 | c16b091 |
+| 2 | D | 1 | 2026-11-06 | 12/12 | tak | 3/4 | tak | 0 | 0 | tak | 0 | 48 | 20.7 | 22549626 | 15.8 | 5 | c16b091 |
+| 2 | D | 2 | 2026-11-06 | 12/12 | tak | 1/4 | tak | 0 | 0 | tak | 0 | 35 | 15.0 | 12084021 | 8.25 | 0 | c16b091 |
 
 ## Średnie na konfigurację
 
-| Zestaw | Konfiguracja | Przebiegów | Zadania | Kolizja (%) | Minuty | Tokeny | Koszt USD | Rundy |
-|---|---|---|---|---|---|---|---|---|
-| 1 | A — sesja bez kierownika | 1 | 7.0 | 100 | 3.4 | 1237943.0 | 1.0 | 0.0 |
-| 1 | B — kierownik, tylko Claude (z2: wykonawca Opus) | 1 | 7.0 | 100 | 8.7 | 3522898.0 | 4.2 | 0.0 |
-| 1 | D — kierownik, wykonawca Sonnet | 1 | 7.0 | 100 | 8.4 | 5397211.0 | 4.0 | 0.0 |
-| 2 | A — sesja bez kierownika | 2 | 12.0 | 100 | 6.9 | 2554148.5 | 2.1 | 0.0 |
-| 2 | B — kierownik, tylko Claude (z2: wykonawca Opus) | 2 | 12.0 | 100 | 19.1 | 18353703.0 | 14.2 | 1.5 |
-| 2 | D — kierownik, wykonawca Sonnet | 2 | 12.0 | 100 | 17.9 | 17316823.5 | 12.0 | 2.5 |
+| Zestaw | Konfiguracja | Przebiegów | Zadania | Kolizja (%) | Sondy | Minuty | Tokeny | Koszt USD | Rundy |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | A — sesja bez kierownika | 1 | 7.0 | 100 | — | 3.4 | 1237943.0 | 1.0 | 0.0 |
+| 1 | B — kierownik, tylko Claude (z2: wykonawca Opus) | 1 | 7.0 | 100 | — | 8.7 | 3522898.0 | 4.2 | 0.0 |
+| 1 | D — kierownik, wykonawca Sonnet | 1 | 7.0 | 100 | — | 8.4 | 5397211.0 | 4.0 | 0.0 |
+| 2 | A — sesja bez kierownika | 2 | 12.0 | 100 | 2.5 | 6.9 | 2554148.5 | 2.1 | 0.0 |
+| 2 | B — kierownik, tylko Claude (z2: wykonawca Opus) | 2 | 12.0 | 100 | 3.5 | 19.1 | 18353703.0 | 14.2 | 1.5 |
+| 2 | D — kierownik, wykonawca Sonnet | 2 | 12.0 | 100 | 2.0 | 17.9 | 17316823.5 | 12.0 | 2.5 |
 
 ## Uwagi z przebiegów
 

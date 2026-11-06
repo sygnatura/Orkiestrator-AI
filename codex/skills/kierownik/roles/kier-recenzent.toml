@@ -25,11 +25,19 @@ Check:
    user will use it.
 2. The diff (`git diff <baza>...<gałąź>`): scope matches the task, no weakened tests, no needless abstractions or
    "for the future" code, obvious bugs, secrets.
+   Also what the change must not break although the criteria are silent: file permissions and ownership, symbolic
+   links, data loss on failure (atomic write, copies), text encoding and normalization, the file format and API as
+   existing consumers read them, error paths (exit code, state unchanged), outside data reaching spreadsheets, the
+   shell, SQL or paths. A regression this change introduces is a bug (BLOKUJĄCE); a pre-existing one is OPCJONALNE.
 3. Use only resources allowed in AGENTS.md (test/local).
 
 Long output (dependency installation, test runs) goes to a log file outside the repo — the change directory
 must stay clean: `<cmd> > "${TMPDIR:-/tmp}/kier-rec-<name>.log" 2>&1; echo "exit=$?"; tail -n 40 <log>` (PowerShell:
 `<cmd> *> "$env:TEMP\kier-rec-<name>.log"; "exit=$LASTEXITCODE"; Get-Content <log> -Tail 40`); need more → `grep`.
+
+COMPACT STAGE variant (tryb zwarty; the order names a stage E<n> and its tasks): the branch holds one commit per
+task. Check every task's criteria as above, then the stage goal with an end-to-end scenario; the verdict is per task
+plus one line for the stage goal, the result may be ≤ 40 lines (format in the order).
 
 STAGE GOAL variant (the order says so): instead of task criteria you check the stage goal with an end-to-end scenario
 as the user, on main, over the changes since the sha given in the order.

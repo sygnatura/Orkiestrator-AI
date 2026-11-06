@@ -50,6 +50,11 @@ PRZECZYTAJ: karta tylko Cel/Kontekst/Zakres/Kryteria; [reguły katalogu, jeśli 
 KRYTERIA: <te same K1..Kn; etap: cel i scenariusz E2E>
 JAK URUCHOMIĆ / DANE: <testowe komendy i izolacja, konkretne dozwolone operacje>
 ZRÓB: K w działaniu z własnym dowodem, scenariusz i diff zakres/testy/błędy/nadmiar.
+REGRESJE: także to, czego zmiana nie może zepsuć, choć kryteria milczą: uprawnienia i właściciel plików,
+     dowiązania symboliczne, utrata danych przy błędzie (zapis atomowy, kopie), kodowanie i normalizacja
+     tekstu, zgodność formatu plików i API z dotychczasowymi odbiorcami, ścieżki błędów (kod wyjścia, stan bez
+     zmian), dane z zewnątrz w arkuszach, powłoce, SQL i ścieżkach. Regresja wprowadzona przez tę zmianę to błąd
+     (BLOKUJĄCE); istniejąca wcześniej — OPCJONALNE.
 NIE: poprawianie kodu, commit, przełączanie gałęzi, instalowanie braków,
      zmiana kryteriów, czytanie Postęp/Odkrycia/Wynik autora jako podpowiedzi.
 WYNIK do 20 linii: ZALICZONE | DO POPRAWY | ZABLOKOWANE — ID @ SHA;
@@ -87,6 +92,48 @@ ZAPIS: analityk tylko odpowiedź; architekt tylko wskazane docs/tasks lub ADR,
 WYNIK: analizy/diagnozy do 40 linii, plan do 80; rekomendacja i dowody,
        nieznane jako [?], decyzje właściciela oznaczone z rekomendacją.
 ```
+
+## Tryb zwarty (compact mode, SKILL section 5)
+
+Zwarty only when all hold: the whole stage fits one executor session (about ≤ 15 tasks of typical size, and the
+code the stage touches can be read in full); no task needs a design decision, a task card or an architect's plan;
+one runner of the required class can do every task. Otherwise, or in doubt → pełny. The owner's `tryb: …`
+overrides. Record the decision in the TODO header before the first order. Why: in the evals (claude/ANALIZA.md,
+decision 15) per-task orders and reviews cost ~6× a single session on stages that fit one session, with no gain in
+measured quality; the gain came from review, which this mode keeps once per stage.
+
+Stage variant of A (the fields of A, with these lines instead):
+
+```text
+ZADANIE: E<n> — etap w trybie zwartym: T-NNN, T-NNN, … (kolejność z TODO)
+GAŁĄŹ / BAZA / AKTUALNA WERSJA: task/E<n>-etap, pełne SHA (poprawki: ta sama gałąź)
+PRZECZYTAJ: PROJEKT, TODO (etap E<n>: kryteria wszystkich zadań), karty jeśli istnieją.
+KRYTERIA: te z TODO dla każdego zadania; każde zadanie to osobny commit z jego ID i własny test;
+          runda poprawek: tylko zadania i uwagi BLOKUJĄCE wymienione w zleceniu.
+WSTRZYMAJ: kryterium sprzeczne z istniejącym testem, danymi albo innym zadaniem, albo potrzebna decyzja →
+          nie obchodź po cichu: zrób to, co niesporne, opisz w raporcie; zadania, którego nie skończysz,
+          nie commituj (cofnij częściowe zmiany) i wpisz je w WSTRZYMANE.
+WYNIK: raport do 25 linii: wiersz na zadanie „T-NNN | sha | test → wynik | uwagi”, testy całości,
+       scenariusz, WSTRZYMANE, NIE SPRAWDZONO, POZA ZAKRESEM.
+```
+
+Compact-stage variant of B (the fields of B, with these lines instead):
+
+```text
+RECENZJA: E<n> — etap w trybie zwartym: T-NNN, T-NNN, …
+BAZA / OCENIANY SHA: <sha bazy> ... task/E<n>-etap @ <sha>; commity: git log --oneline <baza>..task/E<n>-etap
+KRYTERIA: każdego zadania (z TODO) + cel etapu i scenariusz E2E (runda powtórna: zadania zmienione + scenariusz)
+WYNIK do 40 linii: wiersz na zadanie „T-NNN: ZALICZONE | DO POPRAWY | ZABLOKOWANE — K1..Kn: …”,
+  „CEL ETAPU: OK / NIE — scenariusz → wynik”, BLOKUJĄCE z T-NNN i lokalizacją, OPCJONALNE.
+```
+
+Flow: one order A (stage variant, executor in MOCNY, „przydział” as for a task) → one order B (compact-stage
+variant; other family first when the stage touches security, data, money or an external contract) instead of
+the per-task reviews and the stage-goal evidence → DO POPRAWY for some tasks: `KIER fix-round E<n>-etap`, order A
+with only those tasks, order B for them plus the stage scenario (two failed rounds → diagnosis as usual) → all
+ZALICZONE: `KIER merge E<n>-etap --push`, „Zrobione” a line per task („recenzja wspólna E<n>”). Back to pełny for
+the rest of the stage when the executor stopped half-way, a task needs a decision, or one review returned ≥ 3
+tasks DO POPRAWY: review and merge what the branch finished, then continue task by task from main.
 
 ## Sending and receiving
 

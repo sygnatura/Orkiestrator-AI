@@ -47,6 +47,21 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
             POZA ZAKRESEM: propozycje (niewdrożone)
           Nie podejmuj innych zadań.
 
+Stage variant (tryb zwarty, section „Tryb zwarty” below) — the fields above, with these lines instead:
+
+    ZADANIE: E<n> — etap w trybie zwartym: T-NNN, T-NNN, … (kolejność z TODO.md)
+    GAŁĄŹ: task/E<n>-etap od <sha bazy> — utwórz ją `git switch -c task/E<n>-etap <sha>`
+           (runda poprawek: gałąź już istnieje @ <sha> → `git switch task/E<n>-etap`)
+    PRZECZYTAJ: [CLI: AGENTS.md,] docs/PROJEKT.md, docs/TODO.md (etap E<n>: kryteria wszystkich zadań)
+                [+ docs/tasks/T-NNN.md]
+    KRYTERIA: te z TODO.md dla każdego zadania; każde zadanie to osobny commit z jego ID (konwencja z AGENTS.md)
+              i własny test; runda poprawek: tylko zadania i uwagi BLOKUJĄCE wymienione w zleceniu
+    WSTRZYMAJ: kryterium sprzeczne z istniejącym testem, danymi albo innym zadaniem, albo potrzebna decyzja →
+               nie obchodź po cichu: zrób to, co niesporne, i opisz to w raporcie; zadania, którego nie skończysz,
+               nie commituj (cofnij jego częściowe zmiany) i wpisz je w WSTRZYMANE
+    RAPORT (≤ 25 linii zamiast 15): wiersz na zadanie „T-NNN | sha | test → wynik | uwagi”, potem TESTY całości,
+           SCENARIUSZ, WSTRZYMANE, NIE SPRAWDZONO, POZA ZAKRESEM
+
 ## B. Reviewer (runner per SKILL.md section 7: other family via CLI, or host `kier-recenzent`)
 
     RECENZJA: T-NNN — <cel>   (albo: CEL ETAPU E<n> na main)
@@ -67,6 +82,11 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
           wystarcza; polecenie, które nie wystartowało, niczego nie dowodzi; sama lektura kodu to nie dowód →
           NIE SPRAWDZONO) i scenariusz jak użytkownik; przejrzyj diff (zakres, osłabione testy, zbędne
           abstrakcje, błędy, sekrety).
+    [CLI] REGRESJE: sprawdź też to, czego zmiana nie może zepsuć, choć kryteria o tym milczą: uprawnienia
+          i właściciel plików, dowiązania symboliczne, utrata danych przy błędzie (zapis atomowy, kopie),
+          kodowanie i normalizacja tekstu, zgodność formatu plików i API z dotychczasowymi odbiorcami, ścieżki
+          błędów (kod wyjścia, stan bez zmian), dane z zewnątrz trafiające do arkuszy, powłoki, SQL i ścieżek.
+          Regresja wprowadzona przez tę zmianę to błąd (BLOKUJĄCE); istniejąca wcześniej — OPCJONALNE.
     [CLI] UWAGI: BLOKUJĄCE są tylko: niespełnione kryterium, błąd, wyjście poza zakres, osłabiony test, kod
           „na przyszłość”, sekret — z lokalizacją plik:linia. Reszta OPCJONALNE (nie wpływa na werdykt).
     [CLI] NIE: nie poprawiaj kodu, nie commituj, nie przełączaj gałęzi; tylko zasoby testowe/lokalne.
@@ -75,6 +95,15 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
       WERDYKT: ZALICZONE | DO POPRAWY (są BLOKUJĄCE) | ZABLOKOWANE (czego brakuje) — T-NNN @ <sha>  (etap: E<n> @ <sha main>)
       K1..Kn: OK / NIE / NIE SPRAWDZONO (powód) — dowód (polecenie → wynik / obserwacja)
       BLOKUJĄCE: … z lokalizacją      OPCJONALNE: …
+
+Compact-stage variant (tryb zwarty) — the fields above, with these lines instead:
+
+    RECENZJA: E<n> — etap w trybie zwartym: T-NNN, T-NNN, …
+    ZMIANA: <sha bazy> ... task/E<n>-etap @ <sha>; commity zadań: `git log --oneline <sha bazy>..task/E<n>-etap`
+    KRYTERIA: każdego zadania (z TODO.md) + cel etapu i scenariusz end-to-end jak użytkownik
+              (runda powtórna: zadania zmienione w rundzie + scenariusz etapu)
+    WYNIK (≤ 40 linii zamiast 20): wiersz na zadanie „T-NNN: ZALICZONE | DO POPRAWY | ZABLOKOWANE — K1..Kn: …”,
+          wiersz „CEL ETAPU: OK / NIE — scenariusz → wynik”, BLOKUJĄCE z T-NNN i lokalizacją, OPCJONALNE
 
 ## C. Analysis / plan / plan review / diagnosis (`kier-analityk` or `kier-architekt`; no code changes)
 
@@ -93,3 +122,27 @@ Claude Code worktree; add the "On start" steps from the package's `agents/kier-w
     NIE: nie zmieniaj kodu, danych ani konfiguracji.
     WYNIK: ≤ 40 linii (plan może być dłuższy); duży plan lub diagnozę architekt zapisuje
            w docs/tasks/T-NNN.md (analityk nie zapisuje plików).
+
+## Tryb zwarty (compact mode, SKILL.md section 5)
+
+Zwarty only when all hold: the whole stage fits one executor session (about ≤ 15 tasks of typical size, and the
+code the stage touches can be read in full); no task needs a design decision, a docs/tasks/T-NNN.md specification
+or a plan from `kier-architekt`; one runner of the required class can do every task. Otherwise, or in doubt →
+pełny. The owner's `tryb: …` overrides. Record the decision in the TODO.md header before the first order. Why:
+in the evals (ANALIZA.md, decision 15) per-task orders and reviews cost ~6× a single session on stages that fit one
+session, with no gain in measured quality; the gain came from review, which this mode keeps once per stage.
+
+1. One order A, stage variant, to an executor in MOCNY (the „przydział” line as for a task, role `wykonawca E<n>`).
+2. One order B, compact-stage variant, to a fresh reviewer per SKILL.md section 7 (other family first when the
+   stage touches security, data, money or an external contract). It replaces the per-task reviews and END OF STAGE
+   step 1; your formal check (section 8, point 1) covers the whole branch.
+3. Some tasks DO POPRAWY → `KIER fix-round E<n>-etap`, order A (stage variant, existing branch) with only those
+   tasks and their BLOKUJĄCE remarks, then order B for them plus the stage scenario. Two failed rounds on the same
+   problem → the diagnosis as in full mode.
+4. All ZALICZONE → `KIER merge E<n>-etap --push --opis "<opis>"`; „Zrobione”: a line per task (sha of its commit,
+   „recenzja wspólna E<n>”, rounds), then END OF STAGE from step 2.
+
+Back to pełny for the rest of the stage when the executor stopped half-way (context, limit), a task turned out to
+need a decision, or one review returned ≥ 3 tasks DO POPRAWY: review and merge what the branch finished (order B,
+compact-stage variant, for those tasks), then continue task by task from main. WSTRZYMANE tasks are not on the
+branch; settle them as any criteria problem (SKILL.md section 8, last paragraph).

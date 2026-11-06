@@ -11,6 +11,7 @@ nie widzą.
 | B | `/kierownik`, tylko modele Claude (wykonawca Opus) | czy kierownik poprawia jakość |
 | C | `/kierownik` z Codexem jako recenzentem innej rodziny | czy druga rodzina modeli coś wnosi |
 | D | jak B, ale wykonawca zawsze Sonnet | czy Opus jako wykonawca się opłaca |
+| E | `/kierownik` w trybie zwartym (sam wybiera tryb etapu) | czy jedna recenzja całości daje jakość B za koszt bliski A |
 
 ## Co jest w katalogu
 
@@ -20,6 +21,7 @@ nie widzą.
 - `wzorzec/` — rozwiązanie wzorcowe. Służy tylko do sprawdzenia, że ukryte testy da się spełnić
   (`tests/test_evals.py`, uruchamiany w CI).
 - `projekt2/`, `ukryte2/`, `wzorzec2/` — trudniejszy zestaw 2 (niżej), wybierany przez `--zestaw 2`.
+- `sondy2/` — sondy usterek spoza kryteriów dla zestawu 2 (uprawnienia, dowiązanie, `.bak`, układ pliku). Nie wchodzą do wyniku zadań; mierzą, co wnosi recenzja.
 - `przygotuj.py`, `ocen.py`, `zestaw.py` — przygotowanie przebiegu, ocena, zestawienie.
 - `wyniki/` — pliki JSON z przebiegów (commituj je); `WYNIKI.md` — zestawienie.
 
@@ -83,6 +85,7 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
   treścią (porównanie drzew składni). Nowe testy dopisane obok się nie liczą.
 - **Założenie (zestaw 2):** heurystyka, czy przy zadaniu ze sprzecznym kryterium (T-107) commit albo `docs/`
   mówi o sprzeczności. „nie” znaczy tylko, że trzeba przeczytać raport końcowy sesji.
+- **Sondy (zestaw 2):** usterki, o których kryteria milczą: S1 uprawnienia pliku danych po zapisie, S2 zapis przez dowiązanie symboliczne, S3 uprawnienia `.bak` prywatnego pliku, S4 układ pliku po wypożyczeniu i zwrocie. Raportowane osobno (k/4).
 - **Koszt:** minuty, tokeny i rundy podajesz sam. Skrypt pokazuje wzmianki o rundach z `docs/TODO.md`.
 
 ## Jak czytać wyniki
@@ -129,6 +132,7 @@ Przebieg jak wyżej, z `--zestaw 2` w `przygotuj.py` i `ocen.py`. Polecenia star
 - **D:** `Eval D: w tym etapie wyłącznie modele Claude (bez Codex i agy) i wykonawca zawsze w klasie STANDARDOWY (sonnet), także w rundach poprawek; jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.`
 
 W ściądze odpowiedzi „E1” zamień na „E2” („po nim zakończ — nie planuj E3”).
+- **E:** `Eval E: w tym etapie wyłącznie modele Claude (bez Codex i agy); jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.` Trybu etapu celowo nie narzucamy: sprawdzamy, czy kierownik sam wybierze zwarty.
 
 ## Wyniki serii 2 (zestaw 2, 2026-11-05/06)
 

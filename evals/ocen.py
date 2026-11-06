@@ -25,7 +25,7 @@ def zestaw(numer: int = 1) -> dict:
     sufiks = '' if numer == 1 else str(numer)
     ukryte = EVALS / f'ukryte{sufiks}'
     return {'numer': numer, 'projekt': EVALS / f'projekt{sufiks}', 'ukryte': ukryte,
-            'wzorzec': EVALS / f'wzorzec{sufiks}',
+            'wzorzec': EVALS / f'wzorzec{sufiks}', 'sondy': EVALS / f'sondy{sufiks}',
             'zadania': tuple(sorted(p.stem.removeprefix('test_') for p in ukryte.glob('test_T*.py')))}
 
 
@@ -53,11 +53,18 @@ def testy_widoczne(katalog: Path) -> dict:
     return {'zaliczone': wynik.returncode == 0, 'liczba': int(liczba[-1]) if liczba else 0}
 
 
-def testy_ukryte(katalog: Path, numer: int = 1) -> dict:
-    """Każdy plik ukrytych testów uruchamiany osobno w tymczasowej kopii, poza katalogiem przebiegu."""
+def testy_ukryte(katalog: Path, numer: int = 1, sondy: bool = False) -> dict:
+    """Każdy plik ukrytych testów (albo sond: `sondy*/test_S*.py`, z pomocnikami z `ukryte*/`) uruchamiany
+    osobno w tymczasowej kopii, poza katalogiem przebiegu."""
     wyniki = {}
+    z = zestaw(numer)
+    if sondy and not z['sondy'].is_dir():
+        return {}
     with tempfile.TemporaryDirectory(prefix='eval-ukryte-') as temp:
-        for plik in zestaw(numer)['ukryte'].glob('*.py'):
+        for plik in z['ukryte'].glob('*.py'):
+            if not (sondy and plik.name.startswith('test_')):
+                shutil.copy2(plik, temp)
+        for plik in z['sondy'].glob('test_S*.py') if sondy else ():
             shutil.copy2(plik, temp)
         for plik in sorted(Path(temp).glob('test_*.py')):
             wynik = uruchom([sys.executable, '-m', 'unittest', 'discover', '-s', temp, '-p', plik.name], katalog,
@@ -181,6 +188,7 @@ def ocen(katalog: Path, numer: int = 1) -> dict:
         'zadania_wszystkie': len(zadania),
         'kolizja_zaliczona': all(w for n, w in dodatkowe.items() if n.startswith('KOLIZJA')),
         'dodatkowe': dodatkowe,
+        'sondy': testy_ukryte(katalog, numer, sondy=True),
         'widoczne': testy_widoczne(katalog),
         'oslabione_testy': oslabione_testy(katalog, numer),
         'zmienione_testy': zmienione_testy(katalog, numer),
@@ -195,7 +203,7 @@ def ocen(katalog: Path, numer: int = 1) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('katalog', type=Path)
-    parser.add_argument('--konfiguracja', required=True, choices=('A', 'B', 'C', 'D'))
+    parser.add_argument('--konfiguracja', required=True, choices=('A', 'B', 'C', 'D', 'E'))
     parser.add_argument('--zestaw', type=int, default=1, choices=(1, 2), help='zestaw zadań (1 albo 2)')
     parser.add_argument('--przebieg', type=int, required=True)
     parser.add_argument('--minuty', type=float, help='czas od startu do końca etapu')
@@ -221,6 +229,9 @@ def main(argv=None) -> int:
           + ' '.join(f"{z}:{'OK' if wynik['ukryte'].get(z) else 'NIE'}" for z in zadania))
     print('  Kontrole dodatkowe: ' + (' '.join(f"{n}:{'OK' if w else 'NIE'}" for n, w in wynik['dodatkowe'].items())
                                       or 'brak'))
+    if wynik['sondy']:
+        print(f"  Sondy (poza wynikiem): {sum(wynik['sondy'].values())}/{len(wynik['sondy'])}  "
+              + ' '.join(f"{n}:{'OK' if w else 'NIE'}" for n, w in wynik['sondy'].items()))
     print(f"  Testy widoczne: {'OK' if wynik['widoczne']['zaliczone'] else 'NIE'} ({wynik['widoczne']['liczba']})")
     print(f"  Osłabione testy: {', '.join(wynik['oslabione_testy']) or 'brak'}")
     print(f"  Zmienione testy widoczne: {', '.join(wynik['zmienione_testy']) or 'brak'}")

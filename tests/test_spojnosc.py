@@ -15,10 +15,10 @@ CODEX = REPO / 'codex' / 'skills' / 'kierownik'
 SHARED = ('ZESPOL_WZOR.md', 'ZESPOL_PROCEDURY.md', 'URUCHAMIANIE_CLI.md', 'scripts/kier.py')
 PROTOCOL = ('TODO', 'W TOKU', 'DO SPRAWDZENIA', 'GOTOWE', 'ZABLOKOWANE', 'ZALICZONE', 'DO POPRAWY', 'BLOKUJĄCE',
             'OPCJONALNE', 'NIE SPRAWDZONO', 'przydział', 'ścieżka szybka', 'recenzja tą samą klasą',
-            'Registry v12, schemat 2', 'KONFLIKT', 'COLLECT FINISHED ORDERS')
+            'Registry v12, schemat 2', 'KONFLIKT', 'COLLECT FINISHED ORDERS', 'Tryb etapu')
 ORDER_FIELDS = ('ZADANIE', 'PO CO', 'PRZECZYTAJ', 'ŚRODOWISKO', 'ZAKRES', 'KRYTERIA', 'KONFLIKT', 'NIE',
                 'RECENZJA', 'PYTANIE')
-SHORTCUTS = ('status', 'dalej', 'pomysł:', 'zmiana:', 'zespół:', 'stop')
+SHORTCUTS = ('status', 'dalej', 'pomysł:', 'zmiana:', 'zespół:', 'tryb:', 'stop')
 SKILL_LIMIT = 390
 
 

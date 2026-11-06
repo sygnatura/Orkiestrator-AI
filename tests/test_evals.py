@@ -70,6 +70,22 @@ class EvalKitTest(unittest.TestCase):
         self.assertTrue(all(reference['ukryte'].values()), reference['ukryte'])
         self.assertEqual(reference['zadania_zaliczone'], 12)
         self.assertEqual((reference['oslabione_testy'], reference['zmienione_testy']), ([], []))
+        self.assertEqual(sorted(reference['sondy']), ['S1', 'S2', 'S3', 'S4'])
+        self.assertTrue(all(reference['sondy'].values()), reference['sondy'])
+        self.assertEqual(ocen.ocen(self.copy('czysty1'))['sondy'], {})
+
+    def test_probe_catches_a_replaced_symlink(self):
+        try:
+            (self.root / 'link').symlink_to(self.root)
+        except OSError as error:
+            self.skipTest(f'symlinks unavailable: {error}')
+        path = self.copy('dowiazanie', reference=True, numer=2)
+        store = path / 'biblioteka' / 'magazyn.py'
+        store.write_text(store.read_text(encoding='utf-8').replace('Path(os.path.realpath(sciezka))', 'Path(sciezka)'),
+                         encoding='utf-8')
+        probes = ocen.testy_ukryte(path, 2, sondy=True)
+        self.assertFalse(probes['S2'], probes)
+        self.assertTrue(probes['S4'], probes)
 
     def test_changed_visible_test_and_reported_assumption_are_detected(self):
         path = self.copy('zmieniony', numer=2)
@@ -96,7 +112,8 @@ class EvalKitTest(unittest.TestCase):
             path2 = przygotuj.przygotuj(self.root / 'kopia2', remote=False, numer=2)
         names2 = {p.name for p in path2.rglob('*')}
         self.assertIn('biblioteka', names2)
-        self.assertFalse(names2 & {'ukryte2', 'wzorzec2', '_wspolne.py', 'test_T101.py', 'walidacja.py', 'isbn.py'})
+        self.assertFalse(names2 & {'ukryte2', 'wzorzec2', 'sondy2', '_wspolne.py', 'test_T101.py', 'test_S1.py',
+                                   'walidacja.py', 'isbn.py'})
         with self.assertRaises(SystemExit):
             przygotuj.przygotuj(EVALS / 'nie-tutaj', remote=False)
 

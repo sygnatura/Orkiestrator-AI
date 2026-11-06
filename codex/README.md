@@ -152,8 +152,8 @@ Starszego osobnego `$architekt` installer nie usuwa; v10 korzysta z roli
 
 ## Skróty i sprawdzenie
 
-`status`, `dalej`, `pomysł:`, `zmiana:`, `zespół:`, `stop`, `handoff` to
-wiadomości do kierownika. Nowy wątek + `$kierownik` odtwarza checkpoint;
+`status`, `dalej`, `pomysł:`, `zmiana:`, `zespół:`, `tryb:`, `stop`, `handoff` to
+wiadomości do kierownika. `tryb: zwarty` każe zrobić mały etap jednym zleceniem i jedną recenzją całości, `tryb: pełny` — zadanie po zadaniu. Nowy wątek + `$kierownik` odtwarza checkpoint;
 nie potrzeba komend `/clear` ani `/autocompact` Claude.
 
 ```bash

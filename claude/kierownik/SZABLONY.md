@@ -189,6 +189,7 @@ Prowadzi kierownik. Agenci: wyłącznie odczyt.
 ## Stan (<data>)
 Cel: <1 zdanie z PROJEKT.md>
 Etap: E2 — <nazwa>: <obserwowalny cel etapu> (3/5 GOTOWE)
+Tryb etapu: pełny | zwarty — <powód, np. „12 zadań, jeden moduł, bez decyzji projektowych”>
 main @ <sha> | ostatni zweryfikowany: <sha> (<data>, <co potwierdzono>)
 W toku: T-007 | W TOKU | kier-wykonawca (<klasa>) | task/T-007-import
         przydział rec.: autor sonnet/Anthropic, ryzyko NISKIE → MOCNY, inna rodzina → codex-cli <model>
