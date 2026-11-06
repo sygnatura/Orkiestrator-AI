@@ -9,7 +9,7 @@ import sys
 
 EVALS = Path(__file__).resolve().parent
 OPISY = {'A': 'sesja bez kierownika', 'B': 'kierownik, tylko Claude (z2: wykonawca Opus)', 'C': 'kierownik + Codex',
-         'D': 'kierownik, wykonawca Sonnet'}
+         'D': 'kierownik, wykonawca Sonnet', 'E': 'kierownik, tryb zwarty'}
 
 
 def srednia(wartosci: list) -> str:
@@ -21,28 +21,34 @@ def tak_nie(wartosc) -> str:
     return '—' if wartosc is None else ('tak' if wartosc else 'nie')
 
 
+def sondy(wynik: dict) -> str:
+    s = wynik.get('sondy')
+    return f'{sum(s.values())}/{len(s)}' if s else '—'
+
+
 def tabela(wyniki: list[dict]) -> str:
     wiersze = ['# Wyniki evali orkiestratora', '',
-               '| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Widoczne | Osłabione | Zmienione | Założenie | '
+               '| Zestaw | Konf. | Przebieg | Data | Zadania | Kolizja | Sondy | Widoczne | Osłabione | Zmienione | Założenie | '
                'Rewerty | Commity | Minuty | Tokeny | Koszt USD | Rundy | Wersja |',
-               '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
+               '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|']
     for w in sorted(wyniki, key=lambda w: (w.get('zestaw', 1), w['konfiguracja'], w['przebieg'], w['data'])):
         wiersze.append(
             f"| {w.get('zestaw', 1)} | {w['konfiguracja']} | {w['przebieg']} | {w['data']} | {w['zadania_zaliczone']}/{w['zadania_wszystkie']} | "
-            f"{tak_nie(w['kolizja_zaliczona'])} | {tak_nie(w['widoczne']['zaliczone'])} | "
+            f"{tak_nie(w['kolizja_zaliczona'])} | {sondy(w)} | {tak_nie(w['widoczne']['zaliczone'])} | "
             f"{len(w['oslabione_testy'])} | {len(w['zmienione_testy']) if 'zmienione_testy' in w else '—'} | {tak_nie(w.get('zalozenie_zgloszone'))} | "
             f"{w['historia']['rewerty']} | {w['historia']['commity_main']} | "
             f"{w['minuty'] if w['minuty'] is not None else '—'} | {w['tokeny'] if w['tokeny'] is not None else '—'} | "
             f"{w.get('koszt_usd') if w.get('koszt_usd') is not None else '—'} | "
             f"{w['rundy'] if w['rundy'] is not None else '—'} | {w['wersje']['orkiestrator']} |")
     wiersze += ['', '## Średnie na konfigurację', '',
-                '| Zestaw | Konfiguracja | Przebiegów | Zadania | Kolizja (%) | Minuty | Tokeny | Koszt USD | Rundy |',
-                '|---|---|---|---|---|---|---|---|---|']
+                '| Zestaw | Konfiguracja | Przebiegów | Zadania | Kolizja (%) | Sondy | Minuty | Tokeny | Koszt USD | Rundy |',
+                '|---|---|---|---|---|---|---|---|---|---|']
     for numer, konf in sorted({(w.get('zestaw', 1), w['konfiguracja']) for w in wyniki}):
         grupa = [w for w in wyniki if w['konfiguracja'] == konf and w.get('zestaw', 1) == numer]
         kolizja = 100 * sum(w['kolizja_zaliczona'] for w in grupa) / len(grupa)
         wiersze.append(f"| {numer} | {konf} — {OPISY.get(konf, '')} | {len(grupa)} | {srednia([w['zadania_zaliczone'] for w in grupa])} | "
-                       f"{kolizja:.0f} | {srednia([w['minuty'] for w in grupa])} | {srednia([w['tokeny'] for w in grupa])} | "
+                       f"{kolizja:.0f} | {srednia([sum(w['sondy'].values()) if w.get('sondy') else None for w in grupa])} | "
+                       f"{srednia([w['minuty'] for w in grupa])} | {srednia([w['tokeny'] for w in grupa])} | "
                        f"{srednia([w.get('koszt_usd') for w in grupa])} | "
                        f"{srednia([w['rundy'] for w in grupa])} |")
     uwagi = [w for w in wyniki if w.get('uwagi')]

@@ -253,6 +253,23 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      przygotowania, oceny i zestawienia. Konfiguracje A (sesja bez kierownika), B (kierownik, Claude),
      C (kierownik + Codex), D (wykonawca Sonnet). Przebiegi wykonuje właściciel; wyniki w `evals/WYNIKI.md`.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`); tryb PR z CI.
+15. **(v13, po evalach) Tryb zwarty i lista regresji.** Dwie serie evali (evals/README.md): na etapach, które
+   mieszczą się w jednej sesji (7 i 12 zadań, ~150 i ~1000 linii), wszystkie konfiguracje dały pełną jakość
+   mierzoną testami akceptacyjnymi. Zwykła sesja Opus kosztowała ~2 USD i ~7 min, kierownik ~12–14 USD
+   i ~18–19 min. Narzut to osobne zlecenie i osobna recenzja Opus na zadanie oraz scalanie po kolei. Jedyną mierzalną
+   wartością była recenzja: wyłapała usterki spoza kryteriów (uprawnienia 0600, zastąpione dowiązanie, pusty
+   `--rok`), choć niestale — sondy usterek: zwykła sesja 2,5/4, kierownik z wykonawcą Opus 3,5/4, z Sonnetem 2/4.
+   - **Tryb zwarty**: przy etapie mieszczącym się w jednej sesji wykonawcy, bez decyzji projektowych i z jednym
+     runnerem kierownik daje cały etap jednemu wykonawcy (commit na zadanie) i robi jedną recenzję całości,
+     która zastępuje recenzje per zadanie i weryfikację celu etapu. Decyzja w nagłówku TODO.md
+     (`Tryb etapu`), skrót właściciela `tryb:`, przy wątpliwości tryb pełny; powrót do pełnego, gdy wykonawca
+     nie skończy, zadanie wymaga decyzji albo ≥ 3 zadania wracają do poprawy.
+   - **Lista regresji** w każdej recenzji (ZLECENIA B, `kier-recenzent`): uprawnienia, dowiązania, utrata
+     danych, kodowanie, zgodność formatu i API, ścieżki błędów, dane z zewnątrz. Regresja wprowadzona przez
+     zmianę jest błędem (BLOKUJĄCE).
+   - Tryb pełny zostaje dla etapów większych niż jedna sesja i dla prac z decyzjami — tam, gdzie kierownik
+     powstał po to, żeby prowadzić projekt między sesjami. Tego evale jeszcze nie zmierzyły (wieloetapowy
+     zestaw 3).
 
 ## 4. Czy to ma sens — uczciwa ocena
 

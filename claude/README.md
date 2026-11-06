@@ -185,6 +185,7 @@ w trybie auto.
 | `pomysł: …` | Zapis do „Pomysły” — nic nie jest uruchamiane |
 | `zmiana: …` | Zmiana celu/zakresu/priorytetów — najpierw pokazany wpływ |
 | `zespół: …` | Np. „Codex wyczerpany do piątku”, „mam Gemini CLI”, „rezygnuję z agy”, „oszczędzaj Claude”, „wyszedł nowy model X” |
+| `tryb: zwarty` / `tryb: pełny` | Tryb etapu. W zwartym cały mały etap robi jeden wykonawca, a potem jedna recenzja całości; domyślnie kierownik wybiera sam |
 | `stop` | Dokończ bieżący krok, zapisz stan, nie zaczynaj nowych zadań |
 
 ## Gdy Claude jest niedostępny

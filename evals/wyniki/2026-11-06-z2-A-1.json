@@ -52,5 +52,11 @@
   "git": "git version 2.43.0",
   "python": "3.13.17",
   "system": "Linux"
+ },
+ "sondy": {
+  "S1": true,
+  "S2": false,
+  "S3": true,
+  "S4": true
  }
 }

@@ -10,13 +10,15 @@
 
 Obie wersje to v13: mechanika gita w skrypcie `scripts/kier.py`, procedura konfliktów przy równoległej pracy,
 wykonawca domyślnie w klasie MOCNY, zgoda na `agy` bez sandboxa pytana na każdej maszynie
-([claude/ANALIZA.md](claude/ANALIZA.md), decyzja 14). Zbudowana na v12 — zespole wielu dostawców ze wspólnym
-rejestrem `~/.kierownik/ZESPOL.md` (decyzja 13) — i na v11: v10 z gałęzi **`claude/eloquent-meitner-98b5px`**,
-commit [c45c525](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2),
-po optymalizacji zużycia tokenów (instrukcje dla modeli po angielsku, komunikacja
-i pliki projektu po polsku; uzasadnienie w [claude/ANALIZA.md](claude/ANALIZA.md),
-decyzja 12). Oryginał v10 jest w historii Gita i na źródłowej gałęzi.
-Starsze pliki z głównego katalogu zostały przeniesione do archiwum.
+([claude/ANALIZA.md](claude/ANALIZA.md), decyzja 14), a od decyzji 15 tryb zwarty: mały etap robi jeden
+wykonawca, a potem jedna recenzja całości, bo evale pokazały, że przy etapach mieszczących się w jednej sesji
+zadania po kolei kosztują ~6× więcej bez zysku jakości ([evals/README.md](evals/README.md)). Zbudowana na v12 —
+zespole wielu dostawców ze wspólnym rejestrem `~/.kierownik/ZESPOL.md` (decyzja 13) — i na v11: v10 z gałęzi
+**`claude/eloquent-meitner-98b5px`**, commit
+[c45c525](https://github.com/sygnatura/Orkiestrator-AI/commit/c45c525445034b7859f66dda158e2226489db4b2), po
+optymalizacji zużycia tokenów (instrukcje dla modeli po angielsku, komunikacja i pliki projektu po polsku;
+uzasadnienie w [claude/ANALIZA.md](claude/ANALIZA.md), decyzja 12). Oryginał v10 jest w historii Gita i na
+źródłowej gałęzi. Starsze pliki z głównego katalogu zostały przeniesione do archiwum.
 
 ## Instalacja i aktualizacja — jedno polecenie
 

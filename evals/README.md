@@ -11,6 +11,7 @@ nie widzą.
 | B | `/kierownik`, tylko modele Claude (wykonawca Opus) | czy kierownik poprawia jakość |
 | C | `/kierownik` z Codexem jako recenzentem innej rodziny | czy druga rodzina modeli coś wnosi |
 | D | jak B, ale wykonawca zawsze Sonnet | czy Opus jako wykonawca się opłaca |
+| E | `/kierownik` w trybie zwartym (sam wybiera tryb etapu) | czy jedna recenzja całości daje jakość B za koszt bliski A |
 
 ## Co jest w katalogu
 
@@ -20,6 +21,7 @@ nie widzą.
 - `wzorzec/` — rozwiązanie wzorcowe. Służy tylko do sprawdzenia, że ukryte testy da się spełnić
   (`tests/test_evals.py`, uruchamiany w CI).
 - `projekt2/`, `ukryte2/`, `wzorzec2/` — trudniejszy zestaw 2 (niżej), wybierany przez `--zestaw 2`.
+- `sondy2/` — sondy usterek spoza kryteriów dla zestawu 2 (uprawnienia, dowiązanie, `.bak`, układ pliku). Nie wchodzą do wyniku zadań; mierzą, co wnosi recenzja.
 - `przygotuj.py`, `ocen.py`, `zestaw.py` — przygotowanie przebiegu, ocena, zestawienie.
 - `wyniki/` — pliki JSON z przebiegów (commituj je); `WYNIKI.md` — zestawienie.
 
@@ -39,6 +41,7 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
 1. Przygotuj świeżą kopię **poza** tym repozytorium (skrypt odmówi kopii w środku):
    `python3 evals/przygotuj.py ~/evale/B-1 --remote`
 2. Otwórz nową sesję Claude Code w `~/evale/B-1` i zanotuj godzinę startu.
+   Przebieg bezobsługowy (`claude -p`) uruchamiaj z `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, bo inaczej długie zlecenia w tle są ubijane 10 minut po ostatniej turze (seria 3).
 3. Wpisz polecenie startowe danej konfiguracji (niżej) i nie ingeruj do końca etapu. Na pytania odpowiadaj
    ze ściągi, żeby każdy przebieg dostał te same odpowiedzi.
 4. Gdy etap jest zamknięty (raport etapu albo informacja, że wszystko zrobione), zanotuj czas i odczytaj zużycie
@@ -83,6 +86,7 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
   treścią (porównanie drzew składni). Nowe testy dopisane obok się nie liczą.
 - **Założenie (zestaw 2):** heurystyka, czy przy zadaniu ze sprzecznym kryterium (T-107) commit albo `docs/`
   mówi o sprzeczności. „nie” znaczy tylko, że trzeba przeczytać raport końcowy sesji.
+- **Sondy (zestaw 2):** usterki, o których kryteria milczą: S1 uprawnienia pliku danych po zapisie, S2 zapis przez dowiązanie symboliczne, S3 uprawnienia `.bak` prywatnego pliku, S4 układ pliku po wypożyczeniu i zwrocie. Raportowane osobno (k/4).
 - **Koszt:** minuty, tokeny i rundy podajesz sam. Skrypt pokazuje wzmianki o rundach z `docs/TODO.md`.
 
 ## Jak czytać wyniki
@@ -129,6 +133,7 @@ Przebieg jak wyżej, z `--zestaw 2` w `przygotuj.py` i `ocen.py`. Polecenia star
 - **D:** `Eval D: w tym etapie wyłącznie modele Claude (bez Codex i agy) i wykonawca zawsze w klasie STANDARDOWY (sonnet), także w rundach poprawek; jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.`
 
 W ściądze odpowiedzi „E1” zamień na „E2” („po nim zakończ — nie planuj E3”).
+- **E:** `Eval E: w tym etapie wyłącznie modele Claude (bez Codex i agy); jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.` Trybu etapu celowo nie narzucamy: sprawdzamy, czy kierownik sam wybierze zwarty.
 
 ## Wyniki serii 2 (zestaw 2, 2026-11-05/06)
 
@@ -168,3 +173,34 @@ sprzeczności, rozwiązane konflikty — ale na tym zestawie nie przekłada się
 po co powstał: projektu, który nie mieści się w jednej sesji (wiele etapów, przejęcie pracy, kontekst ponad
 okno). Następny eval powinien być wieloetapowy (E1→E3 w osobnych sesjach), a do oceny warto dodać sondy
 usterek spoza kryteriów (uprawnienia, dowiązania), żeby zmierzyć, co wnosi recenzja.
+
+## Wyniki serii 3 (zestaw 2, tryb zwarty, 2026-11-06)
+
+Konfiguracja E: kierownik z trybem zwartym i listą regresji w recenzji (decyzja 15 w `claude/ANALIZA.md`), dwa
+przebiegi w kontenerze jak w serii 2. Trybu nie narzucaliśmy — kierownik w obu przebiegach sam wybrał zwarty
+(„12 małych zadań w ~400 liniach kodu, jedna sesja wykonawcy, bez decyzji projektowych”).
+
+| Konfiguracja | Zadania | Kolizja | Sondy (śr. z 4) | Czas (śr.) | Koszt (śr., cennik API) | Rundy |
+|---|---|---|---|---|---|---|
+| A — sesja bez kierownika | 12/12, 12/12 | 2/2 | 2,5 | 6,9 min | 2,1 USD | — |
+| B — kierownik, wykonawca Opus | 12/12, 12/12 | 2/2 | 3,5 | 19,1 min | 14,2 USD | 1,5 |
+| D — kierownik, wykonawca Sonnet | 12/12, 12/12 | 2/2 | 2,0 | 17,9 min | 12,0 USD | 2,5 |
+| **E — kierownik, tryb zwarty** | 12/12, 12/12 | 2/2 | **4,0** | 19,6 min | **4,9 USD** | 1 |
+
+- **Jakość:** E ma pełny wynik zadań i jako jedyna konfiguracja oba przebiegi 4/4 w sondach. W obu przebiegach
+  recenzja całości zwróciła T-106, bo zapis zastępował dowiązanie symboliczne, i wykonawca to poprawił w jednej
+  rundzie.
+- **Koszt:** ~1/3 trybu pełnego (4,9 wobec 14,2 USD) i ~2,3× zwykłej sesji. Czas jak w trybie pełnym, bo jeden
+  wykonawca robi zadania po kolei.
+- **Zastrzeżenie:** lista regresji powstała z usterek serii 2, a sondy sprawdzają te same kategorie
+  (uprawnienia, dowiązania). Część przewagi E może wynikać z listy, nie z trybu — B i D jej nie miały. Czy
+  efekt jest ogólny, pokaże sonda z kategorii, której lista nie wymienia, albo nowy zestaw.
+- **Środowisko:** pierwsza próba E-1 przerwała się, bo Claude Code przeniósł długiego wykonawcę etapu w tło,
+  a `claude -p` ubija zadania w tle 10 minut po ostatniej turze. W sesji interaktywnej powiadomienie budzi
+  kierownika, więc to cecha uruchomienia bezobsługowego. Przebiegi bezobsługowe uruchamiamy od tej pory
+  z `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; E-1 powtórzono od zera.
+
+**Wniosek:** dla etapów mieszczących się w jednej sesji tryb zwarty daje co najmniej jakość trybu pełnego za
+~1/3 kosztu. Zwykła sesja jest tańsza, ale zostawia usterki, których kryteria nie nazywają. Tryb zwarty zostaje
+domyślnym wyborem kierownika dla takich etapów. Do zmierzenia zostaje tryb pełny na etapach większych niż jedna
+sesja (zestaw 3, wieloetapowy).
