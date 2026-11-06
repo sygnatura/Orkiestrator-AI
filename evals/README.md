@@ -41,6 +41,7 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
 1. Przygotuj świeżą kopię **poza** tym repozytorium (skrypt odmówi kopii w środku):
    `python3 evals/przygotuj.py ~/evale/B-1 --remote`
 2. Otwórz nową sesję Claude Code w `~/evale/B-1` i zanotuj godzinę startu.
+   Przebieg bezobsługowy (`claude -p`) uruchamiaj z `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, bo inaczej długie zlecenia w tle są ubijane 10 minut po ostatniej turze (seria 3).
 3. Wpisz polecenie startowe danej konfiguracji (niżej) i nie ingeruj do końca etapu. Na pytania odpowiadaj
    ze ściągi, żeby każdy przebieg dostał te same odpowiedzi.
 4. Gdy etap jest zamknięty (raport etapu albo informacja, że wszystko zrobione), zanotuj czas i odczytaj zużycie
@@ -172,3 +173,34 @@ sprzeczności, rozwiązane konflikty — ale na tym zestawie nie przekłada się
 po co powstał: projektu, który nie mieści się w jednej sesji (wiele etapów, przejęcie pracy, kontekst ponad
 okno). Następny eval powinien być wieloetapowy (E1→E3 w osobnych sesjach), a do oceny warto dodać sondy
 usterek spoza kryteriów (uprawnienia, dowiązania), żeby zmierzyć, co wnosi recenzja.
+
+## Wyniki serii 3 (zestaw 2, tryb zwarty, 2026-11-06)
+
+Konfiguracja E: kierownik z trybem zwartym i listą regresji w recenzji (decyzja 15 w `claude/ANALIZA.md`), dwa
+przebiegi w kontenerze jak w serii 2. Trybu nie narzucaliśmy — kierownik w obu przebiegach sam wybrał zwarty
+(„12 małych zadań w ~400 liniach kodu, jedna sesja wykonawcy, bez decyzji projektowych”).
+
+| Konfiguracja | Zadania | Kolizja | Sondy (śr. z 4) | Czas (śr.) | Koszt (śr., cennik API) | Rundy |
+|---|---|---|---|---|---|---|
+| A — sesja bez kierownika | 12/12, 12/12 | 2/2 | 2,5 | 6,9 min | 2,1 USD | — |
+| B — kierownik, wykonawca Opus | 12/12, 12/12 | 2/2 | 3,5 | 19,1 min | 14,2 USD | 1,5 |
+| D — kierownik, wykonawca Sonnet | 12/12, 12/12 | 2/2 | 2,0 | 17,9 min | 12,0 USD | 2,5 |
+| **E — kierownik, tryb zwarty** | 12/12, 12/12 | 2/2 | **4,0** | 19,6 min | **4,9 USD** | 1 |
+
+- **Jakość:** E ma pełny wynik zadań i jako jedyna konfiguracja oba przebiegi 4/4 w sondach. W obu przebiegach
+  recenzja całości zwróciła T-106, bo zapis zastępował dowiązanie symboliczne, i wykonawca to poprawił w jednej
+  rundzie.
+- **Koszt:** ~1/3 trybu pełnego (4,9 wobec 14,2 USD) i ~2,3× zwykłej sesji. Czas jak w trybie pełnym, bo jeden
+  wykonawca robi zadania po kolei.
+- **Zastrzeżenie:** lista regresji powstała z usterek serii 2, a sondy sprawdzają te same kategorie
+  (uprawnienia, dowiązania). Część przewagi E może wynikać z listy, nie z trybu — B i D jej nie miały. Czy
+  efekt jest ogólny, pokaże sonda z kategorii, której lista nie wymienia, albo nowy zestaw.
+- **Środowisko:** pierwsza próba E-1 przerwała się, bo Claude Code przeniósł długiego wykonawcę etapu w tło,
+  a `claude -p` ubija zadania w tle 10 minut po ostatniej turze. W sesji interaktywnej powiadomienie budzi
+  kierownika, więc to cecha uruchomienia bezobsługowego. Przebiegi bezobsługowe uruchamiamy od tej pory
+  z `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; E-1 powtórzono od zera.
+
+**Wniosek:** dla etapów mieszczących się w jednej sesji tryb zwarty daje co najmniej jakość trybu pełnego za
+~1/3 kosztu. Zwykła sesja jest tańsza, ale zostawia usterki, których kryteria nie nazywają. Tryb zwarty zostaje
+domyślnym wyborem kierownika dla takich etapów. Do zmierzenia zostaje tryb pełny na etapach większych niż jedna
+sesja (zestaw 3, wieloetapowy).

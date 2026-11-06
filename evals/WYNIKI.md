@@ -11,6 +11,8 @@
 | 2 | B | 2 | 2026-11-06 | 12/12 | tak | 3/4 | tak | 0 | 0 | tak | 0 | 48 | 18.1 | 18173600 | 12.94 | 1 | c16b091 |
 | 2 | D | 1 | 2026-11-06 | 12/12 | tak | 3/4 | tak | 0 | 0 | tak | 0 | 48 | 20.7 | 22549626 | 15.8 | 5 | c16b091 |
 | 2 | D | 2 | 2026-11-06 | 12/12 | tak | 1/4 | tak | 0 | 0 | tak | 0 | 35 | 15.0 | 12084021 | 8.25 | 0 | c16b091 |
+| 2 | E | 1 | 2026-11-06 | 12/12 | tak | 4/4 | tak | 0 | 0 | tak | 0 | 18 | 20.8 | 6379630 | 4.85 | 1 | 86486f9 |
+| 2 | E | 2 | 2026-11-06 | 12/12 | tak | 4/4 | tak | 0 | 0 | tak | 0 | 19 | 18.5 | 5812135 | 4.88 | 1 | 86486f9 |
 
 ## Średnie na konfigurację
 
@@ -22,6 +24,7 @@
 | 2 | A — sesja bez kierownika | 2 | 12.0 | 100 | 2.5 | 6.9 | 2554148.5 | 2.1 | 0.0 |
 | 2 | B — kierownik, tylko Claude (z2: wykonawca Opus) | 2 | 12.0 | 100 | 3.5 | 19.1 | 18353703.0 | 14.2 | 1.5 |
 | 2 | D — kierownik, wykonawca Sonnet | 2 | 12.0 | 100 | 2.0 | 17.9 | 17316823.5 | 12.0 | 2.5 |
+| 2 | E — kierownik, tryb zwarty | 2 | 12.0 | 100 | 4.0 | 19.6 | 6095882.5 | 4.9 | 1.0 |
 
 ## Uwagi z przebiegów
 
@@ -34,3 +37,5 @@
 - z2 B-2: wykonawca zawsze opus; T-107 kryteria v2 przed startem; runda: T-107 (jawnie pusty --rok); konflikty cli.py rozwiązane przy scalaniu
 - z2 D-1: wykonawca sonnet, recenzja opus; przerwany limitem w rundzie T-106 i dokończony przez --resume (łącznie); T-106: 3 rundy + diagnoza architekta; T-101: isbn w eksporcie bez neutralizacji i zawężony test T-105 (wyłapane w recenzji); T-109: komunikat błędu
 - z2 D-2: wykonawca sonnet, recenzja opus; 0 rund; konflikty cli.py rozwiązane przy scalaniu; kierownik dopisał test łączenia flag lista
+- z2 E-1: kierownik sam wybrał tryb zwarty; jedno zlecenie etapu (wykonawca opus) + recenzja całości (opus); runda: T-106 zapis zastępował dowiązanie; powtórzony z CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 — pierwsza próba przerwana, bo claude -p ubija zadania w tle 10 min po turze
+- z2 E-2: kierownik sam wybrał tryb zwarty; jedno zlecenie etapu (wykonawca opus) + recenzja całości (opus); runda: T-106 zapis zastępował dowiązanie

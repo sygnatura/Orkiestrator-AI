@@ -1,0 +1,69 @@
+{
+ "data": "2026-11-06",
+ "konfiguracja": "E",
+ "przebieg": 1,
+ "minuty": 20.8,
+ "tokeny": 6379630,
+ "rundy": 1,
+ "koszt_usd": 4.85,
+ "uwagi": "kierownik sam wybrał tryb zwarty; jedno zlecenie etapu (wykonawca opus) + recenzja całości (opus); runda: T-106 zapis zastępował dowiązanie; powtórzony z CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 — pierwsza próba przerwana, bo claude -p ubija zadania w tle 10 min po turze",
+ "zestaw": 2,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale2/E-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T101": true,
+  "T102": true,
+  "T103": true,
+  "T104": true,
+  "T105": true,
+  "T106": true,
+  "T107": true,
+  "T108": true,
+  "T109": true,
+  "T110": true,
+  "T111": true,
+  "T112": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "sondy": {
+  "S1": true,
+  "S2": true,
+  "S3": true,
+  "S4": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 62
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": true,
+ "historia": {
+  "commity_main": 18,
+  "scalenia": [
+   {
+    "temat": "merge(E2-etap): E2: ISBN, wypożyczenia, przetrzymane, lista z filtrami, statystyki, bezpieczny eksport i zapis",
+    "commity": 13
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "rodziny — w E2 tylko modele Claude (polecenie właściciela). Rundy poprawek: 1 (T-106: zapis przez dowiązanie"
+ ],
+ "wersje": {
+  "orkiestrator": "86486f9",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}
