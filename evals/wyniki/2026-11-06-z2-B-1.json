@@ -1,0 +1,118 @@
+{
+ "data": "2026-11-06",
+ "konfiguracja": "B",
+ "przebieg": 1,
+ "minuty": 20.1,
+ "tokeny": 18533806,
+ "rundy": 2,
+ "koszt_usd": 15.52,
+ "uwagi": "wykonawca zawsze opus, recenzja opus (fable z rejestru niedostępny); przerwany 5-godzinnym limitem konta przy weryfikacji etapu i dokończony przez --resume (czas i koszt łącznie); T-107 kryteria v2 przed startem; rundy: T-106 (uprawnienia 0600, zapis przez dowiązanie), T-107 (jawnie pusty --rok) + scalenie z konfliktem",
+ "zestaw": 2,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale2/B-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T101": true,
+  "T102": true,
+  "T103": true,
+  "T104": true,
+  "T105": true,
+  "T106": true,
+  "T107": true,
+  "T108": true,
+  "T109": true,
+  "T110": true,
+  "T111": true,
+  "T112": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 86
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": true,
+ "historia": {
+  "commity_main": 39,
+  "scalenia": [
+   {
+    "temat": "merge(T-107): walidacja roku",
+    "commity": 3
+   },
+   {
+    "temat": "merge(T-101): ISBN-13",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-111): lista --tylko-dostepne",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-109): lista --sortuj",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-110): lista --autor",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-106): atomowy zapis z kopią .bak",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-112): statystyki",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-103): raport przetrzymanych",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-104): lista --szczegoly",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-105): eksport bezpieczny dla arkuszy",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-108): wypożyczenie i zwrot",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-102): Unicode NFC/NFD w szukaniu i zapisie",
+    "commity": 1
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "przydział wykonawca: autor —, ryzyko ŚREDNIE (dane) → wymagane MOCNY, dowolna → claude-sub opus; recenzja: brak innej rodziny → fable (wymaga credits → opus, recenzja tą samą klasą); runda 1 DO POPRAWY (uprawnienia 0600 nowego pliku; zastąpienie dowiązania — dopisane przez kierownika jako regresja danych)",
+  "przydział wykonawca: ryzyko ŚREDNIE (walidacja danych) → MOCNY → claude-sub opus; recenzja: fable wymaga credits → opus, recenzja tą samą klasą; runda 1 DO POPRAWY (jawnie pusty --rok przechodził); runda 2: scalenie z main (konflikt importer/cli z T-101/T-102)",
+  "- T-110 — 5b5f859, wyk. opus, 0 rund, rec. opus (tą samą klasą), konflikt rozwiązany: biblioteka/cli.py (kierownik), main → 51 passed; tokeny 26k/18k",
+  "- T-109 — a2f91f4, wyk. opus, 0 rund, rec. opus (tą samą klasą), konflikt rozwiązany: biblioteka/cli.py (kierownik; filtr przed sortowaniem), main → 58 passed; scenariusz lista --autor --sortuj rok --szczegoly OK; tokeny 35k/26k",
+  "- T-111 — a18f9fb, wyk. opus, 0 rund, rec. opus (tą samą klasą), konflikt rozwiązany: biblioteka/cli.py (kierownik), main → 62 passed; scenariusz wszystkie 4 flagi listy razem OK; tokeny 26k/18k",
+  "- T-101 — 3c420b3, wyk. opus, 0 rund, rec. opus (tą samą klasą; bez recenzji innej rodziny — brak dostępnej), konflikt rozwiązany: biblioteka/cli.py (kierownik: importy, sąsiednie funkcje), main → 75 passed; scenariusz dodaj/szukaj --isbn, eksport z isbn i '= OK; tokeny 44k/29k",
+  "- T-107 — 95336ce, wyk. opus, 2 rundy (poprawka + scalenie z main), rec. opus ×2 (tą samą klasą), main → 86 passed; kryteria v2; tokeny 32k+24k+33k/30k+37k",
+  "- T-105 — c8c7af9, wyk. opus, 0 rund, rec. opus (recenzja tą samą klasą; bez recenzji innej rodziny — brak dostępnej), `unittest` main → 27 passed; scenariusz =HYPERLINK → '= w CSV; tokeny 23k/27k",
+  "- T-104 — f48b842, wyk. opus, 0 rund, rec. opus (tą samą klasą), main → 29 passed; scenariusz lista --szczegoly OK; tokeny 27k/19k",
+  "- T-103 — 9186c9e, wyk. opus, 0 rund, rec. opus (tą samą klasą), main → 34 passed; scenariusz przetrzymane --dzis 2026-11-05 → [9] 82, [2] 65, [14] brak daty; tokeny 29k/20k",
+  "- T-112 — 6181135, wyk. opus, 0 rund, rec. opus (tą samą klasą), konflikt rozwiązany: biblioteka/cli.py (kierownik, obie strony), main → 38 passed; tokeny 27k/25k",
+  "- T-106 — 8b801f1, wyk. opus, 1 runda, rec. opus ×2 (tą samą klasą; bez recenzji innej rodziny — brak dostępnej), main → 47 passed; scenariusz .bak, umask, dowiązanie OK; tokeny 25k+28k/24k+27k"
+ ],
+ "wersje": {
+  "orkiestrator": "c16b091",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

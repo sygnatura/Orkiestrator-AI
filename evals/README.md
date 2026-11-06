@@ -129,3 +129,42 @@ Przebieg jak wyżej, z `--zestaw 2` w `przygotuj.py` i `ocen.py`. Polecenia star
 - **D:** `Eval D: w tym etapie wyłącznie modele Claude (bez Codex i agy) i wykonawca zawsze w klasie STANDARDOWY (sonnet), także w rundach poprawek; jednorazowo, nie zmieniaj rejestru. Plan E2 jest zaakceptowany — prowadź go do końca.`
 
 W ściądze odpowiedzi „E1” zamień na „E2” („po nim zakończ — nie planuj E3”).
+
+## Wyniki serii 2 (zestaw 2, 2026-11-05/06)
+
+Przebiegi A, B, D, po dwa, w kontenerze przez `claude -p` (Opus jako główny model). B z wykonawcą zawsze Opus,
+D z wykonawcą zawsze Sonnet; recenzje w obu na Opusie, bo `fable` z rejestru nie był dostępny. Tabela
+w [WYNIKI.md](WYNIKI.md).
+
+| Konfiguracja | Zadania | Kolizja | Czas (śr.) | Koszt (śr., cennik API) | Rundy poprawek |
+|---|---|---|---|---|---|
+| A — sesja bez kierownika | 12/12, 12/12 | 2/2 | 6,9 min | 2,1 USD | — (bez recenzji) |
+| B — kierownik, wykonawca Opus | 12/12, 12/12 | 2/2 | 19,1 min | 14,2 USD | 2 i 1 |
+| D — kierownik, wykonawca Sonnet | 12/12, 12/12 | 2/2 | 17,9 min | 12,0 USD | 5 i 0 |
+
+- **Jakość:** ukryte testy nie odróżniają konfiguracji. We wszystkich przebiegach jest 12/12, zaliczona kolizja,
+  brak osłabionych i zmienionych testów, brak rewertów. Sprzeczność w T-107 zgłosił każdy przebieg. Kierownik
+  zapisał przed startem „kryteria v2”, a A napisał o sprzeczności w commicie i raporcie.
+- **Koszt:** kierownik jest ~2,7× wolniejszy i ~6× droższy od zwykłej sesji. W D większość kosztu to Opus jako
+  kierownik i recenzent; Sonnet kosztował 1,5–1,8 USD na przebieg.
+- **Opus czy Sonnet jako wykonawca:** jakość wyszła równa. D jest ~15% tańszy, ale miał więcej rund. W D-1
+  T-106 potrzebował 3 rund i diagnozy architekta, a kierownik przy poprawce zawęził test T-105 (wyłapała to
+  recenzja). Przy dwóch przebiegach to wskazówka, nie wynik.
+- **Procedura konfliktu:** tym razem sprawdzona. Kierownik puszczał zadania równolegle, konflikty w `cli.py`
+  rozwiązywał przy scalaniu, a połączenie flag `lista` przeszło we wszystkich przebiegach.
+- **Poza ukrytymi testami:** recenzja wyłapała prawdziwe usterki — plik danych z uprawnieniami 0600 po zapisie
+  atomowym, zastąpione dowiązanie symboliczne, jawnie pusty `--rok`, ISBN bez neutralizacji w eksporcie.
+  Sprawdzenie wszystkich kopii po fakcie pokazało jednak, że recenzja nie robi tego stale: 0600 zostało
+  w A-2 i D-2 (i we wzorcu, poprawionym po serii), a dowiązanie zachował tylko B-1.
+- **Przerwy:** dwa równoległe przebiegi kierownika razem z A wyczerpały 5-godzinny limit konta. B-1 i D-1
+  dokończono przez `--resume` po resecie; czas i koszt są łączne. B-2 i D-2 puszczono od nowa.
+- **Poprawka zestawu:** ukryty test T-108 wymagał dokładnej linii potwierdzenia, a kryterium mówi tylko
+  „linią `formatuj()`”. Oba kierowniki wypisywały `Wypożyczono: …` i oblewały ten test. Od c16b091 test
+  dopuszcza przedrostek; wszystkie przebiegi oceniono po tej zmianie.
+
+**Wniosek:** w projekcie tej wielkości (~1 tys. linii, 12 zadań, jedna sesja) zwykła sesja Opus daje tę samą
+jakość mierzoną testami akceptacyjnymi za ~1/6 kosztu. Kierownik pokazuje swoją pracę — recenzja, rundy, zgłoszone
+sprzeczności, rozwiązane konflikty — ale na tym zestawie nie przekłada się to na wynik. Nie zmierzyliśmy tego,
+po co powstał: projektu, który nie mieści się w jednej sesji (wiele etapów, przejęcie pracy, kontekst ponad
+okno). Następny eval powinien być wieloetapowy (E1→E3 w osobnych sesjach), a do oceny warto dodać sondy
+usterek spoza kryteriów (uprawnienia, dowiązania), żeby zmierzyć, co wnosi recenzja.

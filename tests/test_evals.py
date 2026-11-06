@@ -122,7 +122,7 @@ class EvalKitTest(unittest.TestCase):
             zestaw.main(['--wyniki', str(results), '--cel', str(target)])
         text = target.read_text(encoding='utf-8')
         self.assertIn('| A | 1 |', text)
-        self.assertIn('B — kierownik, tylko Claude', text)
+        self.assertIn('B — kierownik, tylko Claude (z2: wykonawca Opus)', text)
         self.assertIn('7/7', text)
 
 

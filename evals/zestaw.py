@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 
 EVALS = Path(__file__).resolve().parent
-OPISY = {'A': 'sesja bez kierownika', 'B': 'kierownik, tylko Claude', 'C': 'kierownik + Codex',
+OPISY = {'A': 'sesja bez kierownika', 'B': 'kierownik, tylko Claude (z2: wykonawca Opus)', 'C': 'kierownik + Codex',
          'D': 'kierownik, wykonawca Sonnet'}
 
 

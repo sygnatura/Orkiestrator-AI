@@ -19,6 +19,8 @@ def zapisz(sciezka: Path, ksiazki: list[Ksiazka]) -> None:
     tekst = json.dumps([k.do_slownika() for k in ksiazki], ensure_ascii=False, indent=1) + '\n'
     deskryptor, tymczasowy = tempfile.mkstemp(prefix=f'.{sciezka.name}.', suffix='.tmp', dir=sciezka.parent)
     try:
+        if sciezka.exists():  # mkstemp tworzy plik 0600 — zachowaj uprawnienia pliku danych
+            os.chmod(tymczasowy, sciezka.stat().st_mode & 0o777)
         with os.fdopen(deskryptor, 'w', encoding='utf-8') as plik:
             plik.write(tekst)
             plik.flush()
