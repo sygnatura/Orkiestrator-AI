@@ -1,0 +1,23 @@
+"""Walidacja pól wspólna dla CLI i importu."""
+
+from datetime import date
+import re
+
+ROK_MIN = 1450
+
+
+def sprawdz_rok(rok: int | None) -> int | None:
+    # Kryterium T-107 każe też odrzucać książki bez roku, ale to sprzeczne z danymi (pozycje bez roku),
+    # z testami widocznymi (dodaj/import bez roku) i z T-103/T-109; rok zostaje opcjonalny — zgłoszone właścicielowi.
+    if rok is not None and not ROK_MIN <= rok <= date.today().year:
+        raise ValueError(f'rok spoza zakresu {ROK_MIN}–{date.today().year}: {rok}')
+    return rok
+
+
+def sprawdz_date(tekst: str) -> date:
+    try:
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', tekst):
+            raise ValueError
+        return date.fromisoformat(tekst)
+    except ValueError:
+        raise ValueError(f'niepoprawna data (RRRR-MM-DD): {tekst}') from None

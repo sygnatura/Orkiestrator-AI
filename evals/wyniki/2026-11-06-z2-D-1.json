@@ -1,0 +1,112 @@
+{
+ "data": "2026-11-06",
+ "konfiguracja": "D",
+ "przebieg": 1,
+ "minuty": 20.7,
+ "tokeny": 22549626,
+ "rundy": 5,
+ "koszt_usd": 15.8,
+ "uwagi": "wykonawca sonnet, recenzja opus; przerwany limitem w rundzie T-106 i dokończony przez --resume (łącznie); T-106: 3 rundy + diagnoza architekta; T-101: isbn w eksporcie bez neutralizacji i zawężony test T-105 (wyłapane w recenzji); T-109: komunikat błędu",
+ "zestaw": 2,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale2/D-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T101": true,
+  "T102": true,
+  "T103": true,
+  "T104": true,
+  "T105": true,
+  "T106": true,
+  "T107": true,
+  "T108": true,
+  "T109": true,
+  "T110": true,
+  "T111": true,
+  "T112": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 74
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": true,
+ "historia": {
+  "commity_main": 48,
+  "scalenia": [
+   {
+    "temat": "merge(T-106): zapis atomowy z kopią .bak",
+    "commity": 5
+   },
+   {
+    "temat": "merge(T-109): lista --sortuj",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-101): ISBN-13 w całym systemie",
+    "commity": 4
+   },
+   {
+    "temat": "merge(T-111): lista --tylko-dostepne",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-110): lista --autor",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-104): lista --szczegoly",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-112): statystyki",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-103): raport przetrzymanych",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-107): walidacja roku",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-108): wypożyczenie i zwrot",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-105): eksport bezpieczny dla arkuszy",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-102): Unicode NFC/NFD w szukaniu i zapisie",
+    "commity": 1
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "Tryb evala D (jednorazowo): tylko modele Claude; wykonawca zawsze STANDARDOWY (sonnet), także w rundach poprawek;",
+  "runda 1 (kierownik, poprawka własna 3c4141d): recenzja opus DO POPRAWY — isbn w eksporcie bez `bezpieczne()` i zawężony przeze mnie test T-105; poprawione, test znów obejmuje wszystkie kolumny od 4.",
+  "runda 1: recenzja opus DO POPRAWY — mkstemp zmienia uprawnienia pliku danych na 0600 (regresja dla innych skryptów)",
+  "runda 2 (kierownik, poprawka własna 5d2534c): recenzja opus po r.1 DO POPRAWY — `.bak` z uprawnieniami wg umask (kopia prywatnego pliku czytelna dla wszystkich); copymode + test",
+  "po 2 nieudanych rundach: diagnoza kier-architekt opus (diagnoza bez klasy NAJMOCNIEJSZY — fable wymaga credits): `.bak` jako twarde dowiązanie; runda 3 sonnet (7c56e9a) → DO POPRAWY (grupa przepadała) → poprawka kierownika 1ea505f → ZALICZONE",
+  "runda 1: recenzja opus DO POPRAWY — komunikat złej wartości `--sortuj` po angielsku (argparse choices), konwencja AGENTS.md"
+ ],
+ "wersje": {
+  "orkiestrator": "c16b091",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

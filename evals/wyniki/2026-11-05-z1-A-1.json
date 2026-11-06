@@ -1,0 +1,49 @@
+{
+ "data": "2026-11-05",
+ "konfiguracja": "A",
+ "przebieg": 1,
+ "minuty": 3.4,
+ "tokeny": 1237943,
+ "rundy": 0,
+ "koszt_usd": 1.01,
+ "uwagi": "claude -p w kontenerze (Opus); bez kierownika; 7 commitów zadań, 34 nowe testy",
+ "zestaw": 1,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale/A-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T001": true,
+  "T002": true,
+  "T003": true,
+  "T004": true,
+  "T005": true,
+  "T006": true,
+  "T007": true
+ },
+ "zadania_zaliczone": 7,
+ "zadania_wszystkie": 7,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 37
+ },
+ "oslabione_testy": [],
+ "historia": {
+  "commity_main": 8,
+  "scalenia": [],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [],
+ "wersje": {
+  "orkiestrator": "c28ae3a",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

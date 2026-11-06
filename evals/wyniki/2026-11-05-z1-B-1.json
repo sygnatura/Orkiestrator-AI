@@ -1,0 +1,86 @@
+{
+ "data": "2026-11-05",
+ "konfiguracja": "B",
+ "przebieg": 1,
+ "minuty": 8.7,
+ "tokeny": 3522898,
+ "rundy": 0,
+ "koszt_usd": 4.24,
+ "uwagi": "claude -p w kontenerze; kierownik sam dał Sonnetowi 6/7 zadań (proste), Opus dla T-005, Fable: recenzja T-005 i weryfikacja etapu; T-006/T-007 sekwencyjnie (konflikt nie sprawdzony); 15 subagentów",
+ "zestaw": 1,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale/B-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T001": true,
+  "T002": true,
+  "T003": true,
+  "T004": true,
+  "T005": true,
+  "T006": true,
+  "T007": true
+ },
+ "zadania_zaliczone": 7,
+ "zadania_wszystkie": 7,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 25
+ },
+ "oslabione_testy": [],
+ "historia": {
+  "commity_main": 20,
+  "scalenia": [
+   {
+    "temat": "merge(T-007): znacznik wypożyczenia w linii książki",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-005): bezpieczna nazwa pliku eksportu",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-006): rok w linii książki",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-001): opcja --version",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-004): eksport do CSV",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-002): poprawne stronicowanie lista",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-003): szukanie bez wielkości liter i po fragmencie",
+    "commity": 1
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "- T-007 znacznik wypożyczenia — merge 3316790 (feat 313efce); sonnet, 0 rund; recenzja opus ZALICZONE; `szukaj --autor żerom` → `Przedwiośnie — Stefan Żeromski (1924) [wypożyczona]`; testy 25/0/0; tokeny: wyk. 17179, rec. 15604",
+  "- T-001 `--version` — merge b154a5b (feat e08697e); wykonawca STANDARDOWY sonnet, 0 rund; recenzja kier-recenzent opus (ścieżka szybka, bez recenzji innej rodziny — eval tylko Claude) ZALICZONE; `python -m katalog --version` → `katalog 1.0.0`, exit 0; testy kierownika 4/0/0; tokeny: wyk. 12382, rec. 11039",
+  "- T-002 stronicowanie — merge d3cefc9 (fix 1879bf9); sonnet, 0 rund; recenzja opus ZALICZONE; `lista --strona 1` → pozycje 1–5, `--strona 0`/`4` → stderr + kod 2; testy 9/0/0; tokeny: wyk. 17246, rec. 16916",
+  "- T-003 szukanie — merge f45ee13 (feat 4b5f111); sonnet, 0 rund; recenzja opus ZALICZONE; `szukaj --autor żerom` → 2 książki Żeromskiego w kolejności pliku; testy 6/0/0; tokeny: wyk. 17198, rec. 13193",
+  "- T-005 bezpieczna nazwa eksportu — merge 37ca448 (fix 7375bdc); wykonawca MOCNY opus, 0 rund; recenzja kier-recenzent fable ZALICZONE (bez recenzji innej rodziny — eval tylko Claude; host o klasę wyżej); `eksport ../x.csv`/abs/`pod/x.csv`/dowiązanie → stderr + kod 2, migawka katalogu bez zmian; testy kierownika 21/0/0; tokeny: wyk. 25178, rec. 19901",
+  "- T-006 rok w linii — merge 078ce25 (feat fb6a9f9); sonnet, 0 rund; recenzja opus ZALICZONE; `lista` → `Lalka — Bolesław Prus (1890)`, pozycja bez roku bez nawiasu; testy 16/0/0; tokeny: wyk. 18087, rec. 13956",
+  "- T-004 eksport CSV — merge 5808760 (feat 1d5d6d1); sonnet, 0 rund; recenzja opus ZALICZONE; `eksport k.csv` → nagłówek + 12 wierszy, cytowanie OK; testy 4/0/0; tokeny: wyk. 18106, rec. 15728"
+ ],
+ "wersje": {
+  "orkiestrator": "c28ae3a",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

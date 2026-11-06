@@ -1,0 +1,105 @@
+{
+ "data": "2026-11-06",
+ "konfiguracja": "B",
+ "przebieg": 2,
+ "minuty": 18.1,
+ "tokeny": 18173600,
+ "rundy": 1,
+ "koszt_usd": 12.94,
+ "uwagi": "wykonawca zawsze opus; T-107 kryteria v2 przed startem; runda: T-107 (jawnie pusty --rok); konflikty cli.py rozwiązane przy scalaniu",
+ "zestaw": 2,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale2/B-2",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "KOLIZJA": true,
+  "T101": true,
+  "T102": true,
+  "T103": true,
+  "T104": true,
+  "T105": true,
+  "T106": true,
+  "T107": true,
+  "T108": true,
+  "T109": true,
+  "T110": true,
+  "T111": true,
+  "T112": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": true,
+ "dodatkowe": {
+  "KOLIZJA": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 100
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": true,
+ "historia": {
+  "commity_main": 48,
+  "scalenia": [
+   {
+    "temat": "merge(T-107): walidacja roku (kryteria v2)",
+    "commity": 3
+   },
+   {
+    "temat": "merge(T-110): lista --autor",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-111): lista --tylko-dostepne",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-112): statystyki",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-102): Unicode NFC/NFD w szukaniu i zapisie",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-109): lista --sortuj",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-105): eksport bezpieczny dla arkuszy",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-103): raport przetrzymanych",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-101): ISBN-13 w całym systemie",
+    "commity": 2
+   },
+   {
+    "temat": "merge(T-106): atomowy zapis z kopią .bak",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-108): wypożyczenie i zwrot",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-104): lista --szczegoly",
+    "commity": 1
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [],
+ "wersje": {
+  "orkiestrator": "c16b091",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}
