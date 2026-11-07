@@ -209,3 +209,44 @@ które lista nazywa. Recenzja łapie to, czego każe jej szukać lista; nowej ka
 ~1/3 kosztu. Zwykła sesja jest tańsza, ale zostawia usterki, których kryteria nie nazywają. Tryb zwarty zostaje
 domyślnym wyborem kierownika dla takich etapów. Do zmierzenia zostaje tryb pełny na etapach większych niż jedna
 sesja (zestaw 3, wieloetapowy).
+
+## Zestaw 3 — „biblioteka” w trzech etapach i czterech sesjach
+
+Start po E2 (kod wzorca 2). Plan trzech etapów, każdy w osobnej sesji: E3 konfiguracja i formaty (4 zadania),
+E4 historia i rezerwacje (5), E5 jeden plik danych v2 zgodny wstecz (3).
+
+Co sprawdzają testy:
+- **decyzja właściciela z E3** — domyślny format dat `DD.MM.RRRR`, podany tylko w ściądze sesji E3 — musi przetrwać
+  do E4, gdzie `historia` wypisuje daty;
+- **sesja E4 jest przerywana** 30 s po pierwszym commicie zadania E4 (na dowolnej gałęzi), a nowa sesja ją kończy;
+- dodatkowe kontrole: `CIAGLOSC` (ustawienia i decyzje z E3 w poleceniach z E4/E5) i `REGRESJA` (zachowania z E2
+  po E5, w starym formacie i w v2).
+
+Kryteria i ukryte testy przed przebiegami niezależnie recenzował Fable. Znalazł jeden test ostrzejszy niż
+kryterium (`rezerwacje` z nieznanym ID) i kilka niedopowiedzeń; poprawione przed przebiegami.
+
+## Wyniki serii 4 (zestaw 3, 2026-11-07)
+
+Przebiegi A (zwykłe sesje) i E (kierownik, tryb wybiera sam, recenzja i weryfikacja etapu na Fable), po dwa, każdy
+w czterech sesjach `claude -p`.
+
+| Konfiguracja | Zadania | Ciągłość | Regresja | Czas (śr., suma sesji) | Koszt (śr., cennik API) |
+|---|---|---|---|---|---|
+| A — zwykłe sesje | 12/12, 12/12 | 2/2 | 2/2 | 11,1 min | 3,0 USD* |
+| E — kierownik | 12/12, 12/12 | 2/2 | 2/2 | 35,8 min | 11,8 USD* (w tym Fable 2,9 i 6,4) |
+
+\* Bez kosztu przerwanej sesji, gdy ubity proces go nie zaraportował (A-1, A-2, E-2).
+
+- **Jakość:** pełna w obu konfiguracjach. Decyzja z E3 przetrwała do E4 także w zwykłych sesjach: kolejna sesja
+  przeczytała ją z kodu (format dat był już zaimplementowany), nie z dokumentów. Sondy S1–S6 z zestawu 2 na stanach
+  końcowych: wszędzie 6/6, czyli żadnej regresji względem punktu wyjścia.
+- **Przerwanie:** obie konfiguracje dokończyły E4 bez zgubionych i zdublowanych zadań. Zwykła sesja odtworzyła stan
+  z Gita. Kierownik w E-1 dokończył etap zwarty z gałęzi wykonawcy. W E-2 scalił 2 ukończone zadania i resztę zrobił
+  w trybie pełnym, jak każe reguła powrotu — poprawnie, ale ta sesja trwała 18,6 min.
+- **Koszt:** kierownik ~4× drożej i ~3× dłużej. Recenzja na Fable to 25–47% kosztu kierownika.
+
+**Wniosek:** także przy pracy rozłożonej na sesje, z przerwaniem i decyzją, która musi przetrwać, kierownik nie daje
+mierzalnej przewagi jakości na projekcie tej wielkości (~1,5 tys. linii). Zwykła sesja odtwarza stan z kodu i
+historii Gita wystarczająco dobrze. Mechanizmy kierownika (RESUME, powrót do trybu pełnego, Fable jako weryfikacja
+etapu) działają zgodnie z zasadami, ale ich koszt nie zwraca się w tej skali. Granica, od której mogłyby się zwrócić —
+projekt ponad jedną sesję czytania kodu, decyzje niewidoczne w kodzie, praca wielu dostawców — zostaje niezmierzona.

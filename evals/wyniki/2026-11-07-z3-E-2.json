@@ -1,0 +1,86 @@
+{
+ "data": "2026-11-07",
+ "konfiguracja": "E",
+ "przebieg": 2,
+ "minuty": 41.4,
+ "tokeny": 10405642,
+ "rundy": 0,
+ "koszt_usd": 13.47,
+ "uwagi": "tryb zwarty; po przerwaniu E4 kierownik scalił 2/5 ukończone zadania i resztę E4 zrobił w trybie pełnym (reguła powrotu), stąd dłuższa sesja; recenzje na Fable (6,4 USD); koszt bez przerwanej sesji",
+ "zestaw": 3,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale3/E-2",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "CIAGLOSC": true,
+  "REGRESJA": true,
+  "T201": true,
+  "T202": true,
+  "T203": true,
+  "T204": true,
+  "T301": true,
+  "T302": true,
+  "T303": true,
+  "T304": true,
+  "T305": true,
+  "T401": true,
+  "T402": true,
+  "T403": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": null,
+ "dodatkowe": {
+  "CIAGLOSC": true,
+  "REGRESJA": true
+ },
+ "sondy": {},
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 82
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": null,
+ "historia": {
+  "commity_main": 33,
+  "scalenia": [
+   {
+    "temat": "merge(E5-etap): jeden plik danych (format v2): T-401, T-402, T-403",
+    "commity": 3
+   },
+   {
+    "temat": "merge(T-305): zwrot pokazuje następną rezerwację",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-304): wypożyczenie respektuje rezerwacje",
+    "commity": 1
+   },
+   {
+    "temat": "merge(T-303): rezerwacje: rezerwuj i rezerwacje",
+    "commity": 1
+   },
+   {
+    "temat": "merge(E4-etap): E4 część: historia wypożyczeń i data zwrotu (T-301, T-302)",
+    "commity": 2
+   },
+   {
+    "temat": "merge(E3-etap): E3 konfiguracja i formaty (T-201…T-204)",
+    "commity": 4
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "ZALICZONE, 0 rund poprawek; wykonawca kier-wykonawca opus; bez recenzji innej rodziny — eval: tylko modele Claude;"
+ ],
+ "wersje": {
+  "orkiestrator": "f67562d",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

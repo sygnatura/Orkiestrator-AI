@@ -275,6 +275,13 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - Tryb pełny zostaje dla etapów większych niż jedna sesja i dla prac z decyzjami — tam, gdzie kierownik
      powstał po to, żeby prowadzić projekt między sesjami. Tego evale jeszcze nie zmierzyły (wieloetapowy
      zestaw 3).
+16. **(v13, po serii 4) Wynik pracy wielosesyjnej.** Zestaw 3: trzy etapy w osobnych sesjach, sesja E4 ubita
+   w trakcie, decyzja właściciela z E3 potrzebna w E4. Zwykłe sesje i kierownik: po 12/12 z ciągłością
+   i regresją; zwykła sesja odtworzyła stan z kodu i Gita. Kierownik ~4× drożej (11,8 wobec 3,0 USD), recenzja na
+   Fable 25–47% tego. RESUME i powrót z trybu zwartego do pełnego działały poprawnie. Wniosek dla zasad: bez zmian —
+   tryb zwarty zostaje domyślny dla etapów w jednej sesji; nie ma danych, które uzasadniałyby kierownika w projektach
+   tej skali dla samej jakości (evals/README.md, „Wyniki serii 4”). Granica opłacalności (projekt ponad jedną sesję
+   czytania kodu, decyzje niewidoczne w kodzie, wielu dostawców) pozostaje do zmierzenia.
 
 ## 4. Czy to ma sens — uczciwa ocena
 

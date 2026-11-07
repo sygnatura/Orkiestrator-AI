@@ -1,0 +1,59 @@
+{
+ "data": "2026-11-07",
+ "konfiguracja": "A",
+ "przebieg": 2,
+ "minuty": 11.6,
+ "tokeny": 3950745,
+ "rundy": 0,
+ "koszt_usd": 3.18,
+ "uwagi": "jak A-1; koszt bez przerwanej sesji",
+ "zestaw": 3,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale3/A-2",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "CIAGLOSC": true,
+  "REGRESJA": true,
+  "T201": true,
+  "T202": true,
+  "T203": true,
+  "T204": true,
+  "T301": true,
+  "T302": true,
+  "T303": true,
+  "T304": true,
+  "T305": true,
+  "T401": true,
+  "T402": true,
+  "T403": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": null,
+ "dodatkowe": {
+  "CIAGLOSC": true,
+  "REGRESJA": true
+ },
+ "sondy": {},
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 85
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": null,
+ "historia": {
+  "commity_main": 13,
+  "scalenia": [],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [],
+ "wersje": {
+  "orkiestrator": "f67562d",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

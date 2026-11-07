@@ -1,0 +1,59 @@
+{
+ "data": "2026-11-07",
+ "konfiguracja": "A",
+ "przebieg": 1,
+ "minuty": 10.7,
+ "tokeny": 2995811,
+ "rundy": 0,
+ "koszt_usd": 2.86,
+ "uwagi": "4 sesje claude -p (E3, E4 przerwana po 2 commitach, E4 dokończenie, E5); koszt bez przerwanej sesji (ubita sesja nie raportuje zużycia); stan między sesjami tylko z kodu i Gita",
+ "zestaw": 3,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale3/A-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "CIAGLOSC": true,
+  "REGRESJA": true,
+  "T201": true,
+  "T202": true,
+  "T203": true,
+  "T204": true,
+  "T301": true,
+  "T302": true,
+  "T303": true,
+  "T304": true,
+  "T305": true,
+  "T401": true,
+  "T402": true,
+  "T403": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": null,
+ "dodatkowe": {
+  "CIAGLOSC": true,
+  "REGRESJA": true
+ },
+ "sondy": {},
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 77
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": null,
+ "historia": {
+  "commity_main": 13,
+  "scalenia": [],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [],
+ "wersje": {
+  "orkiestrator": "f67562d",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}
