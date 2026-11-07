@@ -186,7 +186,8 @@ def ocen(katalog: Path, numer: int = 1) -> dict:
         'ukryte': ukryte,
         'zadania_zaliczone': sum(ukryte.get(z, False) for z in zadania),
         'zadania_wszystkie': len(zadania),
-        'kolizja_zaliczona': all(w for n, w in dodatkowe.items() if n.startswith('KOLIZJA')),
+        'kolizja_zaliczona': (all(kolizja) if (kolizja := [w for n, w in dodatkowe.items() if n.startswith('KOLIZJA')])
+                              else None),
         'dodatkowe': dodatkowe,
         'sondy': testy_ukryte(katalog, numer, sondy=True),
         'widoczne': testy_widoczne(katalog),
@@ -204,7 +205,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('katalog', type=Path)
     parser.add_argument('--konfiguracja', required=True, choices=('A', 'B', 'C', 'D', 'E'))
-    parser.add_argument('--zestaw', type=int, default=1, choices=(1, 2), help='zestaw zadań (1 albo 2)')
+    parser.add_argument('--zestaw', type=int, default=1, choices=(1, 2, 3), help='zestaw zadań (1, 2 albo 3)')
     parser.add_argument('--przebieg', type=int, required=True)
     parser.add_argument('--minuty', type=float, help='czas od startu do końca etapu')
     parser.add_argument('--tokeny', type=int, help='tokeny łącznie (Claude /cost + Codex)')

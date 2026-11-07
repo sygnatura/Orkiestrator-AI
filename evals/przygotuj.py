@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Tworzy świeżą kopię projektu testowego evala poza tym repozytorium: repozytorium Git z jednym commitem
 na `main` i opcjonalnie gołym remote obok (`<katalog>.remote.git`), żeby `kier.py merge --push` działało.
-Ukryte testy (`evals/ukryte*/`) i wzorzec (`evals/wzorzec*/`) nigdy nie trafiają do kopii. `--zestaw 2`
-kopiuje `evals/projekt2/` zamiast `evals/projekt/`."""
+Ukryte testy (`evals/ukryte*/`) i wzorzec (`evals/wzorzec*/`) nigdy nie trafiają do kopii. `--zestaw N`
+(2, 3) kopiuje `evals/projektN/` zamiast `evals/projekt/`."""
 
 import argparse
 from pathlib import Path
@@ -45,7 +45,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('katalog', type=Path, help='nowy katalog kopii, poza tym repozytorium')
     parser.add_argument('--remote', action='store_true', help='utwórz goły remote obok kopii')
-    parser.add_argument('--zestaw', type=int, default=1, choices=(1, 2), help='zestaw zadań (1 albo 2)')
+    parser.add_argument('--zestaw', type=int, default=1, choices=(1, 2, 3), help='zestaw zadań (1, 2 albo 3)')
     args = parser.parse_args(argv)
     katalog = przygotuj(args.katalog, args.remote, args.zestaw)
     print(f'Gotowe: {katalog} (main @ {git("rev-parse", "--short", "HEAD", cwd=katalog)}).')
