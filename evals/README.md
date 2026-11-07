@@ -86,7 +86,7 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
   treścią (porównanie drzew składni). Nowe testy dopisane obok się nie liczą.
 - **Założenie (zestaw 2):** heurystyka, czy przy zadaniu ze sprzecznym kryterium (T-107) commit albo `docs/`
   mówi o sprzeczności. „nie” znaczy tylko, że trzeba przeczytać raport końcowy sesji.
-- **Sondy (zestaw 2):** usterki, o których kryteria milczą: S1 uprawnienia pliku danych po zapisie, S2 zapis przez dowiązanie symboliczne, S3 uprawnienia `.bak` prywatnego pliku, S4 układ pliku po wypożyczeniu i zwrocie. Raportowane osobno (k/4).
+- **Sondy (zestaw 2):** usterki, o których kryteria milczą: S1 uprawnienia pliku danych po zapisie, S2 zapis przez dowiązanie symboliczne, S3 uprawnienia `.bak` prywatnego pliku, S4 układ pliku po wypożyczeniu i zwrocie; spoza listy regresji: S5 wydajność na 20 000 książek, S6 znaki sterujące z wejścia. Raportowane osobno (k/6).
 - **Koszt:** minuty, tokeny i rundy podajesz sam. Skrypt pokazuje wzmianki o rundach z `docs/TODO.md`.
 
 ## Jak czytać wyniki
@@ -199,6 +199,11 @@ przebiegi w kontenerze jak w serii 2. Trybu nie narzucaliśmy — kierownik w ob
   a `claude -p` ubija zadania w tle 10 minut po ostatniej turze. W sesji interaktywnej powiadomienie budzi
   kierownika, więc to cecha uruchomienia bezobsługowego. Przebiegi bezobsługowe uruchamiamy od tej pory
   z `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; E-1 powtórzono od zera.
+
+**Sondy spoza listy regresji (dopisane po serii 3, bez nowych przebiegów).** S5 — wydajność na 20 000 książek —
+przechodzą wszystkie przebiegi. S6 — znaki sterujące z wejścia łamią zasadę „jedna linia `lista` na książkę” —
+nie przechodzi żaden, także E. Średnio z 6 sond: A 3,5, B 4,5, D 3,0, E 5,0. Przewaga E bierze się z kategorii,
+które lista nazywa. Recenzja łapie to, czego każe jej szukać lista; nowej kategorii nie złapał nikt.
 
 **Wniosek:** dla etapów mieszczących się w jednej sesji tryb zwarty daje co najmniej jakość trybu pełnego za
 ~1/3 kosztu. Zwykła sesja jest tańsza, ale zostawia usterki, których kryteria nie nazywają. Tryb zwarty zostaje
