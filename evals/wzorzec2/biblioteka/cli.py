@@ -12,7 +12,7 @@ from biblioteka.importer import z_csv
 from biblioteka.isbn import normalizuj_isbn
 from biblioteka.magazyn import nastepne_id, wczytaj, zapisz
 from biblioteka.model import Ksiazka
-from biblioteka.walidacja import sprawdz_date, sprawdz_rok
+from biblioteka.walidacja import sprawdz_date, sprawdz_rok, sprawdz_tekst
 from biblioteka.wyszukiwanie import klucz_alfabetyczny, klucz_tekstu, nfc, pasuje, szukaj
 
 
@@ -81,6 +81,7 @@ def polecenie_dodaj(args, ksiazki: list[Ksiazka]) -> int:
         raise BladUzytkownika('Tytuł i autor nie mogą być puste.')
     try:
         rok = sprawdz_rok(args.rok)
+        sprawdz_tekst(tytul, 'tytuł'), sprawdz_tekst(autor, 'autor')
     except ValueError as blad:
         raise BladUzytkownika(str(blad)) from None
     isbn = isbn_uzytkownika(args.isbn) if args.isbn is not None else None

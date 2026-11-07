@@ -254,11 +254,12 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
      C (kierownik + Codex), D (wykonawca Sonnet). Przebiegi wykonuje właściciel; wyniki w `evals/WYNIKI.md`.
    Dalej (niezrobione): rejestr i routing w kodzie (`kier.py zespol/route/limit`); tryb PR z CI.
 15. **(v13, po evalach) Tryb zwarty i lista regresji.** Dwie serie evali (evals/README.md): na etapach, które
-   mieszczą się w jednej sesji (7 i 12 zadań, ~150 i ~1000 linii), wszystkie konfiguracje dały pełną jakość
-   mierzoną testami akceptacyjnymi. Zwykła sesja Opus kosztowała ~2 USD i ~7 min, kierownik ~12–14 USD
-   i ~18–19 min. Narzut to osobne zlecenie i osobna recenzja Opus na zadanie oraz scalanie po kolei. Jedyną mierzalną
-   wartością była recenzja: wyłapała usterki spoza kryteriów (uprawnienia 0600, zastąpione dowiązanie, pusty
-   `--rok`), choć niestale — sondy usterek: zwykła sesja 2,5/4, kierownik z wykonawcą Opus 3,5/4, z Sonnetem 2/4.
+   mieszczą się w jednej sesji (7 i 12 zadań, ~150 i ~470 linii kodu), wszystkie konfiguracje dały pełną jakość
+   mierzoną testami akceptacyjnymi. Zwykła sesja Opus kosztowała ~2 USD i ~7 min, kierownik ~12–14 USD i ~18–19 min
+   (recenzje na Opusie). Narzut to osobne zlecenie i osobna recenzja Opus na zadanie oraz scalanie po kolei. Jedyną
+   mierzalną wartością była recenzja: wyłapała usterki spoza kryteriów (uprawnienia 0600, zastąpione dowiązanie,
+   pusty `--rok`), choć niestale — sondy usterek: zwykła sesja 2,5/4, kierownik z wykonawcą Opus 3,5/4, z Sonnetem
+   2/4.
    - **Tryb zwarty**: przy etapie mieszczącym się w jednej sesji wykonawcy, bez decyzji projektowych i z jednym
      runnerem kierownik daje cały etap jednemu wykonawcy (commit na zadanie) i robi jedną recenzję całości,
      która zastępuje recenzje per zadanie i weryfikację celu etapu. Decyzja w nagłówku TODO.md
@@ -267,9 +268,23 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - **Lista regresji** w każdej recenzji (ZLECENIA B, `kier-recenzent`): uprawnienia, dowiązania, utrata
      danych, kodowanie, zgodność formatu i API, ścieżki błędów, dane z zewnątrz. Regresja wprowadzona przez
      zmianę jest błędem (BLOKUJĄCE).
+   - **Recenzja całości w trybie zwartym w klasie NAJMOCNIEJSZY** (Fable), bo zastępuje weryfikację celu etapu.
+     W serii 3 szła na Opusie, bo Fable był w rejestrze kontenera oznaczony `wymaga credits`.
+   - **Wykonawca zostaje w MOCNY (Opus)** — wskazówka, nie wynik (2 przebiegi). D (Sonnet zawsze, także przy
+     danych) był ~15% tańszy od B (12,0 wobec 14,2 USD), bo koszt to głównie Opus jako kierownik i recenzent,
+     a miał 2,5 zamiast 1,5 rundy, sondy 2,0 zamiast 3,5 i w D-1 diagnozę architekta. Średnie mieszają przebiegi
+     wznowione po limicie (B-1, D-1) z pełnymi; D-2 (8,25 USD, 0 rund) był najtańszym przebiegiem trybu pełnego.
+     STANDARDOWY tylko na „ścieżce szybkiej”, jak dotąd.
    - Tryb pełny zostaje dla etapów większych niż jedna sesja i dla prac z decyzjami — tam, gdzie kierownik
      powstał po to, żeby prowadzić projekt między sesjami. Tego evale jeszcze nie zmierzyły (wieloetapowy
      zestaw 3).
+16. **(v13, po serii 4) Wynik pracy wielosesyjnej.** Zestaw 3: trzy etapy w osobnych sesjach, sesja E4 ubita
+   w trakcie, decyzja właściciela z E3 potrzebna w E4. Zwykłe sesje i kierownik: po 12/12 z ciągłością
+   i regresją; zwykła sesja odtworzyła stan z kodu i Gita. Kierownik ~4× drożej (11,8 wobec 3,0 USD; koszt A zaniżony o
+   przerwane sesje), recenzja na Fable 29% i 48% kosztu przebiegu. RESUME i powrót z trybu zwartego do pełnego działały poprawnie. Wniosek dla zasad: bez zmian —
+   tryb zwarty zostaje domyślny dla etapów w jednej sesji; nie ma danych, które uzasadniałyby kierownika w projektach
+   tej skali dla samej jakości (evals/README.md, „Wyniki serii 4”). Granica opłacalności (projekt ponad jedną sesję
+   czytania kodu, decyzje niewidoczne w kodzie, wielu dostawców) pozostaje do zmierzenia.
 
 ## 4. Czy to ma sens — uczciwa ocena
 

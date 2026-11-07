@@ -70,7 +70,7 @@ class EvalKitTest(unittest.TestCase):
         self.assertTrue(all(reference['ukryte'].values()), reference['ukryte'])
         self.assertEqual(reference['zadania_zaliczone'], 12)
         self.assertEqual((reference['oslabione_testy'], reference['zmienione_testy']), ([], []))
-        self.assertEqual(sorted(reference['sondy']), ['S1', 'S2', 'S3', 'S4'])
+        self.assertEqual(sorted(reference['sondy']), ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'])
         self.assertTrue(all(reference['sondy'].values()), reference['sondy'])
         self.assertEqual(ocen.ocen(self.copy('czysty1'))['sondy'], {})
 
@@ -86,6 +86,20 @@ class EvalKitTest(unittest.TestCase):
         probes = ocen.testy_ukryte(path, 2, sondy=True)
         self.assertFalse(probes['S2'], probes)
         self.assertTrue(probes['S4'], probes)
+
+    def test_set_3_untouched_fails_every_task_and_reference_passes_everything(self):
+        tasks = ocen.zestaw(3)['zadania']
+        self.assertEqual(len(tasks), 12)
+        clean = ocen.ocen(self.copy('czysty3', numer=3), 3)
+        self.assertTrue(clean['widoczne']['zaliczone'])
+        self.assertFalse(any(clean['ukryte'][z] for z in tasks), clean['ukryte'])
+        self.assertEqual(clean['dodatkowe'], {'CIAGLOSC': False, 'REGRESJA': True})
+        self.assertIsNone(clean['kolizja_zaliczona'])
+        reference = ocen.ocen(self.copy('wzorzec3', reference=True, numer=3), 3)
+        self.assertTrue(reference['widoczne']['zaliczone'])
+        self.assertTrue(all(reference['ukryte'].values()), reference['ukryte'])
+        self.assertEqual((reference['oslabione_testy'], reference['zmienione_testy']), ([], []))
+        self.assertTrue(reference['sondy'] and all(reference['sondy'].values()), reference['sondy'])
 
     def test_changed_visible_test_and_reported_assumption_are_detected(self):
         path = self.copy('zmieniony', numer=2)
@@ -112,6 +126,10 @@ class EvalKitTest(unittest.TestCase):
             path2 = przygotuj.przygotuj(self.root / 'kopia2', remote=False, numer=2)
         names2 = {p.name for p in path2.rglob('*')}
         self.assertIn('biblioteka', names2)
+        with redirect_stdout(io.StringIO()):
+            path3 = przygotuj.przygotuj(self.root / 'kopia3', remote=False, numer=3)
+        self.assertFalse({p.name for p in path3.rglob('*')} & {'ukryte3', 'wzorzec3', 'test_T201.py', 'stan.py',
+                                                               'konfiguracja.py', 'test_CIAGLOSC.py'})
         self.assertFalse(names2 & {'ukryte2', 'wzorzec2', 'sondy2', '_wspolne.py', 'test_T101.py', 'test_S1.py',
                                    'walidacja.py', 'isbn.py'})
         with self.assertRaises(SystemExit):

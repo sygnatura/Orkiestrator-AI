@@ -86,10 +86,14 @@ Zalecana kolejność pierwszej serii: **B, A, C, D**, każda raz.
   treścią (porównanie drzew składni). Nowe testy dopisane obok się nie liczą.
 - **Założenie (zestaw 2):** heurystyka, czy przy zadaniu ze sprzecznym kryterium (T-107) commit albo `docs/`
   mówi o sprzeczności. „nie” znaczy tylko, że trzeba przeczytać raport końcowy sesji.
-- **Sondy (zestaw 2):** usterki, o których kryteria milczą: S1 uprawnienia pliku danych po zapisie, S2 zapis przez dowiązanie symboliczne, S3 uprawnienia `.bak` prywatnego pliku, S4 układ pliku po wypożyczeniu i zwrocie. Raportowane osobno (k/4).
+- **Sondy (zestaw 2):** usterki, o których kryteria milczą: S1 uprawnienia pliku danych po zapisie, S2 zapis przez dowiązanie symboliczne, S3 uprawnienia `.bak` prywatnego pliku, S4 układ pliku po wypożyczeniu i zwrocie; spoza listy regresji: S5 wydajność na 20 000 książek, S6 znaki sterujące z wejścia. Raportowane osobno (k/6).
 - **Koszt:** minuty, tokeny i rundy podajesz sam. Skrypt pokazuje wzmianki o rundach z `docs/TODO.md`.
 
 ## Jak czytać wyniki
+
+Pole `wersje.orkiestrator` w pliku wyniku to wersja repozytorium z chwili przebiegu i pierwszej oceny. Sondy
+dopisywane później (S1–S4 w 86486f9, S5–S6 w ec78fef, zestaw 3 w serii 4) przeliczono na zachowanych kopiach
+przebiegów i dopisano do tych samych plików bez zmiany tego pola.
 
 Przy jednym przebiegu na konfigurację różnice o 1 zadanie albo kilkanaście procent czasu są w granicach przypadku.
 Wnioski wyciągamy z dużych różnic. Tam, gdzie wyniki są bliskie, robimy drugi przebieg. Jakość (zadania, kolizja,
@@ -97,8 +101,9 @@ brak osłabionych testów) liczy się przed kosztem. Tańsza konfiguracja wygryw
 
 ## Wyniki serii 1 (zestaw 1, 2026-11-05)
 
-Przebiegi A, B i D, po jednym, w kontenerze w chmurze przez `claude -p` (Opus jako główny model). Tabela
-w [WYNIKI.md](WYNIKI.md).
+Przebiegi A, B i D, po jednym, w kontenerze w chmurze przez `claude -p` (Opus jako główny model; B-1 część
+recenzji i weryfikację etapu zrobił na Fable — w seriach 2 i 3 recenzje szły na Opusie, w serii 4 znów na Fable,
+więc koszty między seriami nie dotyczą tej samej konfiguracji). Tabela w [WYNIKI.md](WYNIKI.md).
 
 - **Jakość:** wszystkie trzy 7/7, para kolidująca przeszła, bez osłabionych testów i rewertów.
 - **Koszt:** zwykła sesja (A) 3,4 min i ~1 USD wg cennika API, kierownik (B, D) ~8,5 min i ~4 USD.
@@ -167,7 +172,7 @@ w [WYNIKI.md](WYNIKI.md).
   „linią `formatuj()`”. Oba kierowniki wypisywały `Wypożyczono: …` i oblewały ten test. Od c16b091 test
   dopuszcza przedrostek; wszystkie przebiegi oceniono po tej zmianie.
 
-**Wniosek:** w projekcie tej wielkości (~1 tys. linii, 12 zadań, jedna sesja) zwykła sesja Opus daje tę samą
+**Wniosek:** w projekcie tej wielkości (~470 linii kodu po etapie, 12 zadań, jedna sesja) zwykła sesja Opus daje tę samą
 jakość mierzoną testami akceptacyjnymi za ~1/6 kosztu. Kierownik pokazuje swoją pracę — recenzja, rundy, zgłoszone
 sprzeczności, rozwiązane konflikty — ale na tym zestawie nie przekłada się to na wynik. Nie zmierzyliśmy tego,
 po co powstał: projektu, który nie mieści się w jednej sesji (wiele etapów, przejęcie pracy, kontekst ponad
@@ -187,10 +192,13 @@ przebiegi w kontenerze jak w serii 2. Trybu nie narzucaliśmy — kierownik w ob
 | D — kierownik, wykonawca Sonnet | 12/12, 12/12 | 2/2 | 2,0 | 17,9 min | 12,0 USD | 2,5 |
 | **E — kierownik, tryb zwarty** | 12/12, 12/12 | 2/2 | **4,0** | 19,6 min | **4,9 USD** | 1 |
 
-- **Jakość:** E ma pełny wynik zadań i jako jedyna konfiguracja oba przebiegi 4/4 w sondach. W obu przebiegach
+- **Jakość:** E ma pełny wynik zadań i jako jedyna konfiguracja oba przebiegi 4/4 w sondach — przewaga nad B to
+  jedna sonda w jednym przebiegu (B-1 też 4/4), a E działał na wersji z listą regresji (86486f9), B i D na c16b091. W obu przebiegach
   recenzja całości zwróciła T-106, bo zapis zastępował dowiązanie symboliczne, i wykonawca to poprawił w jednej
   rundzie.
-- **Koszt:** ~1/3 trybu pełnego (4,9 wobec 14,2 USD) i ~2,3× zwykłej sesji. Czas jak w trybie pełnym, bo jeden
+- **Koszt:** ~1/3 trybu pełnego (4,9 wobec 14,2 USD) i ~2,3× zwykłej sesji — z recenzją całości na Opusie. Zalecana
+  od tej serii recenzja na Fable kosztowała w serii 4 dodatkowo 2,9–6,4 USD na przebieg, więc tej proporcji nie
+  przenosimy wprost na konfigurację zalecaną. Koszt E nie obejmuje przerwanej pierwszej próby E-1. Czas jak w trybie pełnym, bo jeden
   wykonawca robi zadania po kolei.
 - **Zastrzeżenie:** lista regresji powstała z usterek serii 2, a sondy sprawdzają te same kategorie
   (uprawnienia, dowiązania). Część przewagi E może wynikać z listy, nie z trybu — B i D jej nie miały. Czy
@@ -200,7 +208,55 @@ przebiegi w kontenerze jak w serii 2. Trybu nie narzucaliśmy — kierownik w ob
   kierownika, więc to cecha uruchomienia bezobsługowego. Przebiegi bezobsługowe uruchamiamy od tej pory
   z `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; E-1 powtórzono od zera.
 
-**Wniosek:** dla etapów mieszczących się w jednej sesji tryb zwarty daje co najmniej jakość trybu pełnego za
-~1/3 kosztu. Zwykła sesja jest tańsza, ale zostawia usterki, których kryteria nie nazywają. Tryb zwarty zostaje
+**Sondy spoza listy regresji (dopisane po serii 3, bez nowych przebiegów).** S5 — wydajność na 20 000 książek —
+przechodzą wszystkie przebiegi. S6 — znaki sterujące z wejścia łamią zasadę „jedna linia `lista` na książkę” —
+nie przechodzi żaden, także E. Średnio z 6 sond: A 3,5, B 4,5, D 3,0, E 5,0. Przewaga E bierze się z kategorii,
+które lista nazywa. Recenzja łapie to, czego każe jej szukać lista; nowej kategorii nie złapał nikt.
+
+**Wniosek:** dla etapów mieszczących się w jednej sesji tryb zwarty dał co najmniej jakość trybu pełnego za
+~1/3 kosztu (z recenzją na Opusie; przy dwóch przebiegach to wskazówka). Zwykła sesja jest tańsza, ale zostawia usterki, których kryteria nie nazywają. Tryb zwarty zostaje
 domyślnym wyborem kierownika dla takich etapów. Do zmierzenia zostaje tryb pełny na etapach większych niż jedna
 sesja (zestaw 3, wieloetapowy).
+
+## Zestaw 3 — „biblioteka” w trzech etapach i czterech sesjach
+
+Start po E2 (kod wzorca 2). Plan trzech etapów, każdy w osobnej sesji: E3 konfiguracja i formaty (4 zadania),
+E4 historia i rezerwacje (5), E5 jeden plik danych v2 zgodny wstecz (3).
+
+Co sprawdzają testy:
+- **decyzja właściciela z E3** — domyślny format dat `DD.MM.RRRR`, podany tylko w ściądze sesji E3 — musi przetrwać
+  do E4, gdzie `historia` wypisuje daty;
+- **sesja E4 jest przerywana** 30 s po pierwszym commicie zadania E4 (na dowolnej gałęzi), a nowa sesja ją kończy;
+- dodatkowe kontrole: `CIAGLOSC` (ustawienia i decyzje z E3 w poleceniach z E4/E5) i `REGRESJA` (zachowania z E2
+  po E5, w starym formacie i w v2).
+
+Kryteria i ukryte testy przed przebiegami niezależnie recenzował Fable. Znalazł jeden test ostrzejszy niż
+kryterium (`rezerwacje` z nieznanym ID) i kilka niedopowiedzeń; poprawione przed przebiegami.
+
+## Wyniki serii 4 (zestaw 3, 2026-11-07)
+
+Przebiegi A (zwykłe sesje) i E (kierownik, tryb wybiera sam, recenzja i weryfikacja etapu na Fable), po dwa, każdy
+w czterech sesjach `claude -p`.
+
+| Konfiguracja | Zadania | Ciągłość | Regresja | Czas (śr., suma sesji) | Koszt (śr., cennik API) |
+|---|---|---|---|---|---|
+| A — zwykłe sesje | 12/12, 12/12 | 2/2 | 2/2 | 11,1 min | 3,0 USD* |
+| E — kierownik | 12/12, 12/12 | 2/2 | 2/2 | 35,8 min | 11,8 USD* (w tym Fable 2,9 i 6,4) |
+
+\* Bez kosztu przerwanej sesji, gdy ubity proces go nie zaraportował (A-1, A-2, E-2); w E-1 jest wliczony. Koszt A
+jest więc zaniżony, a stosunek „~4×” raczej górny. Czas to suma wszystkich czterech sesji, z przerwanymi.
+
+- **Jakość:** pełna w obu konfiguracjach. Decyzja z E3 przetrwała do E4 także w zwykłych sesjach — najpewniej przez kod
+  (format dat był już zaimplementowany, a AGENTS.md zwykłej sesji zabrania edycji docs/), co jest interpretacją, nie
+  pomiarem. Sondy S1–S6 z zestawu 2 (zapisane w wynikach, `sondy`) na stanach końcowych: wszędzie 6/6, czyli żadnej
+  regresji względem punktu wyjścia, który też ma 6/6.
+- **Przerwanie:** obie konfiguracje dokończyły E4 bez zgubionych i zdublowanych zadań. Zwykła sesja odtworzyła stan
+  z Gita. Kierownik w E-1 dokończył etap zwarty z gałęzi wykonawcy. W E-2 scalił 2 ukończone zadania i resztę zrobił
+  w trybie pełnym, jak każe reguła powrotu — poprawnie, ale ta sesja trwała 18,6 min (z logu sesji).
+- **Koszt:** kierownik ~4× drożej i ~3× dłużej. Recenzja na Fable to 29% (E-1) i 48% (E-2) kosztu przebiegu.
+
+**Wniosek:** także przy pracy rozłożonej na sesje, z przerwaniem i decyzją, która musi przetrwać, kierownik nie daje
+mierzalnej przewagi jakości na projekcie tej wielkości (~700 linii kodu po E5, 12 zadań). Zwykła sesja odtwarza stan z kodu i
+historii Gita wystarczająco dobrze. Mechanizmy kierownika (RESUME, powrót do trybu pełnego, Fable jako weryfikacja
+etapu) działają zgodnie z zasadami, ale ich koszt nie zwraca się w tej skali. Granica, od której mogłyby się zwrócić —
+projekt ponad jedną sesję czytania kodu, decyzje niewidoczne w kodzie, praca wielu dostawców — zostaje niezmierzona.

@@ -128,7 +128,7 @@ WYNIK do 40 linii: wiersz na zadanie „T-NNN: ZALICZONE | DO POPRAWY | ZABLOKOW
 ```
 
 Flow: one order A (stage variant, executor in MOCNY, „przydział” as for a task) → one order B (compact-stage
-variant; other family first when the stage touches security, data, money or an external contract) instead of
+variant, reviewer in NAJMOCNIEJSZY as for the stage goal; other family first when the stage touches security, data, money or an external contract) instead of
 the per-task reviews and the stage-goal evidence → DO POPRAWY for some tasks: `KIER fix-round E<n>-etap`, order A
 with only those tasks, order B for them plus the stage scenario (two failed rounds → diagnosis as usual) → all
 ZALICZONE: `KIER merge E<n>-etap --push`, „Zrobione” a line per task („recenzja wspólna E<n>”). Back to pełny for

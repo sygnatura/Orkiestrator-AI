@@ -219,7 +219,7 @@ tool name, so a new, exhausted or cancelled subscription changes only the regist
 | T-NNN specification, routine design question | MOCNY | any (host cheapest) |
 | Stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture decision, deciding a conflicting verdict | NAJMOCNIEJSZY | any (host cheapest) |
 | Plan review | MOCNY | other family than the plan author first |
-| Stage goal verification | NAJMOCNIEJSZY | any; + other family for an MVP-key stage or one touching security / data / money |
+| Stage goal verification (also the compact-stage review) | NAJMOCNIEJSZY | any; + other family for an MVP-key stage or one touching security / data / money |
 
 „Ścieżka szybka” never applies to a change touching security, authentication, data, money or an external contract,
 to a fix after a failed round, or when signals conflict — then the „any other task” row applies.

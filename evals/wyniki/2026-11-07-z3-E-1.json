@@ -1,0 +1,81 @@
+{
+ "data": "2026-11-07",
+ "konfiguracja": "E",
+ "przebieg": 1,
+ "minuty": 30.2,
+ "tokeny": 9107646,
+ "rundy": 0,
+ "koszt_usd": 10.17,
+ "uwagi": "kierownik wybrał tryb zwarty w każdym etapie; recenzja całości na Fable (2,9 USD); po przerwaniu E4 RESUME dokończył zwarty etap z gałęzi wykonawcy; koszt z przerwaną sesją (zdążyła raportować)",
+ "zestaw": 3,
+ "katalog": "/tmp/claude-0/-home-user-Orkiestrator-AI/53dce6ee-40bc-5232-8d16-0074337a9fbe/scratchpad/evale3/E-1",
+ "galaz_oceniana": "main",
+ "ukryte": {
+  "CIAGLOSC": true,
+  "REGRESJA": true,
+  "T201": true,
+  "T202": true,
+  "T203": true,
+  "T204": true,
+  "T301": true,
+  "T302": true,
+  "T303": true,
+  "T304": true,
+  "T305": true,
+  "T401": true,
+  "T402": true,
+  "T403": true
+ },
+ "zadania_zaliczone": 12,
+ "zadania_wszystkie": 12,
+ "kolizja_zaliczona": null,
+ "dodatkowe": {
+  "CIAGLOSC": true,
+  "REGRESJA": true
+ },
+ "sondy": {
+  "S1": true,
+  "S2": true,
+  "S3": true,
+  "S4": true,
+  "S5": true,
+  "S6": true
+ },
+ "widoczne": {
+  "zaliczone": true,
+  "liczba": 81
+ },
+ "oslabione_testy": [],
+ "zmienione_testy": [],
+ "zalozenie_zgloszone": null,
+ "historia": {
+  "commity_main": 29,
+  "scalenia": [
+   {
+    "temat": "merge(E5-etap): E5: format v2 (jeden plik danych), polecenie migruj, nieobsługiwana wersja",
+    "commity": 3
+   },
+   {
+    "temat": "merge(E4-etap): E4: historia wypożyczeń, data zwrotu, rezerwacje i ich obsługa w wypożyczeniu i zwrocie",
+    "commity": 5
+   },
+   {
+    "temat": "merge(E3-etap): E3: konfiguracja TOML, format dat, daty w argumentach, ustawienia w poleceniach",
+    "commity": 4
+   }
+  ],
+  "rewerty": 0,
+  "galezie_task": [],
+  "worktree_pozostale": 0,
+  "zmiany_niezacommitowane": false
+ },
+ "rundy_w_todo": [
+  "- E5 (tryb zwarty, recenzja wspólna E5, 0 rund poprawek): T-401 96a4ba6 (format v2), T-402 a2e7442 (`migruj`),"
+ ],
+ "wersje": {
+  "orkiestrator": "f67562d",
+  "git": "git version 2.43.0",
+  "python": "3.13.17",
+  "system": "Linux"
+ }
+}

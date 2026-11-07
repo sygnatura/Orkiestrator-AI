@@ -133,9 +133,10 @@ in the evals (ANALIZA.md, decision 15) per-task orders and reviews cost ~6× a s
 session, with no gain in measured quality; the gain came from review, which this mode keeps once per stage.
 
 1. One order A, stage variant, to an executor in MOCNY (the „przydział” line as for a task, role `wykonawca E<n>`).
-2. One order B, compact-stage variant, to a fresh reviewer per SKILL.md section 7 (other family first when the
-   stage touches security, data, money or an external contract). It replaces the per-task reviews and END OF STAGE
-   step 1; your formal check (section 8, point 1) covers the whole branch.
+2. One order B, compact-stage variant, to a fresh reviewer in NAJMOCNIEJSZY — it is also the stage-goal
+   verification (SKILL.md section 7; none usable → MOCNY with „weryfikacja etapu bez klasy NAJMOCNIEJSZY”; other
+   family first when the stage touches security, data, money or an external contract). It replaces the per-task
+   reviews and END OF STAGE step 1; your formal check (section 8, point 1) covers the whole branch.
 3. Some tasks DO POPRAWY → `KIER fix-round E<n>-etap`, order A (stage variant, existing branch) with only those
    tasks and their BLOKUJĄCE remarks, then order B for them plus the stage scenario. Two failed rounds on the same
    problem → the diagnosis as in full mode.

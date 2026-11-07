@@ -2,6 +2,7 @@
 
 from datetime import date
 import re
+import unicodedata
 
 ROK_MIN = 1450
 
@@ -21,3 +22,10 @@ def sprawdz_date(tekst: str) -> date:
         return date.fromisoformat(tekst)
     except ValueError:
         raise ValueError(f'niepoprawna data (RRRR-MM-DD): {tekst}') from None
+
+
+def sprawdz_tekst(tekst: str, pole: str) -> str:
+    """Znaki sterujące (np. nowa linia) złamałyby zasadę „jedna linia `lista` na książkę”."""
+    if any(unicodedata.category(znak) == 'Cc' for znak in tekst):
+        raise ValueError(f'{pole} zawiera znaki sterujące')
+    return tekst
