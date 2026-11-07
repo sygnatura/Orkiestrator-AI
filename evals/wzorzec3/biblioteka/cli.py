@@ -145,13 +145,14 @@ def polecenie_wypozycz(args, ksiazki: list[Ksiazka]) -> int:
     kolejka = args.stan.rezerwacje.get(str(ksiazka.id), [])
     if kolejka and kolejka[0] != osoba:
         raise BladUzytkownika(f'Książka jest zarezerwowana; pierwsza w kolejce: {kolejka[0]}')
+    zmiana_kolejki = bool(kolejka)
     if kolejka:
         kolejka.pop(0)
         if not kolejka:
             del args.stan.rezerwacje[str(ksiazka.id)]
     ksiazka.wypozyczona_przez, ksiazka.data_wypozyczenia = osoba, kiedy.isoformat()
     args.stan.historia.append({'id': ksiazka.id, 'typ': 'wypozyczenie', 'osoba': osoba, 'data': kiedy.isoformat()})
-    zapisz_ksiazki(args, ksiazki, historia=True, rezerwacje=True)
+    zapisz_ksiazki(args, ksiazki, historia=True, rezerwacje=zmiana_kolejki)
     print(formatuj(ksiazka))
     return 0
 

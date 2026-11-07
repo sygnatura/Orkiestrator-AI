@@ -11,15 +11,17 @@ W toku: brak
 Blokady: brak
 Następny krok: T-201
 Ustalenia: projekt testowy evala orkiestratora; brak remote albo goły remote lokalny (przygotuj.py --remote).
+Zależności: zadania realizuj w kolejności numerów — późniejsze zadanie etapu może korzystać z wcześniejszych
+(np. testy T-201 mogą używać `--format-daty` z T-202 dopiero po T-202), a etap — z poprzednich etapów.
 
 ## E3 — konfiguracja i formaty
 - [ ] T-201 | TODO | — | plik konfiguracji i polecenie `konfiguracja`
       Kryteria: plik TOML (`tomllib`) — domyślnie `biblioteka.toml` w katalogu pliku danych, albo globalna opcja
       `--konfiguracja PLIK`; brak pliku domyślnego → wartości domyślne, brak pliku podanego jawnie → komunikat
       i kod 2. Klucze (wszystkie opcjonalne): `dni_przetrzymania` (liczba całkowita ≥ 0, domyślnie 30),
-      `format_daty` (`"pl"` albo `"iso"`, domyślny — T-202), `katalog_eksportu` (tekst, domyślnie `eksport`;
-      ścieżka względna liczona od katalogu pliku konfiguracji). Błędny TOML, nieznany klucz, zły typ albo
-      wartość → komunikat z nazwą klucza i kod 2 przy każdym poleceniu, pliki bez zmian. Polecenie
+      `format_daty` (`"pl"` albo `"iso"`, domyślny — T-202), `katalog_eksportu` (tekst, domyślnie `eksport` względem
+      bieżącego katalogu jak dotąd; ścieżka względna z pliku liczona od katalogu pliku konfiguracji). Błędny TOML, nieznany klucz, zły typ (np. `true`
+      albo `"10"` zamiast liczby) albo wartość → komunikat z nazwą klucza i kod 2 przy każdym poleceniu, pliki bez zmian. Polecenie
       `konfiguracja` wypisuje trzy linie w kolejności alfabetycznej kluczy: `<klucz> = <wartość> (<źródło>)`,
       gdzie źródło to `domyślne`, `plik` albo `argument`, a wartość jest taka, jak ją podano; test w `tests/`.
 - [ ] T-202 | TODO | — | format dat w wyjściu
@@ -48,8 +50,9 @@ Ustalenia: projekt testowy evala orkiestratora; brak remote albo goły remote lo
       komunikat i kod 2, nic się nie zmienia; test w `tests/`.
 - [ ] T-303 | TODO | — | rezerwacje: `rezerwuj ID --osoba X`, `rezerwacje ID`
       Kryteria: `rezerwuj` dopisuje osobę (bez spacji na brzegach) na koniec kolejki książki i wypisuje
-      `Zarezerwowano: <osoba>, pozycja <N>`; nieznane ID, pusta osoba albo osoba już w kolejce → kod 2.
-      `rezerwacje ID` wypisuje kolejkę: `1. <osoba>`, `2. …`; pusta → brak wyjścia, kod 0. Do E5 kolejki są
+      `Zarezerwowano: <osoba>, pozycja <N>`; rezerwować można także książkę dostępną (niewypożyczoną); nieznane ID,
+      pusta osoba albo osoba już w kolejce → kod 2. `rezerwacje ID` wypisuje kolejkę: `1. <osoba>`, `2. …`;
+      pusta → brak wyjścia, kod 0; nieznane ID → kod 2. Do E5 kolejki są
       w pliku `<nazwa pliku danych bez .json>.rezerwacje.json`, zapisywanym jak plik danych; test w `tests/`.
 - [ ] T-304 | TODO | — | wypożyczenie respektuje rezerwacje (po T-303)
       Kryteria: gdy kolejka książki nie jest pusta, wypożyczyć może tylko pierwsza osoba z kolejki (po
