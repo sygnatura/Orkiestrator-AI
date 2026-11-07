@@ -267,6 +267,11 @@ Zestaw ma być w pełni zgodny z mechaniką Claude Code i nie może być przypis
    - **Lista regresji** w każdej recenzji (ZLECENIA B, `kier-recenzent`): uprawnienia, dowiązania, utrata
      danych, kodowanie, zgodność formatu i API, ścieżki błędów, dane z zewnątrz. Regresja wprowadzona przez
      zmianę jest błędem (BLOKUJĄCE).
+   - **Recenzja całości w trybie zwartym w klasie NAJMOCNIEJSZY** (Fable), bo zastępuje weryfikację celu etapu.
+     W serii 3 szła na Opusie, bo Fable był w rejestrze kontenera oznaczony `wymaga credits`.
+   - **Wykonawca zostaje w MOCNY (Opus).** D (Sonnet zawsze, także przy danych) był tylko ~15% tańszy od B
+     (12,0 wobec 14,2 USD), bo koszt to głównie Opus jako kierownik i recenzent, a miał 2,5 zamiast 1,5 rundy,
+     sondy 2,0 zamiast 3,5 i w D-1 diagnozę architekta. STANDARDOWY tylko na „ścieżce szybkiej”, jak dotąd.
    - Tryb pełny zostaje dla etapów większych niż jedna sesja i dla prac z decyzjami — tam, gdzie kierownik
      powstał po to, żeby prowadzić projekt między sesjami. Tego evale jeszcze nie zmierzyły (wieloetapowy
      zestaw 3).

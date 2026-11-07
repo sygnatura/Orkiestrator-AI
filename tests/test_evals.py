@@ -70,7 +70,7 @@ class EvalKitTest(unittest.TestCase):
         self.assertTrue(all(reference['ukryte'].values()), reference['ukryte'])
         self.assertEqual(reference['zadania_zaliczone'], 12)
         self.assertEqual((reference['oslabione_testy'], reference['zmienione_testy']), ([], []))
-        self.assertEqual(sorted(reference['sondy']), ['S1', 'S2', 'S3', 'S4'])
+        self.assertEqual(sorted(reference['sondy']), ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'])
         self.assertTrue(all(reference['sondy'].values()), reference['sondy'])
         self.assertEqual(ocen.ocen(self.copy('czysty1'))['sondy'], {})
 

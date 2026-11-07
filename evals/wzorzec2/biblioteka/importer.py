@@ -5,7 +5,7 @@ from pathlib import Path
 
 from biblioteka.isbn import normalizuj_isbn
 from biblioteka.model import Ksiazka
-from biblioteka.walidacja import sprawdz_rok
+from biblioteka.walidacja import sprawdz_rok, sprawdz_tekst
 from biblioteka.wyszukiwanie import nfc
 
 
@@ -18,6 +18,7 @@ def z_csv(sciezka: Path, pierwsze_id: int) -> list[Ksiazka]:
                 tytul, autor = nfc((dane.get('tytul') or '').strip()), nfc((dane.get('autor') or '').strip())
                 if not tytul or not autor:
                     raise ValueError('brak tytułu albo autora')
+                sprawdz_tekst(tytul, 'tytuł'), sprawdz_tekst(autor, 'autor')
                 rok_tekst = (dane.get('rok') or '').strip()
                 try:
                     rok = int(rok_tekst) if rok_tekst else None

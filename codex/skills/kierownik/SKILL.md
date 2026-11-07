@@ -196,7 +196,7 @@ above for STANDARDOWY work, or for MOCNY work touching security/data/money/an ex
 same-class exception); T-NNN specification and
 routine design MOCNY; stage plan, takeover plan, hard diagnosis, PLAN IN QUESTION, hard-to-reverse architecture
 decision, deciding a conflicting verdict NAJMOCNIEJSZY; plan review MOCNY, another family than the plan author first;
-stage goal NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
+stage goal (also the compact-stage review) NAJMOCNIEJSZY, plus another family for an MVP-key stage or one touching security/data/money.
 
 Choosing a runner — before launching, write one assignment line („przydział”) into the task's W TOKU line in TODO:
 `przydział <rola>: autor <model>/<rodzina>, ryzyko <…> → wymagane <klasa>, <rodzina> → <runner> <model>[ effort <poziom>][; ścieżka szybka][; odstępstwo: <powód>]`.
