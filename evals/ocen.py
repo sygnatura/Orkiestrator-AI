@@ -25,7 +25,7 @@ def zestaw(numer: int = 1) -> dict:
     sufiks = '' if numer == 1 else str(numer)
     ukryte = EVALS / f'ukryte{sufiks}'
     return {'numer': numer, 'projekt': EVALS / f'projekt{sufiks}', 'ukryte': ukryte,
-            'wzorzec': EVALS / f'wzorzec{sufiks}', 'sondy': EVALS / f'sondy{sufiks}',
+            'wzorzec': EVALS / f'wzorzec{sufiks}', 'sondy': EVALS / ('sondy2' if numer == 3 else f'sondy{sufiks}'),  # zestaw 3 ma to samo CLI co 2
             'zadania': tuple(sorted(p.stem.removeprefix('test_') for p in ukryte.glob('test_T*.py')))}
 
 

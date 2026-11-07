@@ -99,6 +99,7 @@ class EvalKitTest(unittest.TestCase):
         self.assertTrue(reference['widoczne']['zaliczone'])
         self.assertTrue(all(reference['ukryte'].values()), reference['ukryte'])
         self.assertEqual((reference['oslabione_testy'], reference['zmienione_testy']), ([], []))
+        self.assertTrue(reference['sondy'] and all(reference['sondy'].values()), reference['sondy'])
 
     def test_changed_visible_test_and_reported_assumption_are_detected(self):
         path = self.copy('zmieniony', numer=2)
