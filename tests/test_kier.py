@@ -16,6 +16,7 @@ import unittest
 REPO = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('kierownik_kier', REPO / 'claude/kierownik/scripts/kier.py')
 kier = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = kier  # dataclasses (Python 3.9) look the module up by name
 spec.loader.exec_module(kier)
 
 TEST = f'"{sys.executable}" check.py'

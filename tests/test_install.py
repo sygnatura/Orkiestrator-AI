@@ -4,7 +4,7 @@ import sys
 
 sys.dont_write_bytecode = True  # no __pycache__ inside the package directories the installers copy
 
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
 import io
 import json
@@ -12,10 +12,12 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('kierownik_root_install', REPO / 'install.py')
 install = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = install  # dataclasses (Python 3.9) look the module up by name
 spec.loader.exec_module(install)
 
 
@@ -176,6 +178,7 @@ class InstallerTest(unittest.TestCase):
         self.assertIn('usunięcie katalogu', output)
         self.assertFalse(legacy.exists())
 
+    @unittest.skipIf(sys.version_info < (3, 11), 'część Codex wymaga Pythona 3.11+ (tomllib)')
     def test_codex_part_installs_user_skill(self):
         code, _ = self.run_installer('--codex')
         self.assertEqual(code, 0)
@@ -186,6 +189,20 @@ class InstallerTest(unittest.TestCase):
         self.assertEqual((installed / 'scripts/kier.py').read_bytes(), (REPO / 'claude/kierownik/scripts/kier.py').read_bytes())
         self.assertNotIn('v10', (self.home / '.codex/config.toml').read_text(encoding='utf-8'))
         self.assertFalse(self.skill.exists())
+
+
+    def test_too_old_python_for_codex_skips_it_and_installs_claude(self):
+        (self.home / '.claude').mkdir()
+        (self.home / '.codex').mkdir()
+        with patch.object(install, 'CODEX_PYTHON', (99,)):
+            code, output = self.run_installer()
+            self.assertEqual(code, 0, output)
+            self.assertIn('Codex: pominięte', output)
+            self.assertTrue((self.skill / 'scripts/kier.py').is_file())
+            self.assertFalse((self.home / '.agents').exists())
+            with redirect_stderr(io.StringIO()) as errors:
+                self.assertEqual(self.run_installer('--codex')[0], 2)
+            self.assertIn('3.11', errors.getvalue())
 
 
 class HistoryTest(unittest.TestCase):

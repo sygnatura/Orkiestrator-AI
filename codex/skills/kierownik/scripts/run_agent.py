@@ -9,7 +9,12 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import tomllib
+
+if sys.version_info < (3, 11):  # tomllib; komunikat zamiast ModuleNotFoundError
+    sys.exit('Kierownik dla Codex wymaga Pythona 3.11 lub nowszego (jest '
+             + '.'.join(map(str, sys.version_info[:3])) + ').')
+
+import tomllib  # noqa: E402
 
 ROLES = ('kier-analityk', 'kier-wykonawca', 'kier-recenzent', 'kier-architekt')
 # Tool-owned caches a review may leave behind; any other new unignored file is a change. Same as CACHE in kier.py.

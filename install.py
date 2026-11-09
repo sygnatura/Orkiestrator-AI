@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Instaluje i aktualizuje kierownika dla Claude Code i Codex (Python 3.11+).
+"""Instaluje i aktualizuje kierownika dla Claude Code i Codex (Python 3.9+).
 
 Claude Code: ~/.claude/skills/kierownik/ i ~/.claude/agents/kier-*.md. Pliki niezmienione ręcznie są
 podmieniane, zmienione ręcznie trafiają najpierw do kopii zapasowej, a pliki usunięte z pakietu znikają
@@ -8,6 +8,8 @@ nadpisywany ani usuwany. Codex: codex/install.py --user --register-agents --upgr
 zapasowe w ~/.agents/backups/). Pozostałości starszych wersji (skill `architekt` z pierwszego portu
 Codex) są usuwane z kopią. Uruchom z --dry-run, żeby zobaczyć plan bez zmian.
 """
+
+from __future__ import annotations  # adnotacje X | None działają też na Pythonie 3.9 (macOS)
 
 import argparse
 from dataclasses import dataclass
@@ -24,6 +26,8 @@ REPO = Path(__file__).resolve().parent
 CLAUDE_SKILL_SRC = REPO / 'claude' / 'kierownik'
 CLAUDE_AGENTS_SRC = REPO / 'claude' / 'agents'
 CODEX_INSTALLER = REPO / 'codex' / 'install.py'
+MIN_PYTHON = (3, 9)  # część Claude: systemowy Python macOS (Command Line Tools) to 3.9
+CODEX_PYTHON = (3, 11)  # część Codex potrzebuje tomllib
 HISTORY = REPO / 'install-history.json'
 MANIFEST = '.kierownik-install.json'
 # Machine state kept in the skill directory by v10/v11; the lead migrates it into ~/.kierownik/ZESPOL.md.
@@ -226,6 +230,10 @@ def run_codex(home: Path, projects: list[Path]) -> None:
             module.main(arguments)
 
 
+def python_version() -> str:
+    return '.'.join(map(str, sys.version_info[:3]))
+
+
 def detect(home: Path, folder: str, command: str) -> bool:
     return (home / folder).is_dir() or shutil.which(command) is not None
 
@@ -244,14 +252,22 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     if args.record_release:
         return record_release()
-    if sys.version_info < (3, 11):
-        parser.error('Wymagany Python 3.11 lub nowszy.')
+    if sys.version_info < MIN_PYTHON:
+        parser.error(f'Wymagany Python 3.9 lub nowszy (jest {python_version()}).')
     home = (args.home or Path.home()).resolve()
     projects = [p.resolve() for p in args.project]
     do_claude = args.claude or (not args.codex and detect(home, '.claude', 'claude'))
     do_codex = args.codex or (not args.claude and detect(home, '.codex', 'codex'))
     if not (do_claude or do_codex):
         parser.error('Nie wykryto Claude Code ani Codex. Wskaż --claude i/lub --codex.')
+    if do_codex and sys.version_info < CODEX_PYTHON:
+        message = (f'Codex: pominięte — kierownik dla Codex wymaga Pythona 3.11+ (jest {python_version()}). Zainstaluj '
+                   'nowszy Python (np. `brew install python`) i uruchom `python3.13 install.py --codex`.')
+        if args.codex or not do_claude:
+            print(message, file=sys.stderr)
+            return 2
+        print(message)
+        do_codex = False
 
     history = load_history()
     actions, manifest = plan_claude(home, history) if do_claude else ([], None)

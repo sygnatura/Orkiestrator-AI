@@ -21,7 +21,8 @@ więc przełączenie Claude ↔ Codex nie wymaga nowej kolejki ani odtwarzania p
 
 ## Instalacja
 
-Wymagane: Python **3.11+**, Git i klient Codex ze skills. Nie ma zależności
+Wymagane: Python **3.11+** (część Claude działa już od 3.9, Codex potrzebuje `tomllib`), Git i klient Codex ze
+skills. Nie ma zależności
 Python do instalowania. Najprościej z głównego katalogu repozytorium: `python3 install.py`
 (aktualizuje też wersję Claude i usuwa skill `architekt` z pierwszego portu). Tylko Codex,
 z katalogu `codex/` na swojej maszynie:
