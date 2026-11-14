@@ -22,7 +22,7 @@ w v10, więc istniejące projekty działają bez migracji.
 
 Najprościej z głównego katalogu repozytorium: `python3 install.py` (najpierw `--dry-run`). Instalator
 instaluje albo aktualizuje wszystko, rozpoznaje pliki ze starszych wersji, kasuje zbędne i robi kopię
-zapasową — szczegóły w [README repozytorium](../README.md#instalacja-i-aktualizacja--jedno-polecenie).
+zapasową — szczegóły w [README repozytorium](../README.pl.md#instalacja-i-aktualizacja--jedno-polecenie).
 Ręcznie, z katalogu `claude/`, skopiuj skill i subagentów:
 
     # Linux / macOS
