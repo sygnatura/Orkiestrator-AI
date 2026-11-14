@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Git and test mechanics of the kierownik lead (Claude Code and Codex hosts; stdlib only, Python 3.11+).
+"""Git and test mechanics of the kierownik lead (Claude Code and Codex hosts; stdlib only, Python 3.9+).
 
 The lead calls one subcommand per step and reads only the short `KLUCZ: wartość` lines; every git call is
 logged to <repo>/.kierownik/log/kier.log. The script never forces, deletes unmerged work or rewrites pushed
@@ -14,6 +14,8 @@ Exit codes: 0 OK | 1 tests red or untrustworthy (merge undone) | 2 usage/interna
 4 conflict, aborted | 5 merged and green, but push failed | 6 merged and pushed, cleanup incomplete |
 `test`: the command's own exit code.
 """
+
+from __future__ import annotations  # adnotacje X | None działają też na Pythonie 3.9 (macOS)
 
 import argparse
 from datetime import datetime

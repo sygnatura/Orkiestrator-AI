@@ -92,17 +92,19 @@ owner. Instructions addressed to models are in English to save tokens.
 
 ## Technology
 
-- **Python 3.11+, standard library only** (installer, `kier.py`, Codex adapter, eval harness). No dependencies.
+- **Python, standard library only**, no dependencies: 3.9+ for the Claude part (installer, `kier.py`; the macOS
+  system `python3` is enough), 3.11+ for the Codex part and the eval harness (they need `tomllib`).
 - **Git ≥ 2.38** for conflict prediction (`git merge-tree --write-tree`). Older versions degrade to a plain merge
   attempt.
 - **Claude Code** (skills, subagents with `isolation: worktree`; optional features need ≥ 2.1.221 and ≥ 2.1.292)
   and/or **Codex CLI**. Other CLIs (e.g. Google Antigravity) can be registered as extra runners.
-- **GitHub Actions**: Linux, Windows and macOS × Python 3.11 and 3.13.
+- **GitHub Actions**: Linux, Windows and macOS × Python 3.11 and 3.13, plus the Claude part on the macOS system
+  Python (3.9).
 
 ## Tests and CI
 
 ```bash
-python3 -m unittest discover -s tests        # 72 tests: installer, kier.py, consistency, eval harness
+python3 -m unittest discover -s tests        # 73 tests: installer, kier.py, consistency, eval harness
 python3 -m unittest discover -s codex/tests  # 22 tests: Codex installer and CLI adapter
 ```
 
@@ -179,7 +181,7 @@ visible in the code and several providers.
 
 ## Getting started
 
-Requirements: Python 3.11+, Git, and Claude Code and/or Codex.
+Requirements: Git, Claude Code and/or Codex, and Python 3.9+ (Claude Code) or 3.11+ (Codex).
 
 ```bash
 git clone https://github.com/sygnatura/Orkiestrator-AI.git   # or download the ZIP
@@ -203,11 +205,9 @@ Not done yet, in rough order of value:
 
 1. **Evaluate where the lead should pay off:** a larger, longer project (beyond what one session can read) and the
    Codex-as-reviewer configuration on the owner's machine.
-2. **Python 3.9 support for the Claude part**, so the macOS system `python3` works. A fix is in an open pull
-   request; its macOS CI jobs have not run yet.
-3. **Registry and routing in code** (`kier.py zespol/route/limit`) instead of rules in the prompt.
-4. **Pull-request mode:** work through PRs and CI instead of merging to a local `main`.
-5. **An English version of the owner-facing documentation.**
+2. **Registry and routing in code** (`kier.py zespol/route/limit`) instead of rules in the prompt.
+3. **Pull-request mode:** work through PRs and CI instead of merging to a local `main`.
+4. **An English version of the owner-facing documentation.**
 
 ## How this was built with AI
 

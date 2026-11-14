@@ -7,7 +7,13 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
-import tomllib
+import sys
+
+if sys.version_info < (3, 11):  # tomllib; komunikat zamiast ModuleNotFoundError
+    sys.exit('Kierownik dla Codex wymaga Pythona 3.11 lub nowszego (jest '
+             + '.'.join(map(str, sys.version_info[:3])) + ').')
+
+import tomllib  # noqa: E402
 
 ROLES = ('kier-analityk', 'kier-wykonawca', 'kier-recenzent', 'kier-architekt')
 DESCRIPTIONS = (

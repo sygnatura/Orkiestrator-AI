@@ -24,7 +24,9 @@ uzasadnienie w [claude/ANALIZA.md](claude/ANALIZA.md), decyzja 12). Oryginał v1
 
 ## Instalacja i aktualizacja — jedno polecenie
 
-Z głównego katalogu tego repozytorium (Python 3.11+, Linux, macOS i Windows):
+Z głównego katalogu tego repozytorium (Linux, macOS i Windows; Python 3.9+ dla Claude Code — wystarczy systemowy
+`python3` macOS — i 3.11+ dla Codex; sprawdź `python3 --version`). Repozytorium pobrane jako ZIP działa tak samo jak
+klon Gita:
 
 ```bash
 python3 install.py --dry-run   # najpierw zobacz plan, nic się nie zmienia
@@ -97,6 +99,7 @@ codex/              zestaw Codex v13
   tests/            testy instalatora i adaptera CLI
 archiwum/           poprzednie wersje
 .github/workflows/  CI: oba zestawy testów na Linuksie, Windows i macOS (Python 3.11 i 3.13)
+                    oraz część Claude na systemowym Pythonie macOS (3.9)
 evals/              evale: projekt testowy, ukryte testy, ocena przebiegów (evals/README.md)
 ```
 

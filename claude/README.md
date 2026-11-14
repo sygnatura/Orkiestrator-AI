@@ -23,6 +23,8 @@ w v10, więc istniejące projekty działają bez migracji.
 Najprościej z głównego katalogu repozytorium: `python3 install.py` (najpierw `--dry-run`). Instalator
 instaluje albo aktualizuje wszystko, rozpoznaje pliki ze starszych wersji, kasuje zbędne i robi kopię
 zapasową — szczegóły w [README repozytorium](../README.pl.md#instalacja-i-aktualizacja--jedno-polecenie).
+Wymagany Python 3.9+ — na macOS wystarczy systemowy `python3`; tym samym `python3` kierownik uruchamia
+`scripts/kier.py` w projektach.
 Ręcznie, z katalogu `claude/`, skopiuj skill i subagentów:
 
     # Linux / macOS
